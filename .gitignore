@@ -1,0 +1,17 @@
+# Environments
+backend/venv/
+backend/__pycache__/
+.env
+.idea/
+.vscode/
+
+# Node
+frontend/node_modules/
+frontend/dist/
+
+# Databases
+*.sqlite3
+*.db
+
+# macOS
+.DS_Store
