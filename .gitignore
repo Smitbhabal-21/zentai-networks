@@ -1,7 +1,25 @@
-# Environments
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments
+venv/
+.venv/
+env/
 backend/venv/
-backend/__pycache__/
+
+# Environment variables
 .env
+.env.*
+
+# IDE
 .idea/
 .vscode/
 
@@ -15,3 +33,8 @@ frontend/dist/
 
 # macOS
 .DS_Store
+.AppleDouble
+.LSOverride
+
+# Streamlit secrets (never commit)
+.streamlit/secrets.toml

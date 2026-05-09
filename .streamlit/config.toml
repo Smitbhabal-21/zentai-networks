@@ -1,0 +1,7 @@
+[theme]
+base="dark"
+primaryColor="#00E5FF"
+font="sans serif"
+
+[server]
+runOnSave = true

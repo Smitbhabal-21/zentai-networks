@@ -84,16 +84,72 @@ def get_incidents(company_key: str) -> dict:
         "incidents": incidents, "market_signals": signals,
     }
 
-def _fetch_signals() -> dict: return {"vix": {"change_pct": 2.4, "price": 14.2},"oil": {"change_pct": 1.1, "price": 79.2},"shipping": {"change_pct": 3.7, "price": 1100},"wheat": {"change_pct": -0.4, "price": 605}}
-def _severity_from_signal(trigger: str, signals: dict) -> str: return random.choices(["high", "medium", "low"], weights=[0.2, 0.4, 0.4])[0]
+def _fetch_signals() -> dict:
+    """Fetch live market signal data from Yahoo Finance for incident severity weighting."""
+    try:
+        import yfinance as yf
+        tickers = {"vix": "^VIX", "oil": "CL=F", "shipping": "^BDI", "wheat": "ZW=F"}
+        signals = {}
+        for key, sym in tickers.items():
+            try:
+                hist = yf.Ticker(sym).history(period="5d")
+                if len(hist) >= 2:
+                    price = float(hist["Close"].iloc[-1])
+                    prev = float(hist["Close"].iloc[-2])
+                    change_pct = round((price - prev) / prev * 100, 2)
+                    signals[key] = {"price": round(price, 2), "change_pct": change_pct}
+                else:
+                    signals[key] = {"price": 0, "change_pct": 0}
+            except Exception:
+                signals[key] = {"price": 0, "change_pct": 0}
+        return signals
+    except Exception:
+        # Fallback to reasonable defaults if Yahoo Finance is unavailable
+        return {
+            "vix": {"change_pct": 0, "price": 15.0},
+            "oil": {"change_pct": 0, "price": 75.0},
+            "shipping": {"change_pct": 0, "price": 1000},
+            "wheat": {"change_pct": 0, "price": 600},
+        }
+
+
+def _severity_from_signal(trigger: str, signals: dict) -> str:
+    """Determine incident severity based on live market signal magnitude."""
+    sig = signals.get(trigger, {})
+    change = abs(sig.get("change_pct", 0))
+    if change > 3:
+        return random.choices(["high", "medium"], weights=[0.7, 0.3])[0]
+    elif change > 1.5:
+        return random.choices(["high", "medium", "low"], weights=[0.3, 0.5, 0.2])[0]
+    return random.choices(["medium", "low"], weights=[0.4, 0.6])[0]
+
+
 def _risk_score(severity: str, impact_areas: list) -> int:
     base = {"high": 75, "medium": 50, "low": 25}.get(severity, 40)
     return min(99, base + min(20, len(impact_areas) * 5) + random.randint(-5, 5))
+
+
 def _random_timestamp(min_hours: int, max_hours: int) -> str:
     ts = datetime.now() - timedelta(minutes=random.randint(min_hours * 60, max_hours * 60))
     return ts.strftime("%Y-%m-%d %H:%M")
+
+
 def _business_impact(severity: str, risk_score: int) -> str:
-    if severity == "high": return f"Estimated ${random.randint(4, 25)}M revenue at risk. Heavy executive escalation."
-    if severity == "medium": return f"Margin compression projected. EBITDA impact ~${random.randint(500, 2000)}K if unmitigated."
+    if severity == "high":
+        return f"Estimated ${random.randint(4, 25)}M revenue at risk. Heavy executive escalation."
+    if severity == "medium":
+        return f"Margin compression projected. EBITDA impact ~${random.randint(500, 2000)}K if unmitigated."
     return "Monitoring potential disruption. Negligible immediate financial impact."
-def _recommended_action(category: str) -> str: return "Activate established cross-functional contingency protocols."
+
+
+def _recommended_action(category: str) -> str:
+    actions = {
+        "Macroeconomic": "Convene treasury and capital allocation task force. Review hedging positions.",
+        "Geopolitical": "Activate geopolitical risk playbook. Brief regional GMs on contingency protocols.",
+        "Energy": "Engage fuel procurement team. Evaluate forward contract lock-ins.",
+        "Logistics": "Deploy alternate routing plans. Coordinate with carrier management.",
+        "Agricultural": "Review commodity futures positions. Activate supplier diversification.",
+        "Supply Chain": "Escalate to supply chain command center. Audit Tier-2 supplier exposure.",
+    }
+    return actions.get(category, "Activate established cross-functional contingency protocols.")
+

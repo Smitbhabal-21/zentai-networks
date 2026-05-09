@@ -3,7 +3,7 @@
 ## 1. Introduction
 Modern supply chains require more than just tracking; they demand real-time visibility and predictive risk assessment. The **Zentai Networks Terminal** is an end-to-end operational intelligence system designed to bridge the gap between financial performance, global macro-markets, and supply chain resilience. 
 
-Built as a capstone project for the MITA program, the terminal demonstrates a full-stack, enterprise-grade architecture. By integrating highly volatile financial data with custom anomaly-detection models, the platform proactively identifies hidden supply chain distributions before they impact executive KPIs. It delivers this intelligence through a high-performance React dashboard tailored for rapid decision-making across three dummy business units (Citi Bank, Bakery, and Steelworks).
+Built as a capstone project for the MITA program, the terminal demonstrates a full-stack, enterprise-grade architecture. By integrating highly volatile financial data with custom anomaly-detection models, the platform proactively identifies hidden supply chain distributions before they impact executive KPIs. It delivers this intelligence through a high-performance React dashboard tailored for rapid decision-making across ten real-world corporate portfolios (Citi Bank, DHL Logistics, McDonald's, Apple, ExxonMobil, Johnson & Johnson, Procter & Gamble, Ford Motor Co., AT&T, and Walmart).
 
 ## 2. Dataset Overview
 To emulate highly volatile, realistic corporate operations without relying on stagnant CSV files, the data pipeline dynamically ingests comprehensive financial datasets from real-world proxies via **Yahoo Finance (`yfinance`) API** (such as Citi Bank (C), DHL (DHLGY), and McDonald's (MCD)).
