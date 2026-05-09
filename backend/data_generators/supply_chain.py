@@ -5,7 +5,7 @@ Computes inventory turnover, days-on-hand, payables period, fulfillment proxy.
 import yfinance as yf
 import pandas as pd
 import numpy as np
-from data_generators.company_map import COMPANY_MAP
+from backend.data_generators.company_map import COMPANY_MAP
 
 
 def get_supply_chain(company_key: str) -> dict:

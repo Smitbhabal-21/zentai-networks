@@ -3,10 +3,10 @@ AI Advisory Data Generator.
 Combines real-time financial/risk data with researched historical context (2024-2025)
 to generate actionable profit-enhancement strategies.
 """
-from data_generators.company_map import COMPANY_MAP
-from data_generators.financial import get_financials
-from data_generators.stock import get_stock_history
-from data_generators.risk import get_risk_analytics
+from backend.data_generators.company_map import COMPANY_MAP
+from backend.data_generators.financial import get_financials
+from backend.data_generators.stock import get_stock_history
+from backend.data_generators.risk import get_risk_analytics
 
 RESEARCH_DB = {
     "citi": {

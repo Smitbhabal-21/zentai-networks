@@ -3,7 +3,7 @@ Insider Trading Data Generator.
 Scrapes SEC-filed insider transactions (Buys/Sells) from Yahoo Finance.
 """
 import yfinance as yf
-from data_generators.company_map import COMPANY_MAP
+from backend.data_generators.company_map import COMPANY_MAP
 
 def get_insider_trading(company_key: str) -> dict:
     info = COMPANY_MAP.get(company_key)

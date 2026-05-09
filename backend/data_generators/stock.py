@@ -4,7 +4,7 @@ Stock data generator — fetches real OHLCV data from Yahoo Finance.
 import yfinance as yf
 import pandas as pd
 import numpy as np
-from data_generators.company_map import COMPANY_MAP
+from backend.data_generators.company_map import COMPANY_MAP
 
 
 def get_stock_history(company_key: str, period: str = "1y") -> dict:

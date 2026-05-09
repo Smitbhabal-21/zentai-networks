@@ -3,10 +3,10 @@ Executive Briefing Room - Contextual Chat Engine.
 A rule-based Natural Language Generator that acts like an LLM.
 It parses current financial, risk, and sentiment context to answer user queries.
 """
-from data_generators.company_map import COMPANY_MAP
-from data_generators.financial import get_financials
-from data_generators.risk import get_risk_analytics
-from data_generators.ai_ensemble import get_ensemble_recommendation
+from backend.data_generators.company_map import COMPANY_MAP
+from backend.data_generators.financial import get_financials
+from backend.data_generators.risk import get_risk_analytics
+from backend.data_generators.ai_ensemble import get_ensemble_recommendation
 import re
 
 def generate_chat_response(query: str, company_key: str) -> str:

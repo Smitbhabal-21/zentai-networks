@@ -8,7 +8,7 @@ import numpy as np
 from sklearn.ensemble import IsolationForest
 from sklearn.preprocessing import MinMaxScaler
 import shap
-from data_generators.company_map import COMPANY_MAP
+from backend.data_generators.company_map import COMPANY_MAP
 
 
 def get_risk_analytics(company_key: str) -> dict:
@@ -48,7 +48,7 @@ def get_risk_analytics(company_key: str) -> dict:
         current_drawdown = float(hist["drawdown"].iloc[-1] * 100)
 
         # NLP Sentiment Overlay
-        from data_generators.nlp_sentiment import calculate_nlp_sentiment
+        from backend.data_generators.nlp_sentiment import calculate_nlp_sentiment
         sentiment_data = calculate_nlp_sentiment(ticker, company_name=info["name"])
         nlp_score = sentiment_data.get("score", 0.0)
 

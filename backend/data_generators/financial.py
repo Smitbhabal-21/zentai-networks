@@ -5,7 +5,7 @@ Derives quarterly revenue, margins, EBITDA, and composite health score.
 import yfinance as yf
 import pandas as pd
 import numpy as np
-from data_generators.company_map import COMPANY_MAP
+from backend.data_generators.company_map import COMPANY_MAP
 
 
 def get_financials(company_key: str) -> dict:

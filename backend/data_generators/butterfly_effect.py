@@ -3,7 +3,7 @@ Butterfly Effect Causal Engine.
 Generates step-by-step impact chains linking global macro incidents
 to specific vulnerabilities within a company's balance sheet or supply chain.
 """
-from data_generators.company_map import COMPANY_MAP
+from backend.data_generators.company_map import COMPANY_MAP
 import random
 
 # Core global incidents that we map from
