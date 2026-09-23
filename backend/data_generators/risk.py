@@ -7,7 +7,6 @@ import pandas as pd
 import numpy as np
 from sklearn.ensemble import IsolationForest
 from sklearn.preprocessing import MinMaxScaler
-import shap
 from backend.data_generators.company_map import COMPANY_MAP
 
 
@@ -28,7 +27,9 @@ def get_risk_analytics(company_key: str) -> dict:
         hist["price_zscore"] = (hist["Close"] - hist["Close"].rolling(20).mean()) / hist["Close"].rolling(20).std()
         hist["drawdown"] = (hist["Close"] / hist["Close"].cummax()) - 1
 
-        hist = hist.dropna()
+        hist = hist.replace([np.inf, -np.inf], np.nan).dropna()
+        if len(hist) < 60:
+            return {"error": "At least 60 valid observations are required."}
 
         features = ["returns", "volatility_20d", "volume_zscore", "price_zscore", "drawdown"]
         X = hist[features].values
@@ -50,7 +51,7 @@ def get_risk_analytics(company_key: str) -> dict:
         # NLP Sentiment Overlay
         from backend.data_generators.nlp_sentiment import calculate_nlp_sentiment
         sentiment_data = calculate_nlp_sentiment(ticker, company_name=info["name"])
-        nlp_score = sentiment_data.get("score", 0.0)
+        nlp_score = sentiment_data.get("score") or 0.0
 
         # NLP Penalty: Negative sentiment increases risk
         nlp_penalty = 0
@@ -74,15 +75,6 @@ def get_risk_analytics(company_key: str) -> dict:
         # SHAP explainability
         shap_values = _compute_shap(iso, X, features, hist)
 
-        # Add NLP to SHAP
-        if nlp_score != 0:
-            shap_values.append({
-                "feature": "NLP News Sentiment",
-                "shap_value": round(float(-nlp_score * 0.1), 4) # Negative sentiment = negative SHAP (higher anomaly)
-            })
-            # Re-sort SHAP by absolute value
-            shap_values.sort(key=lambda x: abs(x["shap_value"]), reverse=True)
-
         # VaR (Value at Risk) — 95% 1-day
         var_95 = float(np.percentile(hist["returns"].dropna(), 5) * 100)
 
@@ -105,6 +97,9 @@ def get_risk_analytics(company_key: str) -> dict:
             "anomaly_events": anomaly_list,
             "timeline": timeline_list,
             "shap": shap_values,
+            "explanation_method": "Linear surrogate of anomaly model" if shap_values else "unavailable",
+            "as_of": str(hist["Date"].iloc[-1]),
+            "methodology": "Relative Isolation Forest anomaly score within a two-year history; not a probability of loss.",
             "nlp_sentiment": sentiment_data,
         }
     except Exception as e:
@@ -113,6 +108,7 @@ def get_risk_analytics(company_key: str) -> dict:
 
 def _compute_shap(model, X, features, hist):
     try:
+        import shap
         # Use a linear surrogate for SHAP on IsolationForest scores
         from sklearn.linear_model import LinearRegression
         scores = model.score_samples(X)
@@ -137,5 +133,4 @@ def _compute_shap(model, X, features, hist):
         result.sort(key=lambda x: abs(x["shap_value"]), reverse=True)
         return result
     except Exception:
-        features_labels = ["Daily Returns", "20D Volatility", "Volume Z-Score", "Price Z-Score", "Drawdown"]
-        return [{"feature": f, "shap_value": round(np.random.uniform(-0.1, 0.1), 4)} for f in features_labels]
+        return []

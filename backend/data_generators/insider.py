@@ -3,6 +3,7 @@ Insider Trading Data Generator.
 Scrapes SEC-filed insider transactions (Buys/Sells) from Yahoo Finance.
 """
 import yfinance as yf
+import pandas as pd
 from backend.data_generators.company_map import COMPANY_MAP
 
 def get_insider_trading(company_key: str) -> dict:
@@ -19,7 +20,7 @@ def get_insider_trading(company_key: str) -> dict:
         insider_df = stock.insider_transactions
         
         if insider_df is None or insider_df.empty:
-            return {"company": info["name"], "transactions": []}
+            return {"company": info["name"], "transactions": [], "status": "unavailable"}
             
         # Clean and format the data
         # Common columns: 'Shares', 'Value', 'URL', 'Text', 'Insider', 'Position', 'Transaction', 'Start Date', 'Ownership'
@@ -62,12 +63,12 @@ def get_insider_trading(company_key: str) -> dict:
             
         return {
             "company": info["name"],
-            "transactions": transactions
+            "transactions": transactions, "source": "Yahoo Finance insider transactions", "status": "available"
         }
 
     except Exception as e:
         print(f"Error fetching insider data for {ticker}: {e}")
-        return {"company": info["name"], "transactions": []}
+        return {"company": info["name"], "transactions": [], "status": "unavailable"}
 
 if __name__ == "__main__":
     import pandas as pd

@@ -46,7 +46,9 @@ def get_historical_parallel(company_key: str, window: int = 30) -> dict:
         if len(hist) < window * 3:
             return {"error": "Not enough historical data"}
             
-        hist = hist[['Open', 'High', 'Low', 'Close']].reset_index()
+        hist = hist[['Open', 'High', 'Low', 'Close']].replace([np.inf, -np.inf], np.nan).dropna().reset_index()
+        if len(hist) < window * 3:
+            return {'error': 'Not enough complete historical observations.'}
         hist['Date'] = hist['Date'].dt.strftime('%Y-%m-%d')
         
         current_slice = hist.tail(window).copy()
@@ -63,7 +65,7 @@ def get_historical_parallel(company_key: str, window: int = 30) -> dict:
         best_corr = -1.0
         best_idx = -1
         
-        end_search_idx = len(hist) - (window * 2) - 30
+        end_search_idx = len(hist) - (window * 3) + 1
         prices_array = hist['Close'].values
         
         for i in range(end_search_idx):
@@ -74,7 +76,7 @@ def get_historical_parallel(company_key: str, window: int = 30) -> dict:
             h_norm = (hist_slice - h_mean) / h_std
             
             corr, _ = pearsonr(current_norm, h_norm)
-            if corr > best_corr:
+            if np.isfinite(corr) and corr > best_corr:
                 best_corr = corr
                 best_idx = i
                 
@@ -102,6 +104,7 @@ def get_historical_parallel(company_key: str, window: int = 30) -> dict:
         
         return {
             "ticker": ticker,
+            "as_of": str(current_slice["Date"].iloc[-1]),
             "correlation_score": round(best_corr * 100, 1),
             "match_start": match_period['Date'].iloc[0],
             "match_end": match_period['Date'].iloc[-1],

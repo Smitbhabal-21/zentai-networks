@@ -9,7 +9,7 @@ from backend.data_generators.stock import get_stock_history
 from backend.data_generators.risk import get_risk_analytics
 
 RESEARCH_DB = {
-    "citi": {
+    "citi_bank": {
         "context": "Citi reported $85.2B revenue in 2025 (up 6%), demonstrating positive operating leverage from its multi-year simplification strategy. The bank has focused heavily on 5 core businesses and divesting international consumer franchises (like Banamex).",
         "challenges": [
             "Operating under stringent regulatory consent orders requiring vast remediation.",
@@ -84,7 +84,7 @@ RESEARCH_DB = {
             }
         ]
     },
-    "aapl": {
+    "apple": {
         "context": "Apple reported record fiscal 2025 revenue of $416.16B (up 6.43%). Growth was driven by resilient premium iPhone demand and record-breaking Services revenue (>26% of total). The company launched its privacy-centric 'Apple Intelligence' strategy.",
         "challenges": [
             "Intense competitive pressure in China from domestic rivals (Huawei, Xiaomi).",
@@ -109,7 +109,7 @@ RESEARCH_DB = {
             }
         ]
     },
-    "xom": {
+    "exxon": {
         "context": "ExxonMobil delivered $28.8B in 2025 earnings and record production (4.7M boe/d) from advantaged assets like the Permian and Guyana. The company pursues a 'dual-engine' strategy, investing heavily in traditional oil while committing up to $30B to low-carbon solutions.",
         "challenges": [
             "Fluctuating crude oil prices and weaker chemical margins.",

@@ -281,8 +281,8 @@ if module == "Executive Briefing Room":
 elif module == "Portfolio Optimization & Macro":
     st.header("Portfolio Optimization & Macro Market Radar")
     
-    st.subheader("Markowitz Efficient Frontier")
-    st.markdown("Simulating Modern Portfolio Theory to find the mathematically optimal asset weights for maximum return and minimum volatility.")
+    st.subheader("Inverse-Volatility Allocation")
+    st.markdown("Allocate using historical inverse volatility. This is not an optimized efficient frontier or a prediction of future returns.")
     
     capital = st.number_input("Total Investment Capital ($)", min_value=100.0, value=10000.0, step=1000.0, format="%.2f")
     
@@ -303,7 +303,7 @@ elif module == "Portfolio Optimization & Macro":
             values = list(opt_data['dollar_allocations'].values())
             
             fig = go.Figure(data=[go.Pie(labels=labels, values=values, hole=.4, textinfo='label+value', texttemplate="$%{value:,.2f}", marker=dict(colors=px.colors.sequential.Tealgrn))])
-            fig.update_layout(title_text="Optimal Capital Distribution", paper_bgcolor="rgba(0,0,0,0)", font_color="var(--text-color)", margin=dict(t=50, b=0, l=0, r=0))
+            fig.update_layout(title_text="Optimal Capital Distribution", paper_bgcolor="rgba(0,0,0,0)", font_color="#cbd5e1", margin=dict(t=50, b=0, l=0, r=0))
             st.plotly_chart(fig, use_container_width=True)
             
         with c2:
@@ -333,18 +333,18 @@ elif module == "Portfolio Optimization & Macro":
         st.markdown(f"<div style='text-align: center; padding: 20px; border: 1px solid {color}; border-radius: 10px; background: var(--secondary-background-color);'><h3 style='margin:0; color:{color};'>SYSTEM STATE: {macro['market_state']}</h3></div>", unsafe_allow_html=True)
 
 elif module == "AI Investment & Risk Directive":
-    st.subheader("Multi-AI Consensus Directive")
+    st.subheader("Descriptive Market Signals")
     with st.spinner("Running ensemble models..."):
         ai_data = get_ensemble_recommendation(selected_key)
         
     consensus = ai_data["consensus"]
-    confidence = ai_data["confidence"]
+    confidence = ai_data.get("agreement_pct")
     color_class = consensus.lower().replace(" ", "-")
     
     st.markdown(f'''
     <div class="ensemble-card {color_class}">
         <h2 style="margin:0;">{consensus}</h2>
-        <p style="margin:0; opacity:0.8;">Confidence Level: {confidence}%</p>
+        <p style="margin:0; opacity:0.8;">Signal agreement: {str(confidence) + "%" if confidence is not None else "Unavailable"} (not predictive confidence)</p>
         <hr style="opacity:0.2;">
         <p><b>AI Reasoning:</b> {"<br>".join(ai_data.get('justifications', []))}</p>
     </div>
@@ -352,7 +352,7 @@ elif module == "AI Investment & Risk Directive":
     
     st.divider()
     st.subheader("Intrinsic Valuation (DCF Engine)")
-    st.markdown("Calculates the true mathematical value of the company based on projected cash flows.")
+    st.markdown("Estimates a simplified value under explicit cash-flow growth and discount-rate assumptions.")
     with st.spinner("Calculating Discounted Cash Flows..."):
         ticker = COMPANY_MAP[selected_key]['ticker']
         dcf = get_intrinsic_value(ticker)
@@ -363,11 +363,15 @@ elif module == "AI Investment & Risk Directive":
         d2.metric("Calculated Intrinsic Value", f"${dcf['intrinsic_value']}")
         d3.metric("Margin of Safety", f"{dcf['margin_of_safety_pct']}%")
         
-        if dcf['status'] == "Undervalued":
-            st.success(f"**Actionable Intel:** {selected_name} is fundamentally UNDERVALUED. The market is pricing it below its intrinsic cash-generating capability.")
+        if dcf['status'] == "Below model estimate":
+            st.info("Market price is below this scenario's model estimate.")
         else:
-            st.warning(f"**Actionable Intel:** {selected_name} is fundamentally OVERVALUED. The current price requires highly optimistic future growth assumptions.")
-            
+            st.info("Market price is above this scenario's model estimate.")
+        st.caption(dcf['methodology'])
+        st.json(dcf['assumptions'])
+    else:
+        st.warning(dcf['error'])
+
     st.divider()
     st.subheader("Financial Health & ML Risk")
     with st.spinner("Fetching fundamentals..."):
@@ -378,7 +382,7 @@ elif module == "AI Investment & Risk Directive":
     col1, col2, col3, col4 = st.columns(4)
     col1.metric("Revenue (M)", f"${kpis.get('revenue_m') or 0:,.0f}M")
     col2.metric("Gross Margin", f"{kpis.get('gross_margin_pct') or 0}%")
-    col3.metric("Unified Business Health Score", f"{risk_data.get('current_risk_score', 0)}/100")
+    col3.metric("Relative Anomaly Score", f"{risk_data.get('current_risk_score', 0)}/100")
     col4.metric("Volatility", f"{risk_data.get('volatility_pct', 0)}%")
     
     quarterly = fin_data.get("quarterly", [])
@@ -387,7 +391,7 @@ elif module == "AI Investment & Risk Directive":
         fig = px.bar(df, x="period", y=["revenue_m", "gross_profit_m"], barmode="group",
                      title="Quarterly Revenue vs Gross Profit (M USD)",
                      color_discrete_sequence=["#00E5FF", "#8B5CF6"])
-        fig.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)", font_color="var(--text-color)")
+        fig.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)", font_color="#cbd5e1")
         st.plotly_chart(fig, use_container_width=True)
 
 elif module == "Algorithmic Backtester":
@@ -412,16 +416,16 @@ elif module == "Algorithmic Backtester":
             m1, m2, m3, m4 = st.columns(4)
             alpha = bt_data['alpha_pct']
             
-            m1.metric("Strategy Return", f"{bt_data['total_strategy_return_pct']}%", f"Alpha: {alpha}%")
-            m2.metric("Buy & Hold Return", f"{bt_data['total_benchmark_return_pct']}%")
+            m1.metric("Strategy Return", f"{bt_data['strategy_return_pct']}%", f"Alpha: {alpha}%")
+            m2.metric("Buy & Hold Return", f"{bt_data['buyhold_return_pct']}%")
             m3.metric("Max Drawdown", f"{bt_data['max_drawdown_pct']}%", delta_color="inverse")
             m4.metric("Trades Executed", bt_data['trades_executed'])
             
             st.markdown(f"#### Equity Curve: {strategy_option} vs Benchmark")
             df_plot = pd.DataFrame({
-                "Date": pd.to_datetime(bt_data['plot_data']['date']),
-                "Strategy": bt_data['plot_data']['strategy_equity'],
-                "Buy & Hold": bt_data['plot_data']['benchmark_equity']
+                "Date": pd.to_datetime(bt_data['dates']),
+                "Strategy": bt_data['strategy_curve'],
+                "Buy & Hold": bt_data['buyhold_curve']
             })
             
             fig = go.Figure()
@@ -441,7 +445,7 @@ elif module == "Global Operations & Causal History":
         lats = [n['lat'] for n in geo_data['nodes']]
         lons = [n['lon'] for n in geo_data['nodes']]
         names = [f"<b>{n['name']}</b><br>Status: {n['status']}" for n in geo_data['nodes']]
-        colors = ['#00E5FF' if n['status'] == 'Safe' else '#ef4444' for n in geo_data['nodes']]
+        colors = ['#00E5FF' if n['status'] == 'Operational (Safe)' else '#ef4444' for n in geo_data['nodes']]
         
         fig_map.add_trace(go.Scattergeo(lon=lons, lat=lats, text=names, mode='markers', marker=dict(size=12, color=colors)))
         fig_map.update_geos(projection_type="orthographic", showcoastlines=True, showland=True, bgcolor="rgba(0,0,0,0)")
@@ -479,7 +483,7 @@ elif module == "Global Operations & Causal History":
                             open=df_c['Open'], high=df_c['High'],
                             low=df_c['Low'], close=df_c['Close'],
                             increasing_line_color='#00E5FF', decreasing_line_color='#ef4444')])
-            fig_c.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font_color="var(--text-color)", margin=dict(l=0, r=0, t=30, b=0), xaxis_rangeslider_visible=False)
+            fig_c.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font_color="#cbd5e1", margin=dict(l=0, r=0, t=30, b=0), xaxis_rangeslider_visible=False)
             st.plotly_chart(fig_c, use_container_width=True)
 
         with col2:
@@ -489,43 +493,29 @@ elif module == "Global Operations & Causal History":
                             open=df_h['Open'], high=df_h['High'],
                             low=df_h['Low'], close=df_h['Close'],
                             increasing_line_color='#00E5FF', decreasing_line_color='#ef4444')])
-            fig_h.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font_color="var(--text-color)", margin=dict(l=0, r=0, t=30, b=0), xaxis_rangeslider_visible=False)
+            fig_h.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font_color="#cbd5e1", margin=dict(l=0, r=0, t=30, b=0), xaxis_rangeslider_visible=False)
             st.plotly_chart(fig_h, use_container_width=True)
 
 
 
 elif module == "Market Intelligence & Insiders":
-    st.subheader("Global Capital Flow Tracker")
-    st.markdown("Tracks the origination and demographic breakdown of real-time capital deployment.")
-    
-    with st.spinner("Analyzing global volume flows..."):
-        ticker = COMPANY_MAP[selected_key]['ticker']
-        flow = get_options_flow(ticker)
-        
-    if "error" not in flow:
-        c1, c2 = st.columns(2)
-        c1.metric("Total Traded Volume", f"{flow['total_volume_millions']}M Options")
-        
-        color = flow['sentiment_color']
-        c2.markdown(f"<div style='text-align: center; padding: 10px; border: 1px solid {color}; border-radius: 10px; background: var(--secondary-background-color);'><h4 style='margin:0; color:{color};'>GLOBAL TREND: {flow['overall_sentiment']}</h4></div>", unsafe_allow_html=True)
-        
-        st.markdown("<br>#### Capital Demographics", unsafe_allow_html=True)
-        col_inst, col_ret = st.columns([flow['institutional_pct'], flow['retail_pct']])
-        with col_inst:
-            st.markdown(f"<div style='background-color: #8B5CF6; padding: 10px; text-align: center; border-radius: 5px 0 0 5px; color: white;'><b>{flow['institutional_pct']}%</b><br>Institutional</div>", unsafe_allow_html=True)
-        with col_ret:
-            st.markdown(f"<div style='background-color: #00E5FF; padding: 10px; text-align: center; border-radius: 0 5px 5px 0; color: black;'><b>{flow['retail_pct']}%</b><br>Retail</div>", unsafe_allow_html=True)
-            
-        st.markdown("<br>#### Geographic Origination", unsafe_allow_html=True)
-        df_geo = pd.DataFrame(flow['geographic_flows'])
-        
-        def style_action(val):
-            c = '#00E5FF' if val == 'Buying' else '#ef4444'
-            return f'color: {c}; font-weight: bold;'
-            
-        st.dataframe(df_geo.style.map(style_action, subset=['Current Action']), use_container_width=True, hide_index=True)
-
-
+    st.subheader("Reported Options Activity")
+    ticker = COMPANY_MAP[selected_key]['ticker']
+    flow = get_options_flow(ticker)
+    if "error" in flow:
+        st.warning(flow["error"])
+    else:
+        c1, c2, c3 = st.columns(3)
+        c1.metric("Call volume", flow['call_volume'])
+        c2.metric("Put volume", flow['put_volume'])
+        c3.metric("Put/call ratio", flow['put_call_ratio'])
+        st.caption(flow['methodology'])
+    st.subheader("Reported Insider Transactions")
+    insiders = get_insider_trading(selected_key)
+    if insiders.get('transactions'):
+        st.dataframe(pd.DataFrame(insiders['transactions']), hide_index=True)
+    else:
+        st.info("Insider transactions unavailable from the provider.")
 
     st.divider()
     st.subheader("Live News")
@@ -592,13 +582,8 @@ elif module == "Sector War-Room":
     c2.markdown(f"<h3 style='text-align: center; color: #8B5CF6;'>{secondary_name}</h3>", unsafe_allow_html=True)
     c2.markdown(f"<div style='text-align: center; font-size: 24px;'>{sec_ai['consensus']}</div>", unsafe_allow_html=True)
     
-    st.markdown("<br>#### AI Competitor Radar", unsafe_allow_html=True)
-    categories = ['Margin Health', 'Low Volatility', 'News Sentiment', 'Revenue Growth', 'Safety']
-    p_radar = [80, 90, 70, 60, 85] # Simulated normalization for UI speed
-    s_radar = [60, 70, 80, 90, 65]
-    
-    fig = go.Figure()
-    fig.add_trace(go.Scatterpolar(r=p_radar, theta=categories, fill='toself', name=selected_name, line_color='#00E5FF'))
-    fig.add_trace(go.Scatterpolar(r=s_radar, theta=categories, fill='toself', name=secondary_name, line_color='#8B5CF6'))
-    fig.update_layout(polar=dict(radialaxis=dict(visible=True, range=[0, 100])), paper_bgcolor="rgba(0,0,0,0)")
-    st.plotly_chart(fig, use_container_width=True)
+    st.subheader("Reported Financial Comparison")
+    first = get_financials(selected_key)
+    second = get_financials(secondary_key)
+    st.dataframe(pd.DataFrame({selected_name: first.get('latest_kpis', {}), secondary_name: second.get('latest_kpis', {})}))
+    st.caption("Fiscal periods can differ; missing metrics remain unavailable. No simulated radar scores are used.")

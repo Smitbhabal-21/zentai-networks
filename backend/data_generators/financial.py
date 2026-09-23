@@ -43,8 +43,8 @@ def get_financials(company_key: str) -> dict:
         for i, q in enumerate(quarters):
             rev = revenue[i]
             gp = gross_profit[i]
-            gross_margin = round((gp / rev * 100), 1) if rev and gp else None
-            net_margin = round((net_income[i] / rev * 100), 1) if rev and net_income[i] else None
+            gross_margin = round((gp / rev * 100), 1) if rev is not None and rev != 0 and gp is not None else None
+            net_margin = round((net_income[i] / rev * 100), 1) if rev is not None and rev != 0 and net_income[i] is not None else None
             quarterly_data.append({
                 "period": q,
                 "revenue_m": rev,
@@ -81,7 +81,7 @@ def get_financials(company_key: str) -> dict:
         cash = float(bs.loc[cash_row, latest_col]) / 1e6 if cash_row else None
         total_debt = float(bs.loc[debt_row, latest_col]) / 1e6 if debt_row else None
         total_assets = float(bs.loc[assets_row, latest_col]) / 1e6 if assets_row else None
-        debt_to_assets = round(total_debt / total_assets, 3) if total_debt and total_assets else None
+        debt_to_assets = round(total_debt / total_assets, 3) if total_debt is not None and total_assets else None
     except Exception:
         cash = total_debt = total_assets = debt_to_assets = None
 
@@ -93,14 +93,16 @@ def get_financials(company_key: str) -> dict:
         "ticker": info["tag"],
         "industry": info["industry"],
         "quarterly": quarterly_data,
+        "as_of": latest.get("period"),
+        "source": "Yahoo Finance quarterly statements",
         "latest_kpis": {
             "revenue_m": latest.get("revenue_m"),
             "ebitda_m": latest.get("ebitda_m"),
             "gross_margin_pct": latest.get("gross_margin_pct"),
             "net_margin_pct": latest.get("net_margin_pct"),
             "revenue_growth_pct": rev_growth,
-            "cash_m": round(cash, 1) if cash else None,
-            "total_debt_m": round(total_debt, 1) if total_debt else None,
+            "cash_m": round(cash, 1) if cash is not None else None,
+            "total_debt_m": round(total_debt, 1) if total_debt is not None else None,
             "debt_to_assets": debt_to_assets,
         },
         "health_score": health_score,
@@ -109,6 +111,9 @@ def get_financials(company_key: str) -> dict:
 
 def _find_row(df: pd.DataFrame, candidates: list):
     for c in candidates:
+        if c in df.index:
+            return c
+    for c in candidates:
         for idx in df.index:
             if c.lower() in str(idx).lower():
                 return idx
@@ -116,6 +121,8 @@ def _find_row(df: pd.DataFrame, candidates: list):
 
 
 def _compute_health_score(latest: dict, rev_growth, debt_to_assets) -> dict:
+    if any(value is None for value in (latest.get("gross_margin_pct"), latest.get("net_margin_pct"), rev_growth, debt_to_assets)):
+        return {"composite": None, "breakdown": {}, "rating": "Insufficient data"}
     scores = {}
 
     gm = latest.get("gross_margin_pct") or 0
@@ -127,7 +134,7 @@ def _compute_health_score(latest: dict, rev_growth, debt_to_assets) -> dict:
     rg = rev_growth or 0
     scores["revenue_growth"] = min(100, max(0, 50 + rg * 5))  # centered at 0%
 
-    da = debt_to_assets or 0.5
+    da = debt_to_assets if debt_to_assets is not None else 0.5
     scores["debt_ratio"] = min(100, max(0, (1 - da) * 100))   # lower debt → higher
 
     weights = {"gross_margin": 0.30, "net_margin": 0.30, "revenue_growth": 0.25, "debt_ratio": 0.15}

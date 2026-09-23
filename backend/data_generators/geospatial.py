@@ -69,7 +69,7 @@ COMPANY_NODES = {
         {"name": "Tokyo Financial Hub", "lat": 35.6762, "lon": 139.6503, "type": "Operations"},
         {"name": "Frankfurt Euro Clearance", "lat": 50.1109, "lon": 8.6821, "type": "Operations"}
     ],
-    "citi": [
+    "citi_bank": [
         {"name": "New York HQ", "lat": 40.7128, "lon": -74.0060, "type": "Headquarters"},
         {"name": "London European Hub", "lat": 51.5074, "lon": -0.1278, "type": "Operations"},
         {"name": "Hong Kong Asian Hub", "lat": 22.3193, "lon": 114.1694, "type": "Operations"},
@@ -144,6 +144,8 @@ def get_geospatial_exposure(company_key: str) -> dict:
 
     return {
         "company": info["name"],
+        "data_type": "static_reference",
+        "note": "Illustrative facility locations and scenario zones; not a live operational incident feed.",
         "nodes": processed_nodes,
         "danger_zones": render_zones
     }

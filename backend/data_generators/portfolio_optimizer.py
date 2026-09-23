@@ -52,7 +52,13 @@ def optimize_portfolio(tickers: list, period: str = "1y", investment_amount: flo
         # Step 1: Download one year of closing prices for all tickers at once.
         # yfinance batches this into a single API call, which is much faster
         # than calling each ticker individually.
-        data = yf.download(tickers, period=period, progress=False)["Close"]
+        tickers = list(dict.fromkeys(tickers))
+        if len(tickers) < 2 or not np.isfinite(investment_amount) or investment_amount <= 0:
+            return {"error": "Select at least two assets and positive investment capital."}
+        data = yf.download(tickers, period=period, progress=False, auto_adjust=True)["Close"]
+        if any(t not in data.columns for t in tickers):
+            return {"error": "One or more selected assets have no history."}
+        data = data.reindex(columns=tickers)
 
         if data.empty:
             return {"error": "Could not fetch price data for the portfolio."}
@@ -60,7 +66,9 @@ def optimize_portfolio(tickers: list, period: str = "1y", investment_amount: flo
         # Step 2: Convert daily closing prices into daily percentage returns.
         # e.g., if a stock goes from $100 to $103, the daily return is 3%.
         # We drop the first row (NaN) produced by pct_change().
-        returns = data.pct_change().dropna()
+        returns = data.pct_change(fill_method=None).replace([np.inf, -np.inf], np.nan).dropna()
+        if len(returns) < 60 or (returns.std() <= 0).any():
+            return {"error": "Insufficient overlapping history or zero-volatility asset."}
 
         # Step 3: Annualise the metrics.
         # Daily returns × 252 trading days ≈ annual return.
@@ -92,12 +100,12 @@ def optimize_portfolio(tickers: list, period: str = "1y", investment_amount: flo
 
         # Step 6: Convert weights into percentages and dollar allocations.
         weights_dict = {
-            tickers[i]: round(optimal_weights.iloc[i] * 100, 2)
-            for i in range(num_assets)
+            ticker: round(float(optimal_weights.loc[ticker]) * 100, 2)
+            for ticker in tickers
         }
         dollar_dict = {
-            tickers[i]: round(optimal_weights.iloc[i] * investment_amount, 2)
-            for i in range(num_assets)
+            ticker: round(float(optimal_weights.loc[ticker]) * investment_amount, 2)
+            for ticker in tickers
         }
 
         return {
@@ -105,6 +113,8 @@ def optimize_portfolio(tickers: list, period: str = "1y", investment_amount: flo
             "annual_volatility_pct": round(port_volatility * 100, 2),
             "sharpe_ratio": round(sharpe_ratio, 2),
             "optimal_weights": weights_dict,
+            "methodology": "Inverse-volatility allocation, not a solved efficient frontier. Return and Sharpe are historical estimates; risk-free rate assumed zero.",
+            "as_of": str(returns.index[-1])[:10],
             "dollar_allocations": dollar_dict,
         }
 

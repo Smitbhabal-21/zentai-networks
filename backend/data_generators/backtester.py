@@ -28,7 +28,7 @@ import pandas as pd
 import numpy as np
 
 
-def run_backtest(ticker: str, strategy: str = "SMA Crossover", period: str = "5y") -> dict:
+def run_backtest(ticker: str, strategy: str = "SMA Crossover", period: str = "5y", cost_bps: float = 10) -> dict:
     """
     Runs a full quantitative backtest for the given ticker and strategy.
 
@@ -50,14 +50,16 @@ def run_backtest(ticker: str, strategy: str = "SMA Crossover", period: str = "5y
         }
     """
     try:
+        if not 0 <= cost_bps <= 100:
+            return {"error": "Trading cost must be between 0 and 100 basis points."}
         stock = yf.Ticker(ticker)
-        df = stock.history(period=period)
+        df = stock.history(period=period, auto_adjust=True)
 
         if df.empty:
             return {"error": f"No historical data found for {ticker}."}
 
         # Calculate the daily percentage change in closing price
-        df["Daily Return"] = df["Close"].pct_change()
+        df["Daily Return"] = df["Close"].pct_change(fill_method=None)
 
         # ----------------------------------------------------------------
         # Build the trading signal for the chosen strategy
@@ -115,13 +117,19 @@ def run_backtest(ticker: str, strategy: str = "SMA Crossover", period: str = "5y
         # ----------------------------------------------------------------
 
         # Strategy return = daily market return × whether we were in position
-        df["Strategy Return"] = df["Daily Return"] * df["Position"]
+        df["Turnover"] = df["Position"].fillna(0).diff().abs().fillna(0)
+        df["Strategy Return"] = df["Daily Return"] * df["Position"] - df["Turnover"] * cost_bps / 10000
 
         # Drop rows with NaN values introduced by rolling windows
         df.dropna(inplace=True)
 
         if df.empty:
             return {"error": "Not enough data after calculating indicators."}
+
+        # Charge the opening position as well as subsequent changes in exposure.
+        df["Turnover"] = df["Position"].diff().abs()
+        df.loc[df.index[0], "Turnover"] = abs(df["Position"].iloc[0])
+        df["Strategy Return"] = df["Daily Return"] * df["Position"] - df["Turnover"] * cost_bps / 10000
 
         # Cumulative growth curves (starting at $1.00)
         df["Strategy Curve"] = (1 + df["Strategy Return"]).cumprod()
@@ -134,12 +142,13 @@ def run_backtest(ticker: str, strategy: str = "SMA Crossover", period: str = "5y
 
         # Maximum Drawdown: how far did the strategy fall from its peak?
         # Smaller (less negative) is better.
-        roll_max = df["Strategy Curve"].cummax()
+        roll_max = df["Strategy Curve"].cummax().clip(lower=1.0)
         drawdown = (df["Strategy Curve"] - roll_max) / roll_max
         max_drawdown = drawdown.min() * 100
 
         # Sharpe Ratio: risk-adjusted return (annualised)
-        sharpe = (df["Strategy Return"].mean() * 252) / (df["Strategy Return"].std() * np.sqrt(252))
+        std = df["Strategy Return"].std()
+        sharpe = (df["Strategy Return"].mean() * 252) / (std * np.sqrt(252)) if std > 0 else None
 
         # Format dates as strings for JSON serialisation in the UI
         dates = df.index.strftime("%Y-%m-%d").tolist()
@@ -151,7 +160,11 @@ def run_backtest(ticker: str, strategy: str = "SMA Crossover", period: str = "5y
             "buyhold_return_pct": round(buyhold_return, 2),
             "alpha_pct": round(alpha, 2),
             "max_drawdown_pct": round(max_drawdown, 2),
-            "sharpe_ratio": round(sharpe, 2),
+            "sharpe_ratio": round(sharpe, 2) if sharpe is not None else None,
+            "trades_executed": int(df["Turnover"].sum()),
+            "cost_bps": cost_bps,
+            "as_of": dates[-1],
+            "methodology": "Adjusted close-to-close returns with one-session-lagged positions and per-side trading costs. Not an opening-price execution simulation.",
             "dates": dates,
             "strategy_curve": df["Strategy Curve"].round(4).tolist(),
             "buyhold_curve": df["BuyHold Curve"].round(4).tolist(),

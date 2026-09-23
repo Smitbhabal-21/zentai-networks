@@ -1,0 +1,10 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+  "functions": {
+    "api/analytics.py": {
+      "maxDuration": 60,
+      "excludeFiles": "{node_modules/**,.next/**,.venv/**,tests/**,*.pptx,*.docx,generate_report.py,export_presentation.py,streamlit_app.py}"
+    }
+  }
+}
