@@ -14,19 +14,19 @@ import {
   Legend,
 } from "recharts";
 const axis = {
-  stroke: "#4c5754",
-  tick: { fill: "#8d9994", fontSize: 11 },
+  stroke: "var(--border)",
+  tick: { fill: "var(--muted)", fontSize: 11 },
   tickLine: false,
   axisLine: false,
 };
 const tooltip = {
   contentStyle: {
-    background: "#1a211f",
-    border: "1px solid #34413b",
-    borderRadius: 8,
-    color: "#e8eee9",
+    background: "var(--panel)",
+    border: "1px solid var(--border)",
+    borderRadius: 14,
+    color: "var(--text)",
   },
-  labelStyle: { color: "#aebbb3" },
+  labelStyle: { color: "var(--muted)" },
 };
 export function PriceChart({
   data,
@@ -46,13 +46,13 @@ export function PriceChart({
         >
           <defs>
             <linearGradient id="priceFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#b8ef79" stopOpacity={0.22} />
-              <stop offset="100%" stopColor="#b8ef79" stopOpacity={0} />
+              <stop offset="0%" stopColor="var(--accent)" stopOpacity={0.22} />
+              <stop offset="100%" stopColor="var(--accent)" stopOpacity={0} />
             </linearGradient>
           </defs>
           <CartesianGrid
             vertical={false}
-            stroke="#27302c"
+            stroke="var(--border)"
             strokeDasharray="3 5"
           />
           <XAxis
@@ -81,7 +81,7 @@ export function PriceChart({
           <Area
             dataKey="close"
             type="monotone"
-            stroke="#b8ef79"
+            stroke="var(--accent)"
             strokeWidth={2}
             fill="url(#priceFill)"
             isAnimationActive={false}
@@ -102,7 +102,7 @@ export function Lines({
     <div className="chart">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data}>
-          <CartesianGrid vertical={false} stroke="#27302c" />
+          <CartesianGrid vertical={false} stroke="var(--border)" />
           <XAxis
             dataKey="date"
             {...axis}
@@ -117,7 +117,8 @@ export function Lines({
               key={k}
               type="monotone"
               dataKey={k}
-              stroke={["#b8ef79", "#76a9e8", "#cfb4ff"][i]}
+              stroke={["var(--accent)", "var(--positive)", "var(--purple)"][i]}
+              strokeDasharray={i === 1 ? "6 4" : i === 2 ? "2 3" : undefined}
               dot={false}
               strokeWidth={2}
               isAnimationActive={false}
@@ -133,7 +134,7 @@ export function FinancialChart({ data }: { data: Record<string, any>[] }) {
     <div className="chart">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data}>
-          <CartesianGrid vertical={false} stroke="#27302c" />
+          <CartesianGrid vertical={false} stroke="var(--border)" />
           <XAxis
             dataKey="period"
             {...axis}
@@ -149,14 +150,16 @@ export function FinancialChart({ data }: { data: Record<string, any>[] }) {
           <Bar
             dataKey="revenue_m"
             name="Revenue ($M)"
-            fill="#b8ef79"
-            radius={[4, 4, 0, 0]}
+            fill="var(--accent)"
+            isAnimationActive={false}
+            radius={[6, 6, 0, 0]}
           />
           <Bar
             dataKey="net_income_m"
             name="Net income ($M)"
-            fill="#6d8f77"
-            radius={[4, 4, 0, 0]}
+            fill="var(--positive)"
+            isAnimationActive={false}
+            radius={[6, 6, 0, 0]}
           />
         </BarChart>
       </ResponsiveContainer>

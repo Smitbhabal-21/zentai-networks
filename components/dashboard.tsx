@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Activity,
   ArrowDownRight,
@@ -8,12 +8,14 @@ import {
   ArrowRight,
   BarChart3,
   BookOpen,
-  ChevronDown,
   CircleHelp,
   Clock3,
   Globe2,
   LayoutDashboard,
   Menu,
+  Sun,
+  Moon,
+  Monitor,
   Newspaper,
   Pause,
   Play,
@@ -37,6 +39,7 @@ import {
 import type { MarketResponse, NewsResponse, Quote } from "@/lib/types";
 import { useFeed } from "./use-feed";
 import { FinancialChart, Lines, PriceChart } from "./charts";
+import { BrandMark } from "./brand-mark";
 const navigation = [
   { id: "overview", label: "Market overview", icon: LayoutDashboard },
   { id: "news", label: "Newsroom", icon: Newspaper },
@@ -150,10 +153,7 @@ function Stamp({ quote }: { quote?: Quote }) {
 }
 function CompanyBadge({ company }: { company: Company }) {
   return (
-    <span
-      className="company-badge"
-      style={{ color: company.color, background: `${company.color}13` }}
-    >
+    <span className="company-badge" style={{ borderColor: company.color }}>
       {company.ticker.slice(0, 2)}
     </span>
   );
@@ -220,14 +220,81 @@ export default function Dashboard() {
     [search, setSearch] = useState(""),
     [mobile, setMobile] = useState(false),
     [brief, setBrief] = useState(false);
+  const [appearance, setAppearance] = useState("system");
+  const briefingRef = useRef<HTMLDialogElement>(null);
+  const sidebarRef = useRef<HTMLElement>(null);
+  const menuRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("zentai-appearance");
+      if (saved && ["light", "dark", "system"].includes(saved))
+        setAppearance(saved);
+    } catch {}
+  }, []);
+  useEffect(() => {
+    document.documentElement.dataset.appearance = appearance;
+  }, [appearance]);
+  const changeAppearance = (value: string) => {
+    setAppearance(value);
+    try {
+      localStorage.setItem("zentai-appearance", value);
+    } catch {}
+  };
   useEffect(() => {
     if (!brief) return;
-    const close = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setBrief(false);
+    const trigger = document.activeElement as HTMLElement | null;
+    const dialog = briefingRef.current;
+    dialog?.showModal();
+    return () => {
+      dialog?.close();
+      trigger?.focus();
     };
-    window.addEventListener("keydown", close);
-    return () => window.removeEventListener("keydown", close);
   }, [brief]);
+  useEffect(() => {
+    if (!mobile && !brief) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, [mobile, brief]);
+  useEffect(() => {
+    if (!mobile) return;
+    const sidebar = sidebarRef.current;
+    const focusable = () =>
+      Array.from(
+        sidebar?.querySelectorAll<HTMLElement>("a[href], button, select") || [],
+      ).filter((el) => el.getClientRects().length > 0);
+    focusable()[0]?.focus();
+    const keydown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setMobile(false);
+        requestAnimationFrame(() => menuRef.current?.focus());
+      }
+      if (e.key === "Tab") {
+        const items = focusable(),
+          first = items[0],
+          last = items[items.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last?.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first?.focus();
+        }
+      }
+    };
+    window.addEventListener("keydown", keydown);
+    return () => window.removeEventListener("keydown", keydown);
+  }, [mobile]);
+  useEffect(() => {
+    const desktop = window.matchMedia("(min-width: 761px)");
+    const close = () => {
+      if (desktop.matches) setMobile(false);
+    };
+    desktop.addEventListener("change", close);
+    return () => desktop.removeEventListener("change", close);
+  }, []);
   const [favorites, setFavorites] = useState<string[]>([
     "AAPL",
     "NVDA",
@@ -282,6 +349,8 @@ export default function Dashboard() {
   const navigate = (id: string) => {
     setPage(id);
     setMobile(false);
+    requestAnimationFrame(() => document.getElementById("page-title")?.focus());
+    window.scrollTo({ top: 0 });
   };
   const refresh = () => {
     market.refresh();
@@ -291,6 +360,9 @@ export default function Dashboard() {
   };
   return (
     <div className="app-shell">
+      <a className="skip-link" href="#main-content">
+        Skip to content
+      </a>
       {mobile && (
         <button
           aria-label="Close navigation overlay"
@@ -298,19 +370,35 @@ export default function Dashboard() {
           onClick={() => setMobile(false)}
         />
       )}
-      <aside className={`sidebar ${mobile ? "is-open" : ""}`}>
+      <aside
+        id="workspace-navigation"
+        ref={sidebarRef}
+        className={`sidebar ${mobile ? "is-open" : ""}`}
+        aria-label="Workspace"
+      >
+        <button
+          className="mobile-menu icon-button sidebar-close"
+          aria-label="Close navigation"
+          onClick={() => {
+            setMobile(false);
+            requestAnimationFrame(() => menuRef.current?.focus());
+          }}
+        >
+          <X size={20} />
+        </button>
         <a className="brand" href="/" aria-label="Zentai home">
-          <span className="brand-symbol">Z</span>
+          <BrandMark className="brand-symbol" />
           <span>
-            ZENTAI<small>NETWORKS</small>
+            Zentai<small>NETWORKS</small>
           </span>
         </a>
         <div className="workspace-label">
-          <span className="workspace-avatar">S</span>
+          <span className="workspace-avatar">
+            <Activity size={18} />
+          </span>
           <div>
-            Intelligence workspace<small>Market research terminal</small>
+            Intelligence workspace<small>Markets, in perspective</small>
           </div>
-          <ChevronDown size={14} />
         </div>
         <p className="nav-label">WORKSPACE</p>
         <nav aria-label="Main navigation">
@@ -318,6 +406,7 @@ export default function Dashboard() {
             <button
               key={id}
               className={page === id ? "active" : ""}
+              aria-current={page === id ? "page" : undefined}
               onClick={() => navigate(id)}
             >
               <Icon size={17} />
@@ -377,12 +466,15 @@ export default function Dashboard() {
           </div>
         </div>
       </aside>
-      <div className="main-shell">
+      <div className="main-shell" inert={mobile || undefined}>
         <header className="topbar">
           <div className="breadcrumb">
             <button
               className="mobile-menu icon-button"
               aria-label="Open navigation"
+              ref={menuRef}
+              aria-expanded={mobile}
+              aria-controls="workspace-navigation"
               onClick={() => setMobile(true)}
             >
               <Menu size={20} />
@@ -395,16 +487,33 @@ export default function Dashboard() {
             <span className="public-badge">
               <span className="status-dot" /> PUBLIC FEEDS
             </span>
-            <span className="avatar">ZN</span>
+            <label className="appearance-control">
+              <span className="sr-only">Appearance</span>
+              {appearance === "dark" ? (
+                <Moon size={16} />
+              ) : appearance === "light" ? (
+                <Sun size={16} />
+              ) : (
+                <Monitor size={16} />
+              )}
+              <select
+                aria-label="Appearance"
+                value={appearance}
+                onChange={(e) => changeAppearance(e.target.value)}
+              >
+                <option value="system">System</option>
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+              </select>
+            </label>
           </div>
         </header>
-        <main>
+        <main id="main-content" tabIndex={-1}>
           <div className="page-header">
             <div>
               <p className="eyebrow">THE BIG PICTURE, IN FOCUS</p>
-              <h1>
+              <h1 id="page-title" tabIndex={-1}>
                 {active?.label || "Data & methodology"}
-                <span className="title-dot">.</span>
               </h1>
               <p className="subtitle">
                 {page === "overview"
@@ -541,6 +650,7 @@ export default function Dashboard() {
                     <button
                       className={`icon-button star ${favorites.includes(company.ticker) ? "selected" : ""}`}
                       aria-label={`Toggle ${company.ticker} watchlist`}
+                      aria-pressed={favorites.includes(company.ticker)}
                       onClick={() => toggleFavorite(company.ticker)}
                     >
                       <Star
@@ -569,6 +679,7 @@ export default function Dashboard() {
                         <button
                           key={r}
                           className={range === r ? "active" : ""}
+                          aria-pressed={range === r}
                           onClick={() => setRange(r)}
                         >
                           {r.toUpperCase()}
@@ -687,6 +798,7 @@ export default function Dashboard() {
                                 <button
                                   className={`icon-button star ${favorites.includes(c.ticker) ? "selected" : ""}`}
                                   aria-label={`Toggle ${c.ticker} watchlist`}
+                                  aria-pressed={favorites.includes(c.ticker)}
                                   onClick={() => toggleFavorite(c.ticker)}
                                 >
                                   <Star
@@ -872,7 +984,7 @@ export default function Dashboard() {
           {page === "methodology" && <Methodology />}
           <footer>
             <span>
-              <span className="mini-brand">Z</span> ZENTAI NETWORKS
+              <BrandMark className="mini-brand" /> ZENTAI NETWORKS
             </span>
             <p>
               Public feeds may be delayed. Estimates and scenarios are labeled.
@@ -884,60 +996,81 @@ export default function Dashboard() {
         </main>
       </div>
       {brief && (
-        <div className="modal-backdrop" onClick={() => setBrief(false)}>
-          <section
-            className="briefing-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="brief-title"
-            onClick={(e) => e.stopPropagation()}
+        <dialog
+          ref={briefingRef}
+          className="briefing-modal"
+          aria-labelledby="brief-title"
+          onCancel={() => setBrief(false)}
+          onKeyDown={(e) => {
+            if (e.key !== "Tab") return;
+            const buttons =
+              e.currentTarget.querySelectorAll<HTMLButtonElement>("button");
+            const first = buttons[0],
+              last = buttons[buttons.length - 1];
+            if (e.shiftKey && document.activeElement === first) {
+              e.preventDefault();
+              last?.focus();
+            } else if (!e.shiftKey && document.activeElement === last) {
+              e.preventDefault();
+              first?.focus();
+            }
+          }}
+          onClick={(e) => {
+            const bounds = e.currentTarget.getBoundingClientRect();
+            if (
+              e.target === e.currentTarget &&
+              (e.clientX < bounds.left ||
+                e.clientX > bounds.right ||
+                e.clientY < bounds.top ||
+                e.clientY > bounds.bottom)
+            )
+              setBrief(false);
+          }}
+        >
+          <button
+            className="icon-button close"
+            aria-label="Close briefing"
+            onClick={() => setBrief(false)}
           >
-            <button
-              className="icon-button close"
-              aria-label="Close briefing"
-              onClick={() => setBrief(false)}
-            >
-              <X size={20} />
-            </button>
-            <div className="brief-icon">
-              <Sparkles size={25} />
-            </div>
-            <p className="eyebrow">OBSERVATION-BASED SUMMARY</p>
-            <h2 id="brief-title">Your {company.name} briefing</h2>
-            {quote ? (
-              <p>
-                The latest reported price is{" "}
-                <strong>{money(quote.price, quote.currency)}</strong>, with a
-                day change of <strong>{pct(quote.changePercent)}</strong>. This
-                observation was reported at {date(quote.asOf)} by {quote.source}
-                .
-              </p>
-            ) : (
-              <p>
-                The current quote is unavailable. No price conclusion can be
-                drawn.
-              </p>
-            )}
+            <X size={20} />
+          </button>
+          <div className="brief-icon">
+            <Sparkles size={25} />
+          </div>
+          <p className="eyebrow">OBSERVATION-BASED SUMMARY</p>
+          <h2 id="brief-title">Your {company.name} briefing</h2>
+          {quote ? (
             <p>
-              {news.data?.articles.length
-                ? `${news.data.articles.length} recent headlines are available. The latest: “${news.data.articles[0].title}”`
-                : "No verified timestamped headlines are available in this snapshot."}
+              The latest reported price is{" "}
+              <strong>{money(quote.price, quote.currency)}</strong>, with a day
+              change of <strong>{pct(quote.changePercent)}</strong>. This
+              observation was reported at {date(quote.asOf)} by {quote.source}.
             </p>
-            <p className="note">
-              This summary uses the displayed snapshot. It is not an AI forecast
-              or a trading recommendation.
+          ) : (
+            <p>
+              The current quote is unavailable. No price conclusion can be
+              drawn.
             </p>
-            <button
-              className="button primary"
-              onClick={() => {
-                setBrief(false);
-                navigate("financials");
-              }}
-            >
-              Explore company research <ArrowRight size={15} />
-            </button>
-          </section>
-        </div>
+          )}
+          <p>
+            {news.data?.articles.length
+              ? `${news.data.articles.length} recent headlines are available. The latest: “${news.data.articles[0].title}”`
+              : "No verified timestamped headlines are available in this snapshot."}
+          </p>
+          <p className="note">
+            This summary uses the displayed snapshot. It is not an AI forecast
+            or a trading recommendation.
+          </p>
+          <button
+            className="button primary"
+            onClick={() => {
+              setBrief(false);
+              navigate("financials");
+            }}
+          >
+            Explore company research <ArrowRight size={15} />
+          </button>
+        </dialog>
       )}
     </div>
   );
