@@ -126,6 +126,38 @@ function FeedStatus({
     </div>
   ) : null;
 }
+function ResultWorkflow({
+  state,
+  noun,
+}: {
+  state: "idle" | "loading" | "ready" | "error";
+  noun: string;
+}) {
+  const activeStep = state === "idle" ? 0 : state === "ready" ? 2 : 1;
+  const message = {
+    idle: `Set your inputs, then run the ${noun}.`,
+    loading: `Processing the ${noun}…`,
+    ready: `The ${noun} is ready to explore.`,
+    error: `The ${noun} could not be updated. Retry above.`,
+  }[state];
+  return (
+    <div className={`result-workflow ${state}`} role="status" aria-live="polite">
+      <div className="workflow-steps" aria-label="Analysis workflow">
+        {["Set inputs", "Run analysis", "Explore results"].map((label, i) => (
+          <div
+            className={`workflow-step ${i < activeStep ? "complete" : i === activeStep ? "current" : ""}`}
+            key={label}
+            aria-current={i === activeStep ? "step" : undefined}
+          >
+            <span className="workflow-number">{i + 1}</span>
+            <span>{label}</span>
+          </div>
+        ))}
+      </div>
+      <p>{message}</p>
+    </div>
+  );
+}
 function Change({ value }: { value: number | null | undefined }) {
   return (
     <span
@@ -197,7 +229,7 @@ function Analytics({
     <>
       <FeedStatus {...feed} hasData={!!feed.data} retry={feed.refresh} />
       {feed.data && (
-        <>
+        <div className="result-reveal" key={feed.receivedAt}>
           {children(feed.data)}
           <p className="source">
             <Clock3 size={12} />
@@ -206,7 +238,7 @@ function Analytics({
             Yahoo Finance
             {feed.data.methodology ? ` · ${feed.data.methodology}` : ""}
           </p>
-        </>
+        </div>
       )}
     </>
   );
@@ -1085,7 +1117,10 @@ function NewsList({
   return (
     <>
       <FeedStatus {...feed} hasData={!!feed.data} retry={feed.refresh} />
-      <div className={compact ? "news-list" : "news-grid"}>
+      <div
+        className={`${compact ? "news-list" : "news-grid"} result-reveal`}
+        key={feed.receivedAt}
+      >
         {feed.data?.articles.slice(0, compact ? 4 : 24).map((a, i) => (
           <a
             className="news-item"
@@ -1321,8 +1356,22 @@ function Portfolio({ auto }: { auto: boolean }) {
         ))}
       </div>
       <FeedStatus {...feed} hasData={!!feed.data} retry={feed.refresh} />
+      <ResultWorkflow
+        state={
+          !request
+            ? "idle"
+            : feed.loading
+              ? "loading"
+              : feed.error
+                ? "error"
+                : feed.data
+                  ? "ready"
+                  : "idle"
+        }
+        noun="allocation"
+      />
       {feed.data && (
-        <>
+        <div className="result-reveal" key={feed.receivedAt}>
           <div className="metric-grid">
             <Metric
               label="Historical annualized return"
@@ -1354,7 +1403,7 @@ function Portfolio({ auto }: { auto: boolean }) {
             History through {feed.data.as_of}. Allocation reflects inputs at the
             time Calculate was pressed.
           </p>
-        </>
+        </div>
       )}
     </section>
   );
@@ -1436,8 +1485,22 @@ function Backtest({ company }: { company: Company }) {
         </button>
       </div>
       <FeedStatus {...feed} hasData={!!feed.data} retry={feed.refresh} />
+      <ResultWorkflow
+        state={
+          !request
+            ? "idle"
+            : feed.loading
+              ? "loading"
+              : feed.error
+                ? "error"
+                : feed.data
+                  ? "ready"
+                  : "idle"
+        }
+        noun="simulation"
+      />
       {feed.data && (
-        <>
+        <div className="result-reveal" key={feed.receivedAt}>
           <div className="metric-grid">
             <Metric
               label="Strategy return"
@@ -1468,7 +1531,7 @@ function Backtest({ company }: { company: Company }) {
             Growth of $1. Effective period: {feed.data.dates[0]} –{" "}
             {feed.data.as_of}. Indicator warm-up is excluded.
           </p>
-        </>
+        </div>
       )}
     </section>
   );
