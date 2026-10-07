@@ -20,7 +20,7 @@ Reviewed the Design overview, linked introductions and WWDC design system materi
 - Clear hierarchy: large page titles, prominent prices, quiet metadata, readable news headlines, and consistent spacing across every workspace section.
 - Material hierarchy: translucent navigation, opaque chart and article surfaces. Blur is restricted to a few functional surfaces; the data remains legible.
 - Appearance: semantic light/dark color tokens, system appearance by default, and a persistent manual selector. Charts and tooltips use the same tokens.
-- Brand: an original warm terracotta Z mark appears in navigation, the footer, and the browser icon. Cream and copper tones replace the initial blue palette; green and red remain reserved for market direction.
+- Brand: an original Z mark appears in navigation, the footer, and the browser icon. The current palette pairs clean neutral surfaces and a dark hero with a restrained lime accent. Positive and negative market moves use separate semantic colors.
 - Typography: platform font stack, relative font sizes, regular-to-semibold weights, and tabular numbers for financial values. No third-party font request.
 - Controls: rounded buttons and segmented controls, explicit selected states, 44px primary touch targets, visible keyboard focus, and a skip link.
 - Accessibility: price changes use signs and arrows as well as color; comparative lines use distinct dash patterns; the briefing uses a modal dialog with keyboard cycling and focus restoration; mobile navigation traps focus while open and makes background controls inert.
@@ -32,6 +32,10 @@ Public feed refresh intervals, source timestamps, uncertainty labels, calculatio
 ## Motion and dashboard references
 
 - [Bento dashboard animation](https://www.instagram.com/reel/Dd7AalkTZPY/) informed the mixed-width market cards, contained result tiles, and short staggered reveals.
-- [Cinematic web design reel](https://www.instagram.com/reel/Dd9nhiOyrZU/) informed the ambient glow and sense of depth. Zentai uses warm copper light instead of the reel's neon palette, and keeps financial text on opaque surfaces.
+- [Cinematic web design reel](https://www.instagram.com/reel/Dd9nhiOyrZU/) informed the ambient glow and sense of depth. Zentai keeps financial text on opaque surfaces.
+
+## Color references
+
+The current color direction takes neutral surfaces and contrast cues from [Apple](https://www.apple.com/) and selective high-energy lime from [Robinhood](https://robinhood.com/us/en/). Zentai retains its own mark and layout. Lime marks actions and selection; market gain and loss colors remain semantically distinct.
 
 Motion is decorative and brief. Source timestamps, failure states, and model caveats remain visible. The existing reduced-motion preference disables these animations.
