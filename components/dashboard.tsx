@@ -1372,32 +1372,44 @@ function Portfolio({ auto }: { auto: boolean }) {
       />
       {feed.data && (
         <div className="result-reveal" key={feed.receivedAt}>
-          <div className="metric-grid">
-            <Metric
-              label="Historical annualized return"
-              value={pct(feed.data.expected_annual_return_pct)}
-            />
-            <Metric
-              label="Annualized volatility"
-              value={pct(feed.data.annual_volatility_pct)}
-            />
-            <Metric
-              label="Historical Sharpe ratio"
-              value={number(feed.data.sharpe_ratio)}
-              detail="Risk-free rate assumed 0%"
-            />
+          <div className="result-stage-heading">
+            <div>
+              <p className="eyebrow">HISTORICAL MODEL OUTPUT</p>
+              <h3>Allocation snapshot</h3>
+            </div>
+            <span className="result-ready">Latest completed snapshot</span>
           </div>
-          <div className="allocations">
-            {Object.entries(feed.data.optimal_weights).map(([ticker, w]) => (
-              <div className="allocation-row" key={ticker}>
-                <strong>{ticker}</strong>
-                <div className="allocation-track">
-                  <span style={{ width: `${w}%` }} />
-                </div>
-                <span>{number(w)}%</span>
-                <strong>{money(feed.data.dollar_allocations[ticker])}</strong>
+          <div className="result-stage">
+            <div className="metric-grid">
+              <Metric
+                label="Historical annualized return"
+                value={pct(feed.data.expected_annual_return_pct)}
+              />
+              <Metric
+                label="Annualized volatility"
+                value={pct(feed.data.annual_volatility_pct)}
+              />
+              <Metric
+                label="Historical Sharpe ratio"
+                value={number(feed.data.sharpe_ratio)}
+                detail="Risk-free rate assumed 0%"
+              />
+            </div>
+            <div className="allocation-surface">
+              <p className="eyebrow">WEIGHTS BY COMPANY</p>
+              <div className="allocations">
+                {Object.entries(feed.data.optimal_weights).map(([ticker, w]) => (
+                  <div className="allocation-row" key={ticker}>
+                    <strong>{ticker}</strong>
+                    <div className="allocation-track">
+                      <span style={{ width: `${w}%` }} />
+                    </div>
+                    <span>{number(w)}%</span>
+                    <strong>{money(feed.data.dollar_allocations[ticker])}</strong>
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
           </div>
           <p className="source">
             History through {feed.data.as_of}. Allocation reflects inputs at the
@@ -1501,32 +1513,44 @@ function Backtest({ company }: { company: Company }) {
       />
       {feed.data && (
         <div className="result-reveal" key={feed.receivedAt}>
-          <div className="metric-grid">
-            <Metric
-              label="Strategy return"
-              value={pct(feed.data.strategy_return_pct)}
-            />
-            <Metric
-              label="Buy & hold return"
-              value={pct(feed.data.buyhold_return_pct)}
-            />
-            <Metric
-              label="Max drawdown"
-              value={pct(feed.data.max_drawdown_pct)}
-            />
-            <Metric
-              label="Position changes"
-              value={number(feed.data.trades_executed, 0)}
-            />
+          <div className="result-stage-heading">
+            <div>
+              <p className="eyebrow">HISTORICAL MODEL OUTPUT</p>
+              <h3>Strategy snapshot</h3>
+            </div>
+            <span className="result-ready">Latest completed snapshot</span>
           </div>
-          <Lines
-            data={feed.data.dates.map((d: string, i: number) => ({
-              date: d,
-              Strategy: feed.data.strategy_curve[i],
-              "Buy & hold": feed.data.buyhold_curve[i],
-            }))}
-            keys={["Strategy", "Buy & hold"]}
-          />
+          <div className="result-stage">
+            <div className="metric-grid">
+              <Metric
+                label="Strategy return"
+                value={pct(feed.data.strategy_return_pct)}
+              />
+              <Metric
+                label="Buy & hold return"
+                value={pct(feed.data.buyhold_return_pct)}
+              />
+              <Metric
+                label="Max drawdown"
+                value={pct(feed.data.max_drawdown_pct)}
+              />
+              <Metric
+                label="Position changes"
+                value={number(feed.data.trades_executed, 0)}
+              />
+            </div>
+            <div className="chart-surface">
+              <p className="eyebrow">GROWTH OF $1 · STRATEGY VS BUY & HOLD</p>
+              <Lines
+                data={feed.data.dates.map((d: string, i: number) => ({
+                  date: d,
+                  Strategy: feed.data.strategy_curve[i],
+                  "Buy & hold": feed.data.buyhold_curve[i],
+                }))}
+                keys={["Strategy", "Buy & hold"]}
+              />
+            </div>
+          </div>
           <p className="source">
             Growth of $1. Effective period: {feed.data.dates[0]} –{" "}
             {feed.data.as_of}. Indicator warm-up is excluded.

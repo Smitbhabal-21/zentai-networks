@@ -28,3 +28,10 @@ Reviewed the Design overview, linked introductions and WWDC design system materi
 - Layout: wide desktop grids collapse to a single content column; the data table scrolls within its card on small screens.
 
 Public feed refresh intervals, source timestamps, uncertainty labels, calculations, and API contracts are unchanged by the design work.
+
+## Motion and dashboard references
+
+- [Bento dashboard animation](https://www.instagram.com/reel/Dd7AalkTZPY/) informed the mixed-width market cards, contained result tiles, and short staggered reveals.
+- [Cinematic web design reel](https://www.instagram.com/reel/Dd9nhiOyrZU/) informed the ambient glow and sense of depth. Zentai uses warm copper light instead of the reel's neon palette, and keeps financial text on opaque surfaces.
+
+Motion is decorative and brief. Source timestamps, failure states, and model caveats remain visible. The existing reduced-motion preference disables these animations.
