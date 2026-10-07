@@ -14,12 +14,13 @@ Reviewed the Design overview, linked introductions and WWDC design system materi
 - [Materials](https://developer.apple.com/design/human-interface-guidelines/materials)
 - [Typography](https://developer.apple.com/design/human-interface-guidelines/typography)
 - [Accessibility](https://developer.apple.com/design/human-interface-guidelines/accessibility)
+- [Color](https://developer.apple.com/design/human-interface-guidelines/color)
 
 ## Application
 
 - Clear hierarchy: large page titles, prominent prices, quiet metadata, readable news headlines, and consistent spacing across every workspace section.
 - Material hierarchy: translucent navigation, opaque chart and article surfaces. Blur is restricted to a few functional surfaces; the data remains legible.
-- Appearance: semantic light/dark color tokens, system appearance by default, and a persistent manual selector. Charts and tooltips use the same tokens.
+- Appearance: semantic light/dark color tokens, increased-contrast variants, system appearance by default, and a persistent manual selector. Charts and tooltips use the same tokens.
 - Brand: an original Z mark appears in navigation, the footer, and the browser icon. The current palette pairs clean neutral surfaces and a dark hero with a restrained lime accent. Positive and negative market moves use separate semantic colors.
 - Typography: platform font stack, relative font sizes, regular-to-semibold weights, and tabular numbers for financial values. No third-party font request.
 - Controls: rounded buttons and segmented controls, explicit selected states, 44px primary touch targets, visible keyboard focus, and a skip link.
@@ -37,5 +38,7 @@ Public feed refresh intervals, source timestamps, uncertainty labels, calculatio
 ## Color references
 
 The current color direction takes neutral surfaces and contrast cues from [Apple](https://www.apple.com/) and selective high-energy lime from [Robinhood](https://robinhood.com/us/en/). Zentai retains its own mark and layout. Lime marks actions and selection; market gain and loss colors remain semantically distinct.
+
+Apple's Color guidance also informed a semantic pass: noninteractive market cards use neutral surfaces without status-colored edges or hover motion; gains and losses carry signs and arrows as well as distinct colors; and the custom palette defines stronger variants for increased-contrast light and dark settings.
 
 Motion is decorative and brief. Source timestamps, failure states, and model caveats remain visible. The existing reduced-motion preference disables these animations.
