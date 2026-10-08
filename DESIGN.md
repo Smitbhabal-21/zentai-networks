@@ -44,3 +44,7 @@ Apple's Color guidance also informed a semantic pass: noninteractive market card
 Motion is decorative and brief. Source timestamps, failure states, and model caveats remain visible. The existing reduced-motion preference disables these animations.
 
 The [logo reveal reference](https://www.instagram.com/reel/DctfWOITj85/) and [animated hero reference](https://www.instagram.com/reel/DeM4Xlhhkgu/) informed a short Z stroke draw, a wordmark entrance, and a quiet orbit inside the dashboard header. The feed indicator pulses only during an actual request; the existing source and timing labels remain the authority for data freshness. Motion stops when the user prefers reduced motion.
+
+## Dashboard makeover
+
+The workspace now uses a deep green navigation rail in both appearances, warmer neutral content surfaces, and a dark featured company chart to make the research area visually distinct. The market summary is a compact four-signal strip with small trend lines calculated from the existing three-month price history. Each card retains its latest observation time, while the strip states when the feed snapshot was fetched. The featured chart adds sourced quote facts beneath the graph. On narrow screens, the cards form two columns so the company chart appears sooner. These visual changes do not alter market calculations or data refresh behavior.

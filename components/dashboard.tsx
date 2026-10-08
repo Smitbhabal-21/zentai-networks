@@ -172,6 +172,39 @@ function Change({ value }: { value: number | null | undefined }) {
     </span>
   );
 }
+function MiniTrend({ history }: { history?: Quote["history"] }) {
+  const values =
+    history?.map((point) => point.close).filter(Number.isFinite) || [];
+  if (values.length < 2) {
+    return <span className="trend-unavailable">Trend unavailable</span>;
+  }
+  const low = Math.min(...values);
+  const span = Math.max(...values) - low || 1;
+  const points = values.map(
+    (value, index) =>
+      `${((index / (values.length - 1)) * 100).toFixed(2)},${(36 - ((value - low) / span) * 30).toFixed(2)}`,
+  );
+  const last = points[points.length - 1].split(",");
+  return (
+    <svg
+      className="mini-trend"
+      viewBox="0 0 100 42"
+      preserveAspectRatio="none"
+      aria-hidden="true"
+    >
+      <polyline
+        points={points.join(" ")}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.9"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        vectorEffect="non-scaling-stroke"
+      />
+      <circle cx={last[0]} cy={last[1]} r="2.4" fill="currentColor" />
+    </svg>
+  );
+}
 function Stamp({ quote }: { quote?: Quote }) {
   return quote ? (
     <p className="source">
@@ -551,7 +584,7 @@ export default function Dashboard() {
               </h1>
               <p className="subtitle">
                 {page === "overview"
-                  ? "Follow the market. Understand the signals. Make informed decisions."
+                  ? "A clearer view of the market, with every signal tied to its source."
                   : `Explore ${company.name} with transparent sources and reproducible analytics.`}
               </p>
             </div>
@@ -629,6 +662,18 @@ export default function Dashboard() {
                 hasData={!!market.data}
                 retry={market.refresh}
               />
+              <div className="section-intro">
+                <div>
+                  <p className="eyebrow">MARKET SIGNALS</p>
+                  <h2>At a glance</h2>
+                </div>
+                <p>
+                  {market.data
+                    ? `Snapshot fetched ${date(market.data.fetchedAt)}`
+                    : "Waiting for source data"}
+                  {" · Public feeds may be delayed"}
+                </p>
+              </div>
               <div className="macro-grid">
                 {[
                   { symbol: "SPY", name: "S&P 500 ETF", tag: "US EQUITIES" },
@@ -659,6 +704,10 @@ export default function Dashboard() {
                             : number(q?.price)}
                         </strong>
                         <Change value={q?.changePercent} />
+                      </div>
+                      <div className="macro-trend">
+                        <span>3-MONTH TREND</span>
+                        <MiniTrend history={q?.history} />
                       </div>
                       <small>
                         {q
@@ -746,6 +795,23 @@ export default function Dashboard() {
                     />
                   )}
                   <Stamp quote={quote} />
+                  <div className="chart-facts">
+                    <div>
+                      <span>DAY MOVE</span>
+                      <strong>
+                        {quote?.change != null && quote.change > 0 ? "+" : ""}
+                        {money(quote?.change, quote?.currency)}
+                      </strong>
+                    </div>
+                    <div>
+                      <span>MARKET STATE</span>
+                      <strong>{quote?.marketState || "Unavailable"}</strong>
+                    </div>
+                    <div>
+                      <span>QUOTE TIME</span>
+                      <strong>{quote ? date(quote.asOf) : "Unavailable"}</strong>
+                    </div>
+                  </div>
                 </section>
                 <section className="panel news-preview">
                   <PanelTitle eyebrow="IN THE LOOP" title="Latest headlines">
