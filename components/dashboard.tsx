@@ -511,13 +511,15 @@ export default function Dashboard() {
             >
               <Menu size={20} />
             </button>
+            <BrandMark className="mobile-brand-symbol" />
             <span>Workspace</span>
             <span>/</span>
             <strong>{active?.label || "Data & methodology"}</strong>
           </div>
           <div className="topbar-right">
-            <span className="public-badge">
-              <span className="status-dot" /> PUBLIC FEEDS
+            <span className={`public-badge ${market.loading ? "is-fetching" : ""}`}>
+              <span className="status-dot" />
+              {market.loading ? "UPDATING FEEDS" : "PUBLIC FEEDS"}
             </span>
             <label className="appearance-control">
               <span className="sr-only">Appearance</span>
@@ -542,7 +544,7 @@ export default function Dashboard() {
         </header>
         <main id="main-content" tabIndex={-1}>
           <div className="page-header">
-            <div>
+            <div className="hero-copy">
               <p className="eyebrow">THE BIG PICTURE, IN FOCUS</p>
               <h1 id="page-title" tabIndex={-1}>
                 {active?.label || "Data & methodology"}
@@ -552,6 +554,12 @@ export default function Dashboard() {
                   ? "Follow the market. Understand the signals. Make informed decisions."
                   : `Explore ${company.name} with transparent sources and reproducible analytics.`}
               </p>
+            </div>
+            <div className="hero-emblem" aria-hidden="true">
+              <span className="hero-orbit hero-orbit-outer" />
+              <span className="hero-orbit hero-orbit-inner" />
+              <BrandMark className="hero-brand-symbol" />
+              <span className="hero-orbit-point" />
             </div>
             <div className="header-actions">
               <button
@@ -588,7 +596,7 @@ export default function Dashboard() {
                 ))}
               </select>
             </div>
-            <div className="refresh-control">
+            <div className={`refresh-control ${auto && market.loading ? "is-fetching" : ""}`}>
               <span className={`status-dot ${auto ? "" : "paused"}`} />
               <span>{auto ? "Auto refresh" : "Refresh paused"}</span>
               <label htmlFor="refresh-interval" className="sr-only">

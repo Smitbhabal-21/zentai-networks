@@ -42,3 +42,5 @@ The current color direction takes neutral surfaces and contrast cues from [Apple
 Apple's Color guidance also informed a semantic pass: noninteractive market cards use neutral surfaces without status-colored edges or hover motion; gains and losses carry signs and arrows as well as distinct colors; and the custom palette defines stronger variants for increased-contrast light and dark settings.
 
 Motion is decorative and brief. Source timestamps, failure states, and model caveats remain visible. The existing reduced-motion preference disables these animations.
+
+The [logo reveal reference](https://www.instagram.com/reel/DctfWOITj85/) and [animated hero reference](https://www.instagram.com/reel/DeM4Xlhhkgu/) informed a short Z stroke draw, a wordmark entrance, and a quiet orbit inside the dashboard header. The feed indicator pulses only during an actual request; the existing source and timing labels remain the authority for data freshness. Motion stops when the user prefers reduced motion.
