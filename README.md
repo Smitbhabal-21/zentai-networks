@@ -20,6 +20,7 @@ Open http://127.0.0.1:3000. Next.js proxies `/api/analytics` to the Python serve
 - Quotes and history: Yahoo Finance chart API. Default price polling: 60 seconds; optional 2 or 5 minutes. Public quotes may be delayed. The last regular-session quote remains visible outside market hours.
 - News: Google News RSS, queried by company name over the past 7 days. Publication times and source links are required; duplicate titles and URLs are removed. Checks every 3 minutes.
 - Financial statements, risk, options, insiders, and history: yfinance. Analytical screens check every 5 minutes. Fundamentals represent reported fiscal periods.
+- Analyst report: merges the current market quote, Yahoo quarterly statements and valuation fields, and Google News headlines into one printable view. The sources retain separate observation and fetch times. The internal credit screen uses four quarters of EBITDA plus debt, cash, and assets; banks and missing inputs are not assessed. Its AAA–CCC labels are **not agency ratings** or default probabilities.
 - Browser polling pauses in hidden tabs and can be paused manually. Refresh data updates active analytics as well as quotes and news.
 - Next.js Data Cache shares quote/news results between requests. Successful Python GET responses use Vercel CDN caching (5 minutes). Errors are not cached. A failed update retains the last successful browser snapshot with an error banner. Quote caches older than 5 minutes are labeled.
 - Portfolio and backtest jobs run on demand. Their outputs are explicitly historical, with the effective data period shown.
@@ -29,13 +30,14 @@ No exchange-wide, tick-level real-time guarantee is made. A public provider can 
 
 ## Features
 
-Market overview, persistent local watchlist, searchable company table, chart ranges, newsroom, quarterly research, company comparisons, DCF scenarios, Isolation Forest anomalies, options volume, insider activity, inverse-volatility portfolios, three backtest strategies, historical pattern matching, static operating-footprint references, and observation-based briefings.
+Market overview, persistent local watchlist, searchable company table, chart ranges, newsroom, quarterly research, printable equity-and-credit analyst report, company comparisons, DCF scenarios, Isolation Forest anomalies, options volume, insider activity, inverse-volatility portfolios, three backtest strategies, historical pattern matching, static operating-footprint references, and observation-based briefings.
 
 ## Correctness decisions
 
 - Chart-range baselines are never treated as prior-day closes. Daily moves use a separate one-day quote response.
 - Portfolio weights are aligned by ticker, not data-frame position. Missing assets and zero-volatility histories fail explicitly.
 - DCF requires positive real inputs. No artificial 5% upside fallback. Assumptions and the simplified FCF-per-share methodology are exposed.
+- Internal credit tiers are a transparent, deterministic screen based on net debt/TTM EBITDA (45%), debt/assets (30%), and cash/debt (25%). Interest coverage is context only. This is not an S&P, Moody's, or Fitch rating, and financial issuers are excluded because they require a different model.
 - Unavailable sentiment stays unavailable. FinBERT is optional and disabled by default; the cloud function does not install or download PyTorch. SHAP is optional; unavailable explanations are never randomized.
 - Options volume does not identify buyers, institutions, geography, or order direction. The production UI displays only reported aggregates.
 - Static operational geography is a scenario reference, not a current incident feed.

@@ -33,6 +33,9 @@ def execute(params):
     elif section=='valuation':
         from backend.data_generators.dcf_engine import get_intrinsic_value
         result=get_intrinsic_value(ticker)
+    elif section=='analyst':
+        from backend.data_generators.analyst_snapshot import get_analyst_snapshot
+        result=get_analyst_snapshot(company)
     elif section=='options':
         from backend.data_generators.options_flow import get_options_flow
         result=get_options_flow(ticker)

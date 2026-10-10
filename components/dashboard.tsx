@@ -11,6 +11,7 @@ import {
   CircleHelp,
   Clock3,
   Globe2,
+  FileText,
   LayoutDashboard,
   Menu,
   Sun,
@@ -40,10 +41,12 @@ import type { MarketResponse, NewsResponse, Quote } from "@/lib/types";
 import { useFeed } from "./use-feed";
 import { FinancialChart, Lines, PriceChart } from "./charts";
 import { BrandMark } from "./brand-mark";
+import { AnalystReport } from "./analyst-report";
 const navigation = [
   { id: "overview", label: "Market overview", icon: LayoutDashboard },
   { id: "news", label: "Newsroom", icon: Newspaper },
   { id: "financials", label: "Company research", icon: BarChart3 },
+  { id: "analyst", label: "Analyst report", icon: FileText },
   { id: "risk", label: "Risk intelligence", icon: ShieldCheck },
   { id: "portfolio", label: "Portfolio lab", icon: Wallet },
   { id: "backtest", label: "Strategy backtester", icon: Activity },
@@ -1031,6 +1034,14 @@ export default function Dashboard() {
               </section>
               <Comparison company={company} auto={auto} />
             </div>
+          )}
+          {page === "analyst" && (
+            <AnalystReport
+              company={company}
+              quote={quoteBySymbol(company.ticker)}
+              news={news}
+              auto={auto}
+            />
           )}
           {page === "risk" && (
             <div className="stack">

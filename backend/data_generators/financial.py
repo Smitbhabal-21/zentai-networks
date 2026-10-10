@@ -24,6 +24,7 @@ def get_financials(company_key: str) -> dict:
         ebitda_row = _find_row(inc, ["EBITDA", "Normalized EBITDA"])
         net_income_row = _find_row(inc, ["Net Income", "Net Income Common Stockholders"])
         operating_row = _find_row(inc, ["Operating Income", "Total Operating Income As Reported"])
+        interest_row = _find_row(inc, ["Interest Expense", "Interest Expense Non Operating"])
 
         quarters = list(inc.columns)[::-1]  # oldest first
 
@@ -38,6 +39,7 @@ def get_financials(company_key: str) -> dict:
         ebitda = safe_series(ebitda_row)
         net_income = safe_series(net_income_row)
         operating_income = safe_series(operating_row)
+        interest_expense = safe_series(interest_row)
 
         quarterly_data = []
         for i, q in enumerate(quarters):
@@ -52,6 +54,7 @@ def get_financials(company_key: str) -> dict:
                 "ebitda_m": ebitda[i],
                 "net_income_m": net_income[i],
                 "operating_income_m": operating_income[i],
+                "interest_expense_m": abs(interest_expense[i]) if interest_expense[i] is not None else None,
                 "gross_margin_pct": gross_margin,
                 "net_margin_pct": net_margin,
             })

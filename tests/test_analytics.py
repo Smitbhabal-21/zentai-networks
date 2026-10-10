@@ -10,8 +10,22 @@ from backend.data_generators.backtester import run_backtest
 from backend.data_generators.financial import _compute_health_score, _find_row
 from backend.data_generators.historical_parallel import get_historical_parallel
 from backend.data_generators.ai_ensemble import get_ensemble_recommendation
+from backend.data_generators.analyst_snapshot import credit_tier
 
 class AccuracyTests(unittest.TestCase):
+    def test_internal_credit_bands_and_abstention(self):
+        statement = {
+            'quarterly': [{'ebitda_m': 50, 'interest_expense_m': 5}] * 4,
+            'latest_kpis': {'total_debt_m': 500, 'cash_m': 100, 'debt_to_assets': .4},
+        }
+        tier = credit_tier(statement, 'Technology')
+        self.assertEqual(tier['grade'], 'BBB')
+        self.assertEqual(tier['metrics']['ebitda_interest_coverage'], 10)
+        statement['latest_kpis']['cash_m'] = 0
+        self.assertEqual(credit_tier(statement, 'Technology')['grade'], 'BB')
+        self.assertEqual(credit_tier(statement, 'Financials')['status'], 'not_applicable')
+        statement['quarterly'] = statement['quarterly'][:3]
+        self.assertEqual(credit_tier(statement, 'Technology')['status'], 'insufficient')
     def test_dcf_missing_inputs_never_invents_upside(self):
         with patch('backend.data_generators.dcf_engine.yf.Ticker') as ticker:
             ticker.return_value.info={'currentPrice':100}

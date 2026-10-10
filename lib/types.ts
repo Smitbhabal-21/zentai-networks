@@ -31,3 +31,33 @@ export type NewsResponse = {
   source: string;
   warning?: string;
 };
+export type AnalystSnapshot = {
+  company: string;
+  ticker: string;
+  industry: string;
+  as_of: string | null;
+  fetched_at: string;
+  financials: {
+    quarterly: Array<Record<string, number | string | null>>;
+    latest_kpis: Record<string, number | null>;
+    source: string;
+  };
+  valuation: {
+    error?: string;
+    current_price?: number;
+    intrinsic_value?: number;
+    upside_pct?: number;
+    assumptions?: { growth_rate: number; discount_rate: number; terminal_growth: number };
+    methodology?: string;
+  };
+  credit: {
+    status: "available" | "insufficient" | "not_applicable";
+    grade: string | null;
+    score: number | null;
+    reason?: string;
+    caveat: string;
+    methodology?: string;
+    metrics?: Record<string, number | null>;
+    factors?: Array<{ name: string; value: number | null; points: number; weight: number }>;
+  };
+};
