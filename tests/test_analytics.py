@@ -10,9 +10,32 @@ from backend.data_generators.backtester import run_backtest
 from backend.data_generators.financial import _compute_health_score, _find_row
 from backend.data_generators.historical_parallel import get_historical_parallel
 from backend.data_generators.ai_ensemble import get_ensemble_recommendation
-from backend.data_generators.analyst_snapshot import credit_tier
+from backend.data_generators.analyst_snapshot import credit_tier, get_analyst_snapshot
+from backend.data_generators.sec_filings import _fact, get_sec_filing_snapshot
 
 class AccuracyTests(unittest.TestCase):
+    def test_sec_facts_keep_period_and_original_concept(self):
+        facts = {'us-gaap': {'NetIncomeLoss': {'units': {'USD': [
+            {'form': '10-K', 'start': '2024-01-01', 'end': '2024-12-31', 'filed': '2025-02-01', 'val': 2e9, 'accn': 'a'},
+            {'form': '10-Q', 'start': '2025-01-01', 'end': '2025-03-31', 'filed': '2025-04-10', 'val': 1e9, 'accn': 'b'},
+        ]}}}}
+        result = _fact(facts, ('NetIncomeLoss',), annual=True)
+        self.assertEqual(result['value_m'], 2000)
+        self.assertEqual(result['period_end'], '2024-12-31')
+        self.assertEqual(result['concept'], 'us-gaap:NetIncomeLoss')
+    def test_sec_adapter_abstains_without_declared_contact(self):
+        with patch.dict('os.environ', {'SEC_USER_AGENT': ''}):
+            self.assertEqual(get_sec_filing_snapshot('apple')['status'], 'not_configured')
+    def test_filing_reconciliation_respects_fiscal_date_gap(self):
+        financial = {'company': 'Apple', 'as_of': '2026-06-30',
+                     'quarterly': [], 'latest_kpis': {'cash_m': 39544}}
+        filing = {'status': 'available', 'facts': {'cash_m': {'value_m': 39544, 'period_end': '2026-06-27'}}, 'filings': []}
+        with patch('backend.data_generators.analyst_snapshot.get_financials', return_value=financial), \
+             patch('backend.data_generators.analyst_snapshot.get_intrinsic_value', return_value={'error': 'missing'}), \
+             patch('backend.data_generators.analyst_snapshot.get_sec_filing_snapshot', return_value=filing):
+            report = get_analyst_snapshot('apple')
+        self.assertEqual(report['quality_checks'][0]['status'], 'aligned')
+        self.assertIn('3-day period gap', report['quality_checks'][0]['detail'])
     def test_internal_credit_bands_and_abstention(self):
         statement = {
             'quarterly': [{'ebitda_m': 50, 'interest_expense_m': 5}] * 4,

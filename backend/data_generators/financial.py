@@ -79,14 +79,20 @@ def get_financials(company_key: str) -> dict:
         cash_row = _find_row(bs, ["Cash And Cash Equivalents", "Cash Cash Equivalents And Short Term Investments"])
         debt_row = _find_row(bs, ["Total Debt", "Long Term Debt"])
         assets_row = _find_row(bs, ["Total Assets"])
+        current_assets_row = _find_row(bs, ["Current Assets", "Total Current Assets"])
+        current_liabilities_row = _find_row(bs, ["Current Liabilities", "Total Current Liabilities"])
 
         latest_col = bs.columns[0]
         cash = float(bs.loc[cash_row, latest_col]) / 1e6 if cash_row else None
         total_debt = float(bs.loc[debt_row, latest_col]) / 1e6 if debt_row else None
         total_assets = float(bs.loc[assets_row, latest_col]) / 1e6 if assets_row else None
         debt_to_assets = round(total_debt / total_assets, 3) if total_debt is not None and total_assets else None
+        current_assets = float(bs.loc[current_assets_row, latest_col]) / 1e6 if current_assets_row else None
+        current_liabilities = float(bs.loc[current_liabilities_row, latest_col]) / 1e6 if current_liabilities_row else None
+        current_ratio = round(current_assets / current_liabilities, 2) if current_assets is not None and current_liabilities and current_liabilities > 0 else None
     except Exception:
         cash = total_debt = total_assets = debt_to_assets = None
+        current_assets = current_liabilities = current_ratio = None
 
     # --- Health Score (composite 0-100) ---
     health_score = _compute_health_score(latest, rev_growth, debt_to_assets)
@@ -107,6 +113,9 @@ def get_financials(company_key: str) -> dict:
             "cash_m": round(cash, 1) if cash is not None else None,
             "total_debt_m": round(total_debt, 1) if total_debt is not None else None,
             "debt_to_assets": debt_to_assets,
+            "current_assets_m": round(current_assets, 1) if current_assets is not None else None,
+            "current_liabilities_m": round(current_liabilities, 1) if current_liabilities is not None else None,
+            "current_ratio": current_ratio,
         },
         "health_score": health_score,
     }

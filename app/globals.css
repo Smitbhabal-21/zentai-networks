@@ -2208,8 +2208,64 @@ footer button {
 .report-provenance p { display: flex; align-items: baseline; gap: 6px; margin: 5px 0; color: var(--muted); font-size: .78rem; }
 .report-provenance svg { flex-shrink: 0; }
 .report-provenance small { display: block; margin-top: 14px; color: var(--muted); line-height: 1.6; }
+.report-explain { position: relative; display: inline-flex; vertical-align: middle; margin-left: 3px; font-weight: 400; letter-spacing: 0; }
+.report-explain > button { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; color: var(--muted); border-radius: 50%; }
+.report-explain > button:hover, .report-explain > button:focus-visible { color: var(--text); background: var(--panel2); outline: 2px solid var(--accent); outline-offset: 2px; }
+.report-explain-pop { display: none; position: absolute; z-index: 30; top: calc(100% + 6px); left: 0; width: min(320px, calc(100vw - 42px)); padding: 13px 15px; color: var(--text); background: var(--panel); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 14px 35px #0003; text-align: left; line-height: 1.55; font-size: .76rem; white-space: normal; }
+.report-explain-pop > strong { display: block; margin-bottom: 4px; font-size: .8rem; }
+.report-explain-pop > span { display: block; color: var(--muted); }
+.report-explain:hover .report-explain-pop, .report-explain:focus-within .report-explain-pop, .report-explain.is-open .report-explain-pop { display: block; }
+.report-kpi .report-explain { position: absolute; top: 12px; right: 10px; }
+.report-kpi { position: relative; }
+.report-kpi .report-explain-pop { left: auto; right: 0; }
+.report-kpi:nth-child(odd) .report-explain-pop { left: 0; right: auto; }
+.scenario-card:last-child .report-explain-pop { left: auto; right: 0; }
+.filing-fact:nth-child(4n) .report-explain-pop { left: auto; right: 0; }
+.report-monitor { display: flex; align-items: flex-start; gap: 12px; padding: 16px 20px; border: 1px solid var(--border); border-radius: 14px; background: var(--panel); }
+.report-monitor .status-dot { flex: 0 0 auto; margin-top: 7px; }
+.report-monitor > div { flex: 1; }
+.report-monitor strong { font-size: .84rem; }
+.report-monitor p { margin: 3px 0 0; color: var(--muted); font-size: .78rem; }
+.credit-review-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; margin: 18px 0 0; }
+.credit-review-grid > div { min-width: 0; padding: 11px; border: 1px solid var(--border); border-radius: 10px; }
+.credit-review-grid span, .filing-fact > span { display: block; color: var(--muted); font-size: .73rem; }
+.credit-review-grid strong { display: block; margin-top: 4px; font-size: .82rem; overflow-wrap: anywhere; }
+.bank-review h3 { margin: 18px 0 6px; font-size: .9rem; }
+.model-controls { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; margin: 20px 0; }
+.model-controls label { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 13px; border: 1px solid var(--border); border-radius: 12px; color: var(--muted); font-size: .76rem; }
+.model-controls label > span { display: flex; align-items: center; color: var(--text); }
+.model-controls input { width: 74px; padding: 6px; margin-right: 4px; border: 1px solid var(--border); border-radius: 7px; color: var(--text); background: var(--bg); text-align: right; }
+.scenario-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; }
+.scenario-card { position: relative; padding: 20px; border: 1px solid var(--border); border-radius: 15px; background: var(--bg); }
+.scenario-card:nth-child(2) { border-color: var(--accent); background: var(--selected); }
+.scenario-card > span { display: block; color: var(--muted); font-size: .78rem; }
+.scenario-card strong { display: block; margin: 12px 0 4px; font-size: clamp(1.45rem,2.4vw,2rem); letter-spacing: -.04em; }
+.scenario-card small, .scenario-card p { color: var(--muted); font-size: .75rem; }
+.scenario-card p { margin: 10px 0 0; }
+.report-method .table-scroll { margin-top: 12px; }
+.filing-facts { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 10px; margin: 16px 0; }
+.filing-fact { min-width: 0; padding: 15px; border: 1px solid var(--border); border-radius: 12px; }
+.filing-fact strong { display: block; margin: 7px 0; font-size: 1.05rem; overflow-wrap: anywhere; }
+.filing-fact small { color: var(--muted); font-size: .7rem; }
+.filing-fact a, .filing-links a, .report-section .note a { color: var(--accent); }
+.filing-fact a svg, .filing-links a svg, .report-section .note a svg { vertical-align: middle; }
+.filing-links { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 18px 0; font-size: .78rem; }
+.report-quality { margin-top: 18px; padding: 15px; border-radius: 12px; background: var(--bg); font-size: .78rem; }
+.report-quality p { margin: 6px 0 0; color: var(--muted); }
+.report-quality p span { margin-right: 5px; text-transform: capitalize; font-weight: 700; color: var(--text); }
+.report-quality .quality-mismatch { color: var(--red); }
+.memo-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
+.memo-grid > div { padding: 17px; border: 1px solid var(--border); border-radius: 13px; }
+.memo-grid h3 { margin: 0 0 8px; font-size: .9rem; }
+.memo-grid ul { margin: 0; padding-left: 18px; color: var(--muted); font-size: .78rem; line-height: 1.7; }
+.memo-notes { display: block; margin: 18px 0 10px; font-size: .8rem; font-weight: 600; }
+.memo-notes textarea { display: block; width: 100%; resize: vertical; min-height: 125px; margin-top: 6px; padding: 13px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg); color: var(--text); font: inherit; font-weight: 400; }
+.memo-notes textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.memo-signoff { display: flex; gap: 8px; align-items: baseline; font-size: .77rem; }
+.memo-signoff input { accent-color: var(--accent); }
 @media (max-width: 1100px) { .report-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .report-columns { grid-template-columns: 1fr; } }
-@media (max-width: 650px) { .analyst-banner { display: block; } .report-actions { margin-top: 18px; } .report-kpis, .report-headlines { grid-template-columns: 1fr; } .report-kpi { padding: 18px; } }
+@media (max-width: 1100px) { .filing-facts { grid-template-columns: repeat(2,minmax(0,1fr)); } .filing-fact:nth-child(even) .report-explain-pop { left: auto; right: 0; } }
+@media (max-width: 650px) { .analyst-banner { display: block; } .report-actions { margin-top: 18px; } .report-kpis, .report-headlines, .model-controls, .scenario-grid, .memo-grid { grid-template-columns: 1fr; } .report-kpi { padding: 18px; } .report-kpi:nth-child(odd) .report-explain-pop { left: auto; right: 0; } .credit-review-grid, .filing-facts { grid-template-columns: 1fr 1fr; } }
 @media (prefers-reduced-motion: reduce) { .report-kpi, .factor-track span, .report-headlines a { animation: none; transition: none; } }
 @media print {
   body:has(.analyst-report) { background: white; color: black; }

@@ -1,11 +1,13 @@
 """Source-labeled analyst snapshot and an explicitly internal credit tier."""
 
 from concurrent.futures import ThreadPoolExecutor
+from datetime import date
 from math import isfinite
 
 from backend.data_generators.company_map import COMPANY_MAP
 from backend.data_generators.dcf_engine import get_intrinsic_value
 from backend.data_generators.financial import get_financials
+from backend.data_generators.sec_filings import get_sec_filing_snapshot
 
 
 GRADE_BANDS = ((85, "AAA"), (75, "AA"), (65, "A"), (55, "BBB"),
@@ -78,6 +80,7 @@ def credit_tier(financials: dict, industry: str) -> dict:
             "cash_to_debt": round(cash_debt, 2) if cash_debt is not None else None,
             "ebitda_interest_coverage": round(coverage, 2) if coverage is not None else None,
             "ttm_ebitda_m": round(ttm_ebitda, 1),
+            "current_ratio": kpis.get("current_ratio"),
         },
         "factors": [{"name": name, "value": value, "points": points,
                      "weight": weight} for name, value, points, weight in factors],
@@ -88,11 +91,29 @@ def credit_tier(financials: dict, industry: str) -> dict:
 
 def get_analyst_snapshot(company_key: str) -> dict:
     company = COMPANY_MAP[company_key]
-    with ThreadPoolExecutor(max_workers=2) as pool:
+    with ThreadPoolExecutor(max_workers=3) as pool:
         financial_future = pool.submit(get_financials, company_key)
         valuation_future = pool.submit(get_intrinsic_value, company["ticker"])
+        filings_future = pool.submit(get_sec_filing_snapshot, company_key)
         financials = financial_future.result()
         valuation = valuation_future.result()
+        filings = filings_future.result()
+    checks = []
+    filing_cash = filings.get("facts", {}).get("cash_m")
+    provider_cash = financials.get("latest_kpis", {}).get("cash_m")
+    if filing_cash and _finite(provider_cash):
+        try:
+            period_gap = abs((date.fromisoformat(filing_cash["period_end"]) - date.fromisoformat(financials["as_of"])).days)
+        except (TypeError, ValueError):
+            period_gap = 999
+        if period_gap <= 7:
+            difference = abs(filing_cash["value_m"] - provider_cash)
+            relative = difference / max(abs(filing_cash["value_m"]), 1)
+            checks.append({"metric": "Cash and equivalents", "status": "aligned" if relative <= .01 else "mismatch",
+                           "detail": f"SEC {filing_cash['value_m']:,.1f}M ({filing_cash['period_end']}) vs provider {provider_cash:,.1f}M ({financials['as_of']}); {period_gap}-day period gap and {relative * 100:.1f}% value difference."})
+        else:
+            checks.append({"metric": "Cash and equivalents", "status": "different_periods",
+                           "detail": "SEC and provider periods differ; no numerical reconciliation was made."})
     return {
         "company": financials.get("company", company["name"]),
         "ticker": company["ticker"],
@@ -101,5 +122,7 @@ def get_analyst_snapshot(company_key: str) -> dict:
         "financials": financials,
         "valuation": valuation,
         "credit": credit_tier(financials, company["industry"]),
-        "sources": ["Yahoo Finance quarterly statements", "Yahoo Finance company valuation fields"],
+        "filings": filings,
+        "quality_checks": checks,
+        "sources": ["Yahoo Finance quarterly statements", "Yahoo Finance company valuation fields", "SEC EDGAR when configured"],
     }

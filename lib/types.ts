@@ -47,6 +47,8 @@ export type AnalystSnapshot = {
     current_price?: number;
     intrinsic_value?: number;
     upside_pct?: number;
+    free_cash_flow_m?: number;
+    shares_outstanding_m?: number;
     assumptions?: { growth_rate: number; discount_rate: number; terminal_growth: number };
     methodology?: string;
   };
@@ -60,4 +62,14 @@ export type AnalystSnapshot = {
     metrics?: Record<string, number | null>;
     factors?: Array<{ name: string; value: number | null; points: number; weight: number }>;
   };
+  filings: {
+    status: "available" | "not_configured" | "unavailable";
+    reason?: string;
+    source?: string;
+    methodology?: string;
+    cik: number;
+    facts: Record<string, { value_m: number; period_end: string; filed?: string; form?: string; accession?: string; concept: string }>;
+    filings: Array<{ form: string; filed: string; accession: string; url: string }>;
+  };
+  quality_checks: Array<{ metric: string; status: string; detail: string }>;
 };
