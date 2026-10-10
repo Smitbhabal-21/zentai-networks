@@ -2263,6 +2263,41 @@ footer button {
 .memo-notes textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .memo-signoff { display: flex; gap: 8px; align-items: baseline; font-size: .77rem; }
 .memo-signoff input { accent-color: var(--accent); }
+.research-workbench { display: grid; gap: 16px; }
+.evidence-list, .change-list, .record-list { display: grid; gap: 8px; margin-top: 16px; }
+.evidence-row, .change-row, .record-row { border: 1px solid var(--border); border-radius: 12px; background: var(--bg); }
+.evidence-row summary { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 13px 16px; cursor: pointer; font-size: .83rem; }
+.evidence-row summary::marker { color: var(--accent); }
+.evidence-row summary strong { font-size: .9rem; white-space: nowrap; }
+.evidence-row summary small, .change-row small, .record-row small { color: var(--muted); font-size: .73rem; font-weight: 400; }
+.evidence-detail { padding: 0 16px 15px; border-top: 1px solid var(--border); color: var(--muted); font-size: .78rem; }
+.evidence-detail p { margin: 10px 0; }
+.evidence-detail b { color: var(--text); margin-right: 5px; }
+.evidence-detail a, .change-row a, .revision-tags a { color: var(--accent); font-weight: 600; }
+.evidence-detail a svg, .change-row a svg, .revision-tags a svg { vertical-align: middle; }
+.revision-tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 13px 0; }
+.revision-tags span { padding: 8px 11px; border-radius: 999px; background: var(--selected); font-size: .74rem; }
+.change-row { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 2px 14px; padding: 12px 15px; font-size: .8rem; }
+.change-row > small { grid-column: 1 / -1; }
+.challenge-summary { margin-top: 18px; padding: 17px; border: 1px solid var(--border); border-radius: 14px; background: var(--panel2); }
+.challenge-summary h3 { margin: 0 0 12px; font-size: .95rem; }
+.challenge-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+.challenge-grid > div { padding: 14px; border: 1px solid var(--border); border-radius: 10px; background: var(--panel); }
+.challenge-grid span, .challenge-grid small { display: block; color: var(--muted); font-size: .72rem; }
+.challenge-grid strong { display: block; margin: 3px 0; font-size: 1rem; }
+.challenge-summary > p { margin: 12px 0 0; color: var(--muted); font-size: .75rem; }
+.record-form { display: flex; align-items: end; flex-wrap: wrap; gap: 10px; margin: 20px 0 16px; }
+.record-form label { display: grid; gap: 5px; color: var(--muted); font-size: .74rem; }
+.record-form input, .record-form select { min-height: 40px; padding: 7px 10px; border: 1px solid var(--border); border-radius: 9px; background: var(--bg); color: var(--text); }
+.record-form input { width: 150px; }
+.record-metrics { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; }
+.record-metrics > div { padding: 14px; border: 1px solid var(--border); border-radius: 11px; background: var(--panel2); }
+.record-metrics span, .record-metrics strong { display: block; }
+.record-metrics span { color: var(--muted); font-size: .72rem; }
+.record-metrics strong { margin-top: 5px; font-size: 1rem; }
+.record-row { display: flex; justify-content: space-between; gap: 15px; padding: 13px 15px; font-size: .8rem; }
+.record-row small { display: block; margin-top: 3px; }
+@media (max-width: 650px) { .challenge-grid, .record-metrics { grid-template-columns: 1fr; } .change-row { grid-template-columns: 1fr; } .record-row { display: grid; } .evidence-row summary strong { white-space: normal; text-align: right; } }
 @media (max-width: 1100px) { .report-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .report-columns { grid-template-columns: 1fr; } }
 @media (max-width: 1100px) { .filing-facts { grid-template-columns: repeat(2,minmax(0,1fr)); } .filing-fact:nth-child(even) .report-explain-pop { left: auto; right: 0; } }
 @media (max-width: 650px) { .analyst-banner { display: block; } .report-actions { margin-top: 18px; } .report-kpis, .report-headlines, .model-controls, .scenario-grid, .memo-grid { grid-template-columns: 1fr; } .report-kpi { padding: 18px; } .report-kpi:nth-child(odd) .report-explain-pop { left: auto; right: 0; } .credit-review-grid, .filing-facts { grid-template-columns: 1fr 1fr; } }
