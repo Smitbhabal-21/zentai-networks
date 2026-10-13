@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useId, useState } from "react";
 import { Clock3, ExternalLink, FileDown, Info, RefreshCw } from "lucide-react";
 import type { Company } from "@/lib/companies";
 import type { AnalystSnapshot, NewsResponse, Quote } from "@/lib/types";
@@ -9,6 +9,8 @@ import { FinancialChart } from "./charts";
 import type { ModelInputs } from "@/lib/valuation";
 import { challengeDcf, stressCredit } from "@/lib/research";
 import { ResearchWorkbench } from "./research-workbench";
+import { headlinePriority } from "@/lib/news-priority";
+import { ValuationComparison } from "./valuation-comparison";
 
 const cash = (value?: number | null) =>
   value == null || !Number.isFinite(value)
@@ -21,9 +23,12 @@ const num = (value?: number | null, digits = 1) =>
 const stamp = (value?: string | null) =>
   value ? new Date(value).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }) : "Unavailable";
 
+const ExplainContext = createContext<{ active: string | null; setActive: (id: string | null) => void } | null>(null);
 function Explain({ label, children }: { label: string; children: React.ReactNode }) {
-  const [open, setOpen] = useState(false);
-  return <span className={`report-explain ${open ? "is-open" : ""}`}><button type="button" aria-label={`Explain ${label}`} aria-expanded={open} onClick={() => setOpen(!open)} onBlur={() => setOpen(false)}><Info size={14} /></button><span className="report-explain-pop" role="tooltip"><strong>{label}</strong><span>{children}</span></span></span>;
+  const id = useId();
+  const context = useContext(ExplainContext);
+  const open = context?.active === id;
+  return <span className={`report-explain ${open ? "is-open" : ""}`} onMouseEnter={() => context?.setActive(id)} onMouseLeave={() => context?.setActive(null)}><button type="button" aria-label={`Explain ${label}`} aria-describedby={open ? id : undefined} aria-expanded={open} onFocus={() => context?.setActive(id)} onBlur={() => context?.setActive(null)} onClick={() => context?.setActive(id)} onKeyDown={event => { if (event.key === "Escape") { context?.setActive(null); event.currentTarget.blur(); } }}><Info size={14} /></button><span id={id} className="report-explain-pop" role="tooltip"><strong>{label}</strong><span>{children}</span></span></span>;
 }
 
 export function AnalystReport({ company, quote, news, auto }: {
@@ -42,8 +47,15 @@ export function AnalystReport({ company, quote, news, auto }: {
   const kpi = report?.financials.latest_kpis;
   const valuation = report?.valuation;
   const articles = news.data?.articles.slice(0, 4) || [];
+  const [activeExplain, setActiveExplain] = useState<string | null>(null);
+  useEffect(() => {
+    const close = (event: PointerEvent) => { if (!(event.target instanceof Element) || !event.target.closest(".report-explain")) setActiveExplain(null); };
+    document.addEventListener("pointerdown", close);
+    return () => document.removeEventListener("pointerdown", close);
+  }, []);
 
   return (
+    <ExplainContext.Provider value={{ active: activeExplain, setActive: setActiveExplain }}>
     <div className="analyst-report stack">
       <section className="analyst-banner panel">
         <div>
@@ -109,7 +121,7 @@ export function AnalystReport({ company, quote, news, auto }: {
           </section>
         </div>
 
-        <ScenarioLab ticker={company.ticker} report={report} valuation={report.valuation} quote={quote} />
+        <ScenarioLab ticker={company.ticker} report={report} valuation={report.valuation} quote={quote} auto={auto} />
         <FilingsPanel report={report} />
         <ResearchWorkbench report={report} quote={quote} />
         <ResearchMemo report={report} quote={quote} />
@@ -118,8 +130,8 @@ export function AnalystReport({ company, quote, news, auto }: {
           <div className="panel-heading"><div><p className="eyebrow">MONITOR</p><h2>Recent company headlines</h2></div><span className="quiet-badge">PUBLIC RSS</span></div>
           {news.error && <p className="note">Headline update failed. {news.data ? "Showing the last successful snapshot." : "No headline snapshot is available."}</p>}
           {!news.data && !news.error && <div className="loading" role="status">Loading headlines…</div>}
-          {news.data && (articles.length ? <div className="report-headlines">{articles.map((article) => <a href={article.url} target="_blank" rel="noopener noreferrer" key={article.id}><span>{article.publisher} · {stamp(article.publishedAt)}</span><strong>{article.title}</strong><ExternalLink size={15} /></a>)}</div> : <p className="note">No timestamped headlines found in the past seven days.</p>)}
-          <p className="source">{news.data?.warning} {news.data ? `· Headlines fetched ${stamp(news.data.fetchedAt)}` : ""}</p>
+          {news.data && (articles.length ? <div className="report-headlines">{articles.map((article) => <a className={headlinePriority(article.title) ? "news-important" : ""} href={article.url} target="_blank" rel="noopener noreferrer" key={article.id}><span>{article.publisher} · {stamp(article.publishedAt)}</span><strong>{article.title}</strong>{headlinePriority(article.title) && <small>POTENTIALLY IMPORTANT · {headlinePriority(article.title)}</small>}<ExternalLink size={15} /></a>)}</div> : <p className="note">No timestamped headlines found in the past seven days.</p>)}
+          <p className="source">Red labels are headline-based attention cues, not verified event assessments. {news.data?.warning} {news.data ? `· Headlines fetched ${stamp(news.data.fetchedAt)}` : ""}</p>
         </section>
 
         <section className="report-provenance" aria-label="Sources and freshness">
@@ -133,10 +145,11 @@ export function AnalystReport({ company, quote, news, auto }: {
         </section>
       </div>}
     </div>
+    </ExplainContext.Provider>
   );
 }
 
-function ScenarioLab({ ticker, report, valuation, quote }: { ticker: string; report: AnalystSnapshot; valuation: AnalystSnapshot["valuation"]; quote?: Quote }) {
+function ScenarioLab({ ticker, report, valuation, quote, auto }: { ticker: string; report: AnalystSnapshot; valuation: AnalystSnapshot["valuation"]; quote?: Quote; auto: boolean }) {
   const defaults = valuation.assumptions || { growth_rate: .05, discount_rate: .09, terminal_growth: .02 };
   const ratePct = (rate: number) => Math.round(rate * 1000) / 10;
   const [model, setModel] = useState({ growth: ratePct(defaults.growth_rate), discount: ratePct(defaults.discount_rate), terminal: ratePct(defaults.terminal_growth) });
@@ -161,7 +174,7 @@ function ScenarioLab({ ticker, report, valuation, quote }: { ticker: string; rep
     growth: model.growth / 100, discount: model.discount / 100, terminal: model.terminal / 100 };
   const scenarios = challengeDcf(base, quote?.price ?? null).map(item => ({ ...item, note: item.name === "Bear" ? "Growth −5 pp, discount +1 pp" : item.name === "Bull" ? "Growth +5 pp, discount −1 pp" : "Your editable assumptions" }));
   const creditStress = stressCredit(report);
-  return <section className="panel report-section">
+  return <><section className="panel report-section">
     <div className="panel-heading"><div><p className="eyebrow">EDITABLE EQUITY MODEL</p><h2>Valuation scenarios</h2></div><button className="button" onClick={reset}>Reset assumptions</button></div>
     {valuation.error || !valuation.free_cash_flow_m || !valuation.shares_outstanding_m ? <p className="note">Scenario model unavailable: {valuation.error || "Positive free cash flow and share count are required."}</p> : <>
       <p className="report-context">Starting inputs: free cash flow {cash(valuation.free_cash_flow_m)}M ÷ {num(valuation.shares_outstanding_m, 1)}M shares. Edit the base case; bear and bull cases move from it. Changes are saved in this browser.</p>
@@ -178,7 +191,7 @@ function ScenarioLab({ ticker, report, valuation, quote }: { ticker: string; rep
       <details className="report-method"><summary>See five-year base-case cash flow calculation</summary>{scenarios[1].result && <div className="table-scroll"><table><thead><tr><th>Year</th><th>Forecast FCF / share</th><th>Present value</th></tr></thead><tbody>{scenarios[1].result.years.map(row => <tr key={row.year}><td>{row.year}</td><td>{cash(row.forecast)}</td><td>{cash(row.presentValue)}</td></tr>)}<tr><td>Terminal</td><td>Year 5 × (1 + terminal growth) ÷ (discount − terminal growth)</td><td>{cash(scenarios[1].result?.terminalPresentValue)}</td></tr></tbody></table></div>}</details>
       <p className="note">Illustrative FCF-per-share model. Revenue growth is only a proxy for FCF growth; capital structure, dilution, cyclicality and terminal assumptions require analyst review. No investment recommendation is generated.</p>
     </>}
-  </section>;
+  </section><ValuationComparison report={report} quote={quote} dcfValue={scenarios[1].result?.value ?? null} auto={auto} /></>;
 }
 
 const filingFactLabels: Record<string, string> = {

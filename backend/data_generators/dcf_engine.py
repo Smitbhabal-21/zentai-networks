@@ -9,11 +9,14 @@ def get_intrinsic_value(ticker, growth_rate=None, discount_rate=0.09, terminal_g
         info = yf.Ticker(ticker).info
         price = info.get("currentPrice") or info.get("previousClose")
         fcf, shares = info.get("freeCashflow"), info.get("sharesOutstanding")
+        shares_m = round(shares / 1e6, 2) if isinstance(shares, (float, int)) and math.isfinite(shares) and shares > 0 else None
         if not all(isinstance(x, (float, int)) and math.isfinite(x) and x > 0 for x in (price, fcf, shares)):
-            return {"error": "Positive reported free cash flow, shares, and market price are required for this DCF model."}
+            return {"error": "Positive reported free cash flow, shares, and market price are required for this DCF model.",
+                    "shares_outstanding_m": shares_m}
         growth = growth_rate if growth_rate is not None else info.get("revenueGrowth")
         if growth is None or not math.isfinite(growth) or not -0.5 <= growth <= 0.5:
-            return {"error": "A growth assumption between -50% and 50% is required."}
+            return {"error": "A growth assumption between -50% and 50% is required.",
+                    "shares_outstanding_m": shares_m}
         per_share = fcf / shares
         value = sum(per_share * (1 + growth)**year / (1 + discount_rate)**year for year in range(1, 6))
         value += per_share * (1 + growth)**5 * (1 + terminal_growth) / (discount_rate - terminal_growth) / (1 + discount_rate)**5

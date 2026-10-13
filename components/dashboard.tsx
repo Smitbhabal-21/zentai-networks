@@ -42,6 +42,7 @@ import { useFeed } from "./use-feed";
 import { FinancialChart, Lines, PriceChart } from "./charts";
 import { BrandMark } from "./brand-mark";
 import { AnalystReport } from "./analyst-report";
+import { headlinePriority } from "@/lib/news-priority";
 const navigation = [
   { id: "overview", label: "Market overview", icon: LayoutDashboard },
   { id: "news", label: "Newsroom", icon: Newspaper },
@@ -1206,9 +1207,9 @@ function NewsList({
         className={`${compact ? "news-list" : "news-grid"} result-reveal`}
         key={feed.receivedAt}
       >
-        {feed.data?.articles.slice(0, compact ? 4 : 24).map((a, i) => (
+        {feed.data?.articles.slice(0, compact ? 4 : 24).map((a) => (
           <a
-            className="news-item"
+            className={`news-item ${headlinePriority(a.title) ? "news-important" : ""}`}
             key={a.id}
             href={a.url}
             target="_blank"
@@ -1220,7 +1221,7 @@ function NewsList({
             </div>
             <h3>{a.title}</h3>
             <div className="news-bottom">
-              <span>COMPANY NEWS</span>
+              <span>{headlinePriority(a.title) ? `POTENTIALLY IMPORTANT · ${headlinePriority(a.title)}` : "COMPANY NEWS"}</span>
               <External size={14} />
             </div>
           </a>
@@ -1231,7 +1232,7 @@ function NewsList({
       )}
       {!compact && feed.data && (
         <p className="source">
-          {feed.data.warning} · Fetched {date(feed.data.fetchedAt)}
+          Red highlights are headline-based attention cues for major transactions, earnings, guidance, distress, regulatory actions, or recalls; verify the linked source. {feed.data.warning} · Fetched {date(feed.data.fetchedAt)}
         </p>
       )}
     </>

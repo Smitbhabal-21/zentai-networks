@@ -12,6 +12,7 @@ import {
   BarChart,
   Bar,
   Legend,
+  ReferenceLine,
 } from "recharts";
 const axis = {
   stroke: "var(--border)",
@@ -90,6 +91,25 @@ export function PriceChart({
       </ResponsiveContainer>
     </div>
   );
+}
+export function ValuationHistoryChart({ data, lines }: {
+  data: { date: string; close: number }[];
+  lines: { name: string; value: number; color: string }[];
+}) {
+  const values = [...data.map(point => point.close), ...lines.map(line => line.value)].filter(value => Number.isFinite(value) && value > 0);
+  const low = Math.min(...values), high = Math.max(...values);
+  const padding = Math.max((high - low) * .08, high * .03);
+  return <div className="valuation-history-chart" role="img" aria-label="Historical closing prices with today's selected valuation reference levels">
+    <ResponsiveContainer width="100%" height="100%"><AreaChart data={data} margin={{ top: 15, right: 18, left: 0, bottom: 0 }}>
+      <defs><linearGradient id="valuationPriceFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="var(--accent)" stopOpacity={.25} /><stop offset="100%" stopColor="var(--accent)" stopOpacity={0} /></linearGradient></defs>
+      <CartesianGrid vertical={false} stroke="var(--border)" strokeDasharray="3 5" />
+      <XAxis dataKey="date" {...axis} minTickGap={65} tickFormatter={date => new Date(date).toLocaleDateString("en-US", { month: "short", year: "2-digit" })} />
+      <YAxis {...axis} orientation="right" domain={[Math.max(0, low - padding), high + padding]} tickFormatter={value => `$${Number(value).toFixed(0)}`} width={56} />
+      <Tooltip {...tooltip} labelFormatter={date => new Date(String(date)).toLocaleDateString("en-US", { dateStyle: "medium" })} formatter={value => [`$${Number(value).toFixed(2)}`, "Observed close"]} />
+      <Area dataKey="close" type="monotone" stroke="var(--accent)" strokeWidth={2.5} fill="url(#valuationPriceFill)" isAnimationActive={false} />
+      {lines.map(line => <ReferenceLine key={line.name} y={line.value} stroke={line.color} strokeWidth={2} strokeDasharray="6 5" />)}
+    </AreaChart></ResponsiveContainer>
+  </div>;
 }
 export function Lines({
   data,

@@ -21,9 +21,9 @@ export function BrandMark({ className = "" }: { className?: string }) {
           y2="61"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stopColor="#303a29" />
-          <stop offset="0.5" stopColor="#1b2418" />
-          <stop offset="1" stopColor="#111510" />
+          <stop stopColor="#3b3525" />
+          <stop offset="0.5" stopColor="#29251d" />
+          <stop offset="1" stopColor="#191913" />
         </linearGradient>
         <radialGradient
           id={glowId}
@@ -32,8 +32,8 @@ export function BrandMark({ className = "" }: { className?: string }) {
           r="1"
           gradientTransform="translate(17 8) rotate(55) scale(46)"
         >
-          <stop stopColor="#d4fb54" stopOpacity="0.28" />
-          <stop offset="1" stopColor="#d4fb54" stopOpacity="0" />
+          <stop stopColor="#f6d27a" stopOpacity="0.28" />
+          <stop offset="1" stopColor="#f6d27a" stopOpacity="0" />
         </radialGradient>
       </defs>
       <rect width="64" height="64" rx="18" fill={`url(#${gradientId})`} />
@@ -44,13 +44,13 @@ export function BrandMark({ className = "" }: { className?: string }) {
         width="62.5"
         height="62.5"
         rx="17.25"
-        stroke="#d4fb54"
+        stroke="#f6d27a"
         strokeOpacity="0.3"
         strokeWidth="1.5"
       />
       <path
         d="M19 21H45L19 43H45"
-        stroke="#d4fb54"
+        stroke="#f6d27a"
         strokeWidth="6"
         strokeLinecap="round"
         strokeLinejoin="round"
