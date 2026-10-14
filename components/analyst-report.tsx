@@ -121,7 +121,7 @@ export function AnalystReport({ company, quote, news, auto }: {
           </section>
         </div>
 
-        <ScenarioLab ticker={company.ticker} report={report} valuation={report.valuation} quote={quote} auto={auto} />
+        <ScenarioLab ticker={company.ticker} report={report} valuation={report.valuation} quote={quote} news={news.data} auto={auto} />
         <FilingsPanel report={report} />
         <ResearchWorkbench report={report} quote={quote} />
         <ResearchMemo report={report} quote={quote} />
@@ -149,7 +149,7 @@ export function AnalystReport({ company, quote, news, auto }: {
   );
 }
 
-function ScenarioLab({ ticker, report, valuation, quote, auto }: { ticker: string; report: AnalystSnapshot; valuation: AnalystSnapshot["valuation"]; quote?: Quote; auto: boolean }) {
+function ScenarioLab({ ticker, report, valuation, quote, news, auto }: { ticker: string; report: AnalystSnapshot; valuation: AnalystSnapshot["valuation"]; quote?: Quote; news: NewsResponse | null; auto: boolean }) {
   const defaults = valuation.assumptions || { growth_rate: .05, discount_rate: .09, terminal_growth: .02 };
   const ratePct = (rate: number) => Math.round(rate * 1000) / 10;
   const [model, setModel] = useState({ growth: ratePct(defaults.growth_rate), discount: ratePct(defaults.discount_rate), terminal: ratePct(defaults.terminal_growth) });
@@ -191,7 +191,7 @@ function ScenarioLab({ ticker, report, valuation, quote, auto }: { ticker: strin
       <details className="report-method"><summary>See five-year base-case cash flow calculation</summary>{scenarios[1].result && <div className="table-scroll"><table><thead><tr><th>Year</th><th>Forecast FCF / share</th><th>Present value</th></tr></thead><tbody>{scenarios[1].result.years.map(row => <tr key={row.year}><td>{row.year}</td><td>{cash(row.forecast)}</td><td>{cash(row.presentValue)}</td></tr>)}<tr><td>Terminal</td><td>Year 5 × (1 + terminal growth) ÷ (discount − terminal growth)</td><td>{cash(scenarios[1].result?.terminalPresentValue)}</td></tr></tbody></table></div>}</details>
       <p className="note">Illustrative FCF-per-share model. Revenue growth is only a proxy for FCF growth; capital structure, dilution, cyclicality and terminal assumptions require analyst review. No investment recommendation is generated.</p>
     </>}
-  </section><ValuationComparison report={report} quote={quote} dcfValue={scenarios[1].result?.value ?? null} auto={auto} /></>;
+  </section><ValuationComparison report={report} quote={quote} news={news} dcfValue={scenarios[1].result?.value ?? null} auto={auto} /></>;
 }
 
 const filingFactLabels: Record<string, string> = {

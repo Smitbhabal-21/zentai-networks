@@ -13,6 +13,7 @@ import {
   Bar,
   Legend,
   ReferenceLine,
+  ReferenceDot,
 } from "recharts";
 const axis = {
   stroke: "var(--border)",
@@ -92,22 +93,38 @@ export function PriceChart({
     </div>
   );
 }
-export function ValuationHistoryChart({ data, lines }: {
+export function ValuationHistoryChart({ data, lines, newsMarkers = [], filingMarkers = [], eventNotes = [], selectedNewsDate }: {
   data: { date: string; close: number }[];
   lines: { name: string; value: number; color: string }[];
+  newsMarkers?: { date: string; close: number; important: boolean }[];
+  filingMarkers?: { date: string; close: number }[];
+  eventNotes?: { date: string; title: string; kind: "news" | "filing" }[];
+  selectedNewsDate?: string | null;
 }) {
   const values = [...data.map(point => point.close), ...lines.map(line => line.value)].filter(value => Number.isFinite(value) && value > 0);
   const low = Math.min(...values), high = Math.max(...values);
   const padding = Math.max((high - low) * .08, high * .03);
-  return <div className="valuation-history-chart" role="img" aria-label="Historical closing prices with today's selected valuation reference levels">
+  return <div className="valuation-history-chart" role="img" aria-label="Historical closing prices, dated news markers, and today's selected valuation reference levels">
     <ResponsiveContainer width="100%" height="100%"><AreaChart data={data} margin={{ top: 15, right: 18, left: 0, bottom: 0 }}>
       <defs><linearGradient id="valuationPriceFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="var(--accent)" stopOpacity={.25} /><stop offset="100%" stopColor="var(--accent)" stopOpacity={0} /></linearGradient></defs>
       <CartesianGrid vertical={false} stroke="var(--border)" strokeDasharray="3 5" />
       <XAxis dataKey="date" {...axis} minTickGap={65} tickFormatter={date => new Date(date).toLocaleDateString("en-US", { month: "short", year: "2-digit" })} />
       <YAxis {...axis} orientation="right" domain={[Math.max(0, low - padding), high + padding]} tickFormatter={value => `$${Number(value).toFixed(0)}`} width={56} />
-      <Tooltip {...tooltip} labelFormatter={date => new Date(String(date)).toLocaleDateString("en-US", { dateStyle: "medium" })} formatter={value => [`$${Number(value).toFixed(2)}`, "Observed close"]} />
+      <Tooltip content={({ active, label, payload }) => {
+        if (!active || !payload?.length) return null;
+        const notes = eventNotes.filter(note => note.date === String(label));
+        return <div className="history-chart-tooltip" role="tooltip">
+          <strong>{new Date(String(label)).toLocaleDateString("en-US", { dateStyle: "medium" })}</strong>
+          <span>Observed price: ${Number(payload[0].value).toFixed(2)}</span>
+          {notes.slice(0, 3).map((note, index) => <span key={`${note.kind}-${index}`} className={note.kind === "filing" ? "filing" : ""}>{note.kind === "filing" ? "SEC filing" : "Headline"}: {note.title}</span>)}
+          {notes.length > 3 && <small>+{notes.length - 3} more source events below</small>}
+        </div>;
+      }} />
       <Area dataKey="close" type="monotone" stroke="var(--accent)" strokeWidth={2.5} fill="url(#valuationPriceFill)" isAnimationActive={false} />
       {lines.map(line => <ReferenceLine key={line.name} y={line.value} stroke={line.color} strokeWidth={2} strokeDasharray="6 5" />)}
+      {selectedNewsDate && <ReferenceLine x={selectedNewsDate} stroke="var(--red)" strokeDasharray="3 4" strokeWidth={1.5} />}
+      {newsMarkers.map(marker => <ReferenceDot key={marker.date} x={marker.date} y={marker.close} r={marker.date === selectedNewsDate ? 7 : 5} fill={marker.important ? "var(--red)" : "var(--accent)"} stroke="var(--panel)" strokeWidth={2} />)}
+      {filingMarkers.map(marker => <ReferenceDot key={`filing-${marker.date}`} x={marker.date} y={marker.close} r={4} fill="var(--warning)" stroke="var(--panel)" strokeWidth={2} />)}
     </AreaChart></ResponsiveContainer>
   </div>;
 }
