@@ -2515,6 +2515,42 @@ footer button {
 .signal-chart-key i { display: inline-block; width: 15px; height: 3px; background: var(--accent); border-radius: 3px; }
 .signal-chart-key span:nth-child(2) i { background: var(--positive); }
 .signal-chart-key span:nth-child(3) i { background: var(--purple); }
+.observation-evidence { margin: 22px 0 26px; padding: 19px; border: 1px solid var(--border); border-radius: 16px; background: var(--panel2); }
+.observation-heading { display: flex; align-items: start; justify-content: space-between; gap: 16px; }
+.observation-heading h3 { margin: 4px 0 6px; font-size: 1rem; }
+.observation-heading p:not(.eyebrow), .observation-purpose { max-width: 76ch; color: var(--muted); font-size: .75rem; line-height: 1.55; }
+.observation-heading a, .observation-evidence .source a, .breakout-evidence a { color: var(--positive); text-decoration: underline; text-underline-offset: 3px; font-size: .72rem; }
+.observation-heading a { flex-shrink: 0; }
+.observation-math { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; margin: 17px 0 11px; }
+.observation-math > div { padding: 12px 14px; border: 1px solid var(--border); border-radius: 11px; background: var(--panel); }
+.observation-math span, .observation-math small { display: block; color: var(--muted); font-size: .7rem; }
+.observation-math strong { display: block; margin: 3px 0; font-size: 1.13rem; }
+.observation-plot { display: flex; gap: 8px; height: 148px; margin-top: 15px; }
+.observation-plot-axis { display: flex; flex-direction: column; justify-content: space-between; min-width: 58px; text-align: right; color: var(--muted); font-size: .66rem; }
+.observation-plot-bars { display: grid; grid-template-columns: repeat(30, minmax(0, 1fr)); align-items: end; gap: 2px; flex: 1; min-width: 0; padding: 5px 0; border-top: 1px dashed var(--border); border-bottom: 1px dashed var(--border); }
+.observation-plot-column { display: flex; align-items: end; height: 100%; min-width: 0; }
+.observation-plot-column > span { display: block; width: 100%; min-height: 3px; border-radius: 3px 3px 0 0; background: var(--purple); opacity: .65; }
+.observation-plot-column.recent > span { background: var(--positive); opacity: 1; }
+.observation-plot-labels { display: flex; justify-content: space-between; gap: 8px; margin: 7px 0 16px 66px; color: var(--muted); font-size: .65rem; }
+.observation-plot-labels span:nth-child(2) { color: var(--positive); }
+.observation-rows { border-top: 1px solid var(--border); padding-top: 13px; }
+.observation-rows summary { cursor: pointer; font-size: .75rem; font-weight: 700; }
+.observation-table-wrap { overflow-x: auto; max-height: 330px; margin-top: 11px; }
+.observation-table-wrap table { width: 100%; border-collapse: collapse; font-size: .71rem; }
+.observation-table-wrap th, .observation-table-wrap td { padding: 7px 8px; border-bottom: 1px solid var(--border); text-align: left; white-space: nowrap; }
+.observation-table-wrap th { position: sticky; top: 0; background: var(--panel2); }
+.observation-evidence > .source { margin: 13px 0 0; font-size: .68rem; line-height: 1.5; }
+.breakout-evidence { margin: -4px 0 15px; }
+.breakout-evidence > p { margin-bottom: 12px; }
+.breakout-observations { display: grid; gap: 6px; }
+.breakout-observations > div { display: grid; grid-template-columns: 86px minmax(70px, 1fr) 76px 36px; align-items: center; gap: 8px; font-size: .7rem; }
+.breakout-observations time { color: var(--muted); }
+.breakout-track { display: block; height: 8px; border-radius: 10px; background: var(--border); overflow: hidden; }
+.breakout-track i { display: block; height: 100%; border-radius: inherit; background: var(--purple); }
+.breakout-observations .level .breakout-track i { background: var(--positive); }
+.breakout-observations strong { text-align: right; }
+.breakout-observations .level strong, .breakout-observations .level small { color: var(--positive); }
+@media (max-width: 650px) { .observation-heading { display: block; } .observation-heading a { display: inline-block; margin-top: 8px; } .observation-math { grid-template-columns: 1fr; } .observation-evidence { padding: 13px; } .breakout-observations > div { grid-template-columns: 80px minmax(45px, 1fr) 70px; gap: 5px; font-size: .65rem; } .breakout-observations small { display: none; } }
 .signal-detail-grid { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(260px, 1fr); gap: 16px; margin: 28px 0 18px; }
 .signal-detail-grid > div { padding: 18px; border: 1px solid var(--border); border-radius: 15px; }
 .signal-detail-grid h3 { font-size: .97rem; }

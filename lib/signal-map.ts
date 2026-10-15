@@ -15,13 +15,21 @@ export type SignalObservation = {
   factors: SignalFactor[];
 };
 
+export const averageClose = (points: PricePoint[]) => points.reduce((sum, point) => sum + point.close, 0) / points.length;
+export function validPriceObservations(history: PricePoint[]): PricePoint[] {
+  return history.filter(point => Number.isFinite(point.close) && point.close > 0 && Number.isFinite(Date.parse(point.date)))
+    .sort((a, b) => Date.parse(a.date) - Date.parse(b.date));
+}
+export function priceWindow(history: PricePoint[], count: number, skipLatest = 0): PricePoint[] {
+  const points = validPriceObservations(history);
+  return points.slice(Math.max(0, points.length - skipLatest - count), points.length - skipLatest);
+}
 const avg = (values: number[]) => values.reduce((sum, value) => sum + value, 0) / values.length;
 const percent = (value: number) => `${value >= 0 ? "+" : ""}${value.toFixed(1)}%`;
 const side = (value: number, threshold = 0): -1 | 0 | 1 => value > threshold ? 1 : value < -threshold ? -1 : 0;
 
 export function signalHistory(history: PricePoint[]): SignalObservation[] {
-  const points = history.filter(point => Number.isFinite(point.close) && point.close > 0 && Number.isFinite(Date.parse(point.date)))
-    .sort((a, b) => Date.parse(a.date) - Date.parse(b.date));
+  const points = validPriceObservations(history);
   return points.flatMap((point, index) => {
     if (index < 29) return [];
     const average10 = avg(points.slice(index - 9, index + 1).map(item => item.close));

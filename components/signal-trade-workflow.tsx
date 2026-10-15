@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { Quote } from "@/lib/types";
 import { signalHistory } from "@/lib/signal-map";
 import { closedOptionPnl, watchedLevel } from "@/lib/signal-workflow";
+import { BreakoutObservationEvidence } from "./observation-evidence";
 
 export type ChainContract = { symbol: string; strike: number; bid: number | null; ask: number | null; last_price: number | null; volume: number | null; open_interest: number | null; last_trade_at: string | null };
 export type OptionsChain = { source: string; as_of: string; methodology: string; expirations: { expiration: string; calls: ChainContract[]; puts: ChainContract[] }[]; fetched_at: string };
@@ -82,6 +83,7 @@ export function SignalTradeWorkflow({ quote, chain, loading, error }: { quote?: 
         <div title="The level uses only the ten observations before the latest close. It is a transparent price breakout rule, not an institutional order block."><span>2 · Chart level ⓘ</span><strong>{money(setup.level)}</strong><small>{setup.side === "call" ? "Highest" : "Lowest"} of ten prior closes. Latest {money(signal.close)} {setup.crossed ? "crossed it" : "has not crossed it"}.</small></div>
         <div><span>3 · Condition</span><strong>{setup.side === "call" ? "Close above" : "Close below"} level</strong><small>Watch the next completed daily close. A past crossing does not establish a new fill.</small></div>
       </div>
+      {quote && <BreakoutObservationEvidence quote={quote} side={setup.side} level={setup.level} />}
       <div className="trade-form">
         <label>Expiration<select value={activeDate} onChange={event => { setExpiry(event.target.value); setContractSymbol(""); }}>{chain?.expirations.map(item => <option key={item.expiration} value={item.expiration}>{item.expiration}</option>)}</select></label>
         <label>{setup.side === "call" ? "Call" : "Put"} contract<select value={contractSymbol} onChange={event => setContractSymbol(event.target.value)}><option value="">Select a quoted contract</option>{choices.map(item => <option key={item.symbol} value={item.symbol}>{money(item.strike)} {setup.side} · ask {money(item.ask!)} · {item.symbol}</option>)}</select></label>
