@@ -273,6 +273,9 @@ nav {
   flex-direction: column;
   gap: 4px;
 }
+.nav-group { display: grid; gap: 2px; }
+.nav-group + .nav-group { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+.nav-group .nav-label { margin: 0; padding-bottom: 5px; }
 nav button {
   display: flex;
   gap: 10px;
@@ -508,6 +511,12 @@ main {
   color: #f7faf2;
   box-shadow: var(--shadow);
 }
+.page-header-compact { min-height: 146px; padding: 23px 30px; margin-bottom: 18px; }
+.page-header-compact h1 { font-size: clamp(1.7rem, 2.4vw, 2.4rem); margin: 5px 0 6px; }
+.page-header-compact .subtitle { max-width: 560px; }
+.page-header-compact .hero-emblem { width: 90px; height: 90px; right: 300px; }
+.page-header-compact .hero-brand-symbol { width: 49px; height: 49px; }
+.page-header-compact .hero-orbit-inner { inset: 12px; }
 .hero-copy,
 .header-actions {
   position: relative;
@@ -1723,6 +1732,7 @@ footer button {
     flex-direction: column;
     gap: 20px;
   }
+  .page-header-compact { min-height: 0; }
   .hero-emblem {
     right: 30px;
     top: 80px;
@@ -1877,6 +1887,8 @@ footer button {
     padding: 24px 20px;
     border-radius: 22px;
   }
+  .page-header-compact { padding: 19px 20px; gap: 13px; }
+  .page-header-compact h1 { font-size: 1.9rem; }
   h1 {
     font-size: 2.25rem;
   }
@@ -2396,6 +2408,10 @@ footer button {
 .options-spot span, .options-spot small { display: block; color: var(--muted); font-size: .76rem; }
 .options-spot strong { display: block; margin: 5px 0; font-size: 1.9rem; letter-spacing: -.045em; }
 .options-expiry { display: inline-flex; align-items: center; gap: 12px; margin: 12px 0 18px; font-weight: 650; }
+.options-chain-disclosure, .trade-advanced { border: 1px solid var(--border); border-radius: 12px; background: var(--panel2); margin: 10px 0 16px; }
+.options-chain-disclosure summary, .trade-advanced summary { cursor: pointer; padding: 13px 16px; font-size: .82rem; font-weight: 700; }
+.options-chain-disclosure[open] summary, .trade-advanced[open] summary { border-bottom: 1px solid var(--border); }
+.options-chain-disclosure .table-scroll { margin: 0 12px 12px; }
 .options-chain-table td, .options-chain-table th { white-space: nowrap; }
 .options-row-actions { display: flex; gap: 6px; }
 .options-row-actions button { padding: 7px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--panel2); font-size: .7rem; font-weight: 700; }
@@ -2422,6 +2438,10 @@ footer button {
 .options-legend small { color: var(--muted); }
 .options-risk-note { margin-top: 16px; padding: 13px 16px; border-left: 3px solid var(--warning); border-radius: 8px; background: var(--warning-bg); color: var(--muted); font-size: .79rem; }
 .trade-workflow { scroll-margin-top: 90px; }
+.trade-workflow-heading { align-items: center; }
+.trade-current-quote { min-width: 200px; max-width: 270px; padding: 11px 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--panel2); }
+.trade-current-quote span, .trade-current-quote small { display: block; color: var(--muted); font-size: .68rem; }
+.trade-current-quote strong { display: block; margin: 2px 0; font-size: 1.3rem; }
 .trade-workflow > .source { margin: 9px 0 18px; }
 .trade-steps, .trade-quote { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 18px 0; }
 .trade-steps > div, .trade-quote > div { padding: 16px; border: 1px solid var(--border); border-radius: 14px; background: var(--panel2); }
@@ -2430,6 +2450,7 @@ footer button {
 .trade-steps strong.bullish { color: var(--positive); }
 .trade-steps strong.bearish { color: var(--red); }
 .trade-form { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 20px 0; }
+.trade-advanced .trade-form { padding: 0 15px; margin: 14px 0; }
 .trade-form label, .trade-journal-form label { display: grid; gap: 6px; min-width: 0; color: var(--muted); font-size: .74rem; font-weight: 650; }
 .trade-form input, .trade-form select, .trade-journal-form input, .trade-journal-form select { width: 100%; min-height: 42px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 9px; background: var(--bg); color: var(--text); font-size: .8rem; }
 .trade-evidence { padding: 12px 15px; border: 1px solid var(--border); border-radius: 11px; background: var(--panel2); font-size: .78rem; }
@@ -2449,6 +2470,7 @@ footer button {
 @media (max-width: 650px) { .options-intro { grid-template-columns: 1fr; } .options-intro > .eyebrow, .options-intro > h2, .options-intro > p:not(.eyebrow), .options-spot { grid-column: 1; } .options-spot { grid-row: auto; } .options-strategies, .options-inputs, .options-result-grid { grid-template-columns: 1fr; } .options-chart { height: 290px; } }
 @media (max-width: 1000px) { .trade-form { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 650px) { .trade-steps, .trade-quote, .trade-form { grid-template-columns: 1fr; } .trade-history-row { align-items: flex-start; } }
+@media (max-width: 650px) { .trade-workflow-heading { display: grid; gap: 12px; } .trade-current-quote { max-width: none; } }
 
 .signal-intro { display: grid; grid-template-columns: minmax(0, 1fr) minmax(230px, 320px); gap: 18px 26px; align-items: center; }
 .signal-intro h2 { font-size: clamp(1.5rem, 2.2vw, 2.2rem); margin: 7px 0 10px; }

@@ -56,22 +56,16 @@ export function OptionsLab({ company, quote, auto }: { company: Company; quote?:
   const setManual = (setter: (value: number | "") => void, value: string, leg: "long" | "short") => { setter(value === "" ? "" : Number(value)); if (leg === "long") setLongOrigin(""); else setShortOrigin(""); };
 
   return <div className="options-lab stack">
-    <section className="panel options-intro">
-      <p className="eyebrow">DEFINED-RISK STRATEGY WORKSPACE</p>
-      <h2>Understand the trade before the trade</h2>
-      <p>Connect an explainable stock signal to a call or put research plan, then compare long calls and debit call spreads using your own budget. Public option quotes are reference snapshots and may be delayed. Zentai does not place trades or recommend a contract.</p>
-      <div className="options-spot"><span>{company.ticker} observed share price</span><strong>{dollars(spot || null)}</strong><small>{quote ? `${quote.source} · ${time(quote.asOf)} · ${quote.feedLabel}` : "Price feed unavailable. Payoff analysis waits for an observed share price."}</small></div>
-    </section>
+    <SignalTradeWorkflow quote={quote} chain={feed.data} loading={feed.loading} error={feed.error} />
     <section className="panel">
-      <div className="panel-heading"><div><p className="eyebrow">PUBLIC OPTIONS CHAIN</p><h2>Choose an expiration and strikes</h2></div><button className="button" onClick={feed.refresh} disabled={feed.loading}>Refresh quotes</button></div>
+      <div className="panel-heading"><div><p className="eyebrow">DETAILED CALL CHAIN</p><h2>Compare call quotes for payoff scenarios</h2></div><button className="button" onClick={feed.refresh} disabled={feed.loading}>Refresh quotes</button></div>
       {feed.error && <p className="notice error" role="alert">{feed.error} Enter contract prices manually below.</p>}
       {feed.loading && !feed.data && <p className="loading" role="status">Loading available public contracts…</p>}
       {available.length > 0 && <><label className="options-expiry">Expiration <select value={activeDate} onChange={event => { setExpiration(event.target.value); setLongStrike(""); setLongAsk(""); setShortStrike(""); setShortBid(""); setLongOrigin(""); setShortOrigin(""); }}>{available.map(item => <option key={item.expiration} value={item.expiration}>{item.expiration}</option>)}</select></label>
-        <div className="table-scroll"><table className="options-chain-table"><thead><tr><th>Call strike</th><th>Bid</th><th>Ask</th><th>Volume</th><th>Open interest</th><th>Last trade</th><th>Use quote</th></tr></thead><tbody>{nearCalls.map(row => <tr key={row.symbol}><td>{dollars(row.strike)}</td><td>{dollars(row.bid)}</td><td>{dollars(row.ask)}</td><td>{row.volume ?? "—"}</td><td>{row.open_interest ?? "—"}</td><td>{time(row.last_trade_at)}</td><td><div className="options-row-actions"><button disabled={!row.ask} onClick={() => choose("long", row)}>Buy at ask</button><button disabled={!row.bid} onClick={() => choose("short", row)}>Sell at bid</button></div></td></tr>)}</tbody></table></div>
+        <details className="options-chain-disclosure"><summary>Browse {nearCalls.length} call quotes and choose legs</summary><div className="table-scroll"><table className="options-chain-table"><thead><tr><th>Call strike</th><th>Bid</th><th>Ask</th><th>Volume</th><th>Open interest</th><th>Last trade</th><th>Use quote</th></tr></thead><tbody>{nearCalls.map(row => <tr key={row.symbol}><td>{dollars(row.strike)}</td><td>{dollars(row.bid)}</td><td>{dollars(row.ask)}</td><td>{row.volume ?? "—"}</td><td>{row.open_interest ?? "—"}</td><td>{time(row.last_trade_at)}</td><td><div className="options-row-actions"><button disabled={!row.ask} onClick={() => choose("long", row)}>Buy at ask</button><button disabled={!row.bid} onClick={() => choose("short", row)}>Sell at bid</button></div></td></tr>)}</tbody></table></div></details>
         <p className="source">{feed.data?.source} · fetched {time(feed.data?.fetched_at)}. {feed.data?.methodology} Bid/ask can change before execution; the quoted legs are not guaranteed to fill together.</p></>}
       {!feed.loading && !available.length && <p className="note">No usable call quotes are available. You can still study a manual scenario below.</p>}
     </section>
-    <SignalTradeWorkflow quote={quote} chain={feed.data} />
     <section className="panel"><div className="panel-heading"><div><p className="eyebrow">EDITABLE SCENARIO</p><h2>Set the position and risk limit</h2></div></div>
       <div className="options-inputs">
         <label>Long call strike<input type="number" min="0.01" step="0.01" value={longStrike} onChange={e => setManual(setLongStrike, e.target.value, "long")} /></label>

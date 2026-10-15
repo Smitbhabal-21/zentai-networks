@@ -48,17 +48,18 @@ import { OptionsLab } from "./options-lab";
 import { SignalMap } from "./signal-map";
 import { headlinePriority } from "@/lib/news-priority";
 const navigation = [
-  { id: "overview", label: "Market overview", icon: LayoutDashboard },
-  { id: "signals", label: "Signal map", icon: Network },
-  { id: "news", label: "Newsroom", icon: Newspaper },
-  { id: "financials", label: "Company research", icon: BarChart3 },
-  { id: "analyst", label: "Analyst report", icon: FileText },
-  { id: "risk", label: "Risk intelligence", icon: ShieldCheck },
-  { id: "options-lab", label: "Options lab", icon: TrendingUp },
-  { id: "portfolio", label: "Portfolio lab", icon: Wallet },
-  { id: "backtest", label: "Strategy backtester", icon: Activity },
-  { id: "operations", label: "Global operations", icon: Globe2 },
-];
+  { id: "overview", label: "Market overview", icon: LayoutDashboard, group: "Monitor", description: "Prices, market context, and your watchlist in one glance." },
+  { id: "signals", label: "Signal map", icon: Network, group: "Monitor", description: "Rank the universe and inspect every rule behind a signal." },
+  { id: "news", label: "Newsroom", icon: Newspaper, group: "Monitor", description: "Recent company headlines with source links and timing." },
+  { id: "financials", label: "Company research", icon: BarChart3, group: "Research", description: "Reported fundamentals and company-level context." },
+  { id: "analyst", label: "Analyst report", icon: FileText, group: "Research", description: "Valuation, credit screening, evidence, and assumptions." },
+  { id: "risk", label: "Risk intelligence", icon: ShieldCheck, group: "Research", description: "Examine market risk measures and their limits." },
+  { id: "options-lab", label: "Options lab", icon: TrendingUp, group: "Plan", description: "Connect a signal to a contract, risk plan, and outcome." },
+  { id: "portfolio", label: "Portfolio lab", icon: Wallet, group: "Plan", description: "Explore allocation and portfolio scenarios." },
+  { id: "backtest", label: "Strategy backtester", icon: Activity, group: "Plan", description: "Review historical strategy behavior and assumptions." },
+  { id: "operations", label: "Global operations", icon: Globe2, group: "Explore", description: "Explore wider market and operational signals." },
+] as const;
+const navigationGroups = ["Monitor", "Research", "Plan", "Explore"] as const;
 const money = (v: unknown, currency = "USD") =>
   typeof v === "number" && Number.isFinite(v)
     ? new Intl.NumberFormat("en-US", {
@@ -467,27 +468,23 @@ export default function Dashboard() {
             Zentai<small>NETWORKS</small>
           </span>
         </a>
-        <div className="workspace-label">
-          <span className="workspace-avatar">
-            <Activity size={18} />
-          </span>
-          <div>
-            Intelligence workspace<small>Markets, in perspective</small>
-          </div>
-        </div>
-        <p className="nav-label">WORKSPACE</p>
         <nav aria-label="Main navigation">
-          {navigation.map(({ id, label, icon: Icon }) => (
-            <button
-              key={id}
-              className={page === id ? "active" : ""}
-              aria-current={page === id ? "page" : undefined}
-              onClick={() => navigate(id)}
-            >
-              <Icon size={17} />
-              {label}
-              {id === "news" && <span className="nav-dot" />}
-            </button>
+          {navigationGroups.map((group) => (
+            <div className="nav-group" key={group}>
+              <p className="nav-label">{group}</p>
+              {navigation.filter((item) => item.group === group).map(({ id, label, icon: Icon }) => (
+                <button
+                  key={id}
+                  className={page === id ? "active" : ""}
+                  aria-current={page === id ? "page" : undefined}
+                  onClick={() => navigate(id)}
+                >
+                  <Icon size={17} />
+                  {label}
+                  {id === "news" && <span className="nav-dot" />}
+                </button>
+              ))}
+            </div>
           ))}
         </nav>
         <div className="watchlist-title">
@@ -515,15 +512,6 @@ export default function Dashboard() {
           )}
         </div>
         <div className="sidebar-bottom">
-          <div className="data-card">
-            <span className="status-dot" />
-            <strong>Source-aware intelligence</strong>
-            <p>
-              Public market feeds.
-              <br />
-              Every observation has a timestamp.
-            </p>
-          </div>
           <button
             className="method-link"
             onClick={() => navigate("methodology")}
@@ -586,16 +574,16 @@ export default function Dashboard() {
           </div>
         </header>
         <main id="main-content" tabIndex={-1}>
-          <div className="page-header">
+          <div className={`page-header ${page === "overview" ? "" : "page-header-compact"}`}>
             <div className="hero-copy">
-              <p className="eyebrow">THE BIG PICTURE, IN FOCUS</p>
+              <p className="eyebrow">{page === "overview" ? "THE BIG PICTURE, IN FOCUS" : active?.group?.toUpperCase() || "WORKSPACE"}</p>
               <h1 id="page-title" tabIndex={-1}>
                 {active?.label || "Data & methodology"}
               </h1>
               <p className="subtitle">
                 {page === "overview"
                   ? "A clearer view of the market, with every signal tied to its source."
-                  : `Explore ${company.name} with transparent sources and reproducible analytics.`}
+                  : active?.description || "Understand the data, sources, and methods behind Zentai."}
               </p>
             </div>
             <div className="hero-emblem" aria-hidden="true">
