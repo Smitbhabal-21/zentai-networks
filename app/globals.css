@@ -2387,3 +2387,39 @@ footer button {
   body:has(.analyst-report) .panel, body:has(.analyst-report) .report-kpi { box-shadow: none; break-inside: avoid; }
   body:has(.analyst-report) .report-columns { grid-template-columns: 1fr 1.3fr; }
 }
+
+.options-intro { display: grid; grid-template-columns: minmax(0, 1fr) minmax(230px, 320px); gap: 10px 28px; align-items: center; }
+.options-intro > .eyebrow { grid-column: 1; }
+.options-intro > h2 { grid-column: 1; font-size: clamp(1.5rem, 2.4vw, 2.2rem); }
+.options-intro > p:not(.eyebrow) { grid-column: 1; color: var(--muted); max-width: 62ch; }
+.options-spot { grid-column: 2; grid-row: 1 / 4; padding: 20px; border: 1px solid var(--border); border-radius: 18px; background: var(--panel2); }
+.options-spot span, .options-spot small { display: block; color: var(--muted); font-size: .76rem; }
+.options-spot strong { display: block; margin: 5px 0; font-size: 1.9rem; letter-spacing: -.045em; }
+.options-expiry { display: inline-flex; align-items: center; gap: 12px; margin: 12px 0 18px; font-weight: 650; }
+.options-chain-table td, .options-chain-table th { white-space: nowrap; }
+.options-row-actions { display: flex; gap: 6px; }
+.options-row-actions button { padding: 7px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--panel2); font-size: .7rem; font-weight: 700; }
+.options-row-actions button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.options-row-actions button:disabled { opacity: .4; }
+.options-inputs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin: 18px 0; }
+.options-inputs label { display: grid; gap: 6px; color: var(--muted); font-size: .75rem; font-weight: 650; }
+.options-inputs input { width: 100%; color: var(--text); font-size: .92rem; }
+.options-strategies { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 18px 0; }
+.options-strategies button { display: grid; gap: 5px; padding: 19px; text-align: left; border: 1px solid var(--border); border-radius: 16px; background: var(--panel2); }
+.options-strategies button.selected { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent), 0 0 0 3px var(--selected); }
+.options-strategies span { font-weight: 750; }
+.options-strategies strong { font-size: 1.45rem; letter-spacing: -.04em; }
+.options-strategies small, .options-strategies em { color: var(--muted); font-size: .75rem; font-style: normal; }
+.options-result-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 20px 0; }
+.options-result-grid > div { min-width: 0; padding: 16px; border: 1px solid var(--border); border-radius: 14px; }
+.options-result-grid span, .options-result-grid small { display: block; color: var(--muted); font-size: .72rem; }
+.options-result-grid strong { display: block; margin: 5px 0; font-size: 1.3rem; letter-spacing: -.03em; }
+.options-chart { height: 330px; margin: 16px 0 8px; }
+.options-legend { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; margin: 0 0 14px; font-size: .76rem; }
+.options-legend span { display: inline-flex; gap: 6px; align-items: center; }
+.options-legend i { display: inline-block; width: 17px; height: 3px; border-radius: 3px; background: var(--positive); }
+.options-legend span:nth-child(2) i { background: var(--purple); }
+.options-legend small { color: var(--muted); }
+.options-risk-note { margin-top: 16px; padding: 13px 16px; border-left: 3px solid var(--warning); border-radius: 8px; background: var(--warning-bg); color: var(--muted); font-size: .79rem; }
+@media (max-width: 1000px) { .options-inputs, .options-result-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 650px) { .options-intro { grid-template-columns: 1fr; } .options-intro > .eyebrow, .options-intro > h2, .options-intro > p:not(.eyebrow), .options-spot { grid-column: 1; } .options-spot { grid-row: auto; } .options-strategies, .options-inputs, .options-result-grid { grid-template-columns: 1fr; } .options-chart { height: 290px; } }

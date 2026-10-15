@@ -18,6 +18,7 @@ import {
   Moon,
   Monitor,
   Newspaper,
+  TrendingUp,
   Pause,
   Play,
   RefreshCw,
@@ -42,6 +43,7 @@ import { useFeed } from "./use-feed";
 import { FinancialChart, Lines, PriceChart } from "./charts";
 import { BrandMark } from "./brand-mark";
 import { AnalystReport } from "./analyst-report";
+import { OptionsLab } from "./options-lab";
 import { headlinePriority } from "@/lib/news-priority";
 const navigation = [
   { id: "overview", label: "Market overview", icon: LayoutDashboard },
@@ -49,6 +51,7 @@ const navigation = [
   { id: "financials", label: "Company research", icon: BarChart3 },
   { id: "analyst", label: "Analyst report", icon: FileText },
   { id: "risk", label: "Risk intelligence", icon: ShieldCheck },
+  { id: "options-lab", label: "Options lab", icon: TrendingUp },
   { id: "portfolio", label: "Portfolio lab", icon: Wallet },
   { id: "backtest", label: "Strategy backtester", icon: Activity },
   { id: "operations", label: "Global operations", icon: Globe2 },
@@ -1094,6 +1097,7 @@ export default function Dashboard() {
               <Options company={company} auto={auto} />
             </div>
           )}
+          {page === "options-lab" && <OptionsLab key={company.key} company={company} quote={quoteBySymbol(company.ticker)} auto={auto} />}
           {page === "portfolio" && <Portfolio auto={auto} />}
           {page === "backtest" && <Backtest company={company} />}
           {page === "operations" && (

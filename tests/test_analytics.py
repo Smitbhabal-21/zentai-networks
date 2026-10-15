@@ -12,8 +12,25 @@ from backend.data_generators.historical_parallel import get_historical_parallel
 from backend.data_generators.ai_ensemble import get_ensemble_recommendation
 from backend.data_generators.analyst_snapshot import credit_tier, get_analyst_snapshot
 from backend.data_generators.sec_filings import _fact, get_sec_filing_snapshot
+from backend.data_generators.options_flow import get_options_chain
 
 class AccuracyTests(unittest.TestCase):
+    def test_options_chain_keeps_bid_ask_and_trade_time(self):
+        rows = pd.DataFrame([{'contractSymbol': 'AAPL261120C00340000', 'strike': 340.0,
+                              'bid': 4.2, 'ask': 4.8, 'lastPrice': 4.5,
+                              'volume': 12, 'openInterest': 300,
+                              'lastTradeDate': pd.Timestamp('2026-10-14T15:30:00Z')},
+                             {'contractSymbol': 'AAPL261120C00350000', 'strike': 350.0,
+                              'bid': np.nan, 'ask': 2.8, 'lastPrice': 2.7,
+                              'volume': np.nan, 'openInterest': 100,
+                              'lastTradeDate': pd.Timestamp('2026-10-14T15:30:00Z')}])
+        with patch('backend.data_generators.options_flow.yf.Ticker') as ticker:
+            ticker.return_value.options = ['2026-11-20']
+            ticker.return_value.option_chain.return_value.calls = rows
+            result = get_options_chain('AAPL')
+        self.assertEqual(result['expirations'][0]['calls'][0]['ask'], 4.8)
+        self.assertIsNone(result['expirations'][0]['calls'][1]['bid'])
+        self.assertIn('2026-10-14', result['expirations'][0]['calls'][0]['last_trade_at'])
     def test_sec_facts_keep_period_and_original_concept(self):
         facts = {'us-gaap': {'NetIncomeLoss': {'units': {'USD': [
             {'form': '10-K', 'start': '2024-01-01', 'end': '2024-12-31', 'filed': '2025-02-01', 'val': 2e9, 'accn': 'a'},

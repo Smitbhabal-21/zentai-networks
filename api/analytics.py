@@ -39,6 +39,9 @@ def execute(params):
     elif section=='options':
         from backend.data_generators.options_flow import get_options_flow
         result=get_options_flow(ticker)
+    elif section=='options_chain':
+        from backend.data_generators.options_flow import get_options_chain
+        result=get_options_chain(ticker)
     elif section=='insiders':
         from backend.data_generators.insider import get_insider_trading
         result=get_insider_trading(company)
