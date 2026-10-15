@@ -23,7 +23,8 @@ export function OptionsLab({ company, quote, auto }: { company: Company; quote?:
   const [multiplier, setMultiplier] = useState(100);
   const [budget, setBudget] = useState(500);
   const [selected, setSelected] = useState<"long-call" | "bull-call-spread">("bull-call-spread");
-  const [quoteOrigin, setQuoteOrigin] = useState("");
+  const [longOrigin, setLongOrigin] = useState("");
+  const [shortOrigin, setShortOrigin] = useState("");
   const spot = quote?.price ?? 0;
   const input: OptionInputs = { spot, longStrike: Number(longStrike), longAsk: Number(longAsk), shortStrike: Number(shortStrike), shortBid: Number(shortBid), contracts, multiplier };
   const long = longStrike !== "" && longAsk !== "" ? optionResult("long-call", input) : null;
@@ -32,6 +33,10 @@ export function OptionsLab({ company, quote, auto }: { company: Company; quote?:
   const available = feed.data?.expirations || [];
   const activeExpiry = available.find(item => item.expiration === expiration) || available[0];
   const activeDate = activeExpiry?.expiration || expiration;
+  const breakEvenDistance = result && spot ? (result.breakEven / spot - 1) * 100 : null;
+  const breakEvenContext = breakEvenDistance === null ? "Price unavailable" : Math.abs(breakEvenDistance) < .005
+    ? "Approximately at the observed share price"
+    : `${Math.abs(breakEvenDistance).toFixed(2)}% ${breakEvenDistance > 0 ? "above" : "below"} the observed share price`;
   const nearCalls = useMemo(() => activeExpiry?.calls.filter(row => row.ask !== null && row.ask > 0 || row.bid !== null && row.bid > 0)
     .sort((a, b) => Math.abs(a.strike - spot) - Math.abs(b.strike - spot)).slice(0, 12).sort((a, b) => a.strike - b.strike) || [], [activeExpiry, spot]);
   const points = useMemo(() => {
@@ -44,10 +49,10 @@ export function OptionsLab({ company, quote, auto }: { company: Company; quote?:
     });
   }, [spot, long, spread, input.longStrike, input.longAsk, input.shortStrike, input.shortBid, input.contracts, input.multiplier]);
   const choose = (leg: "long" | "short", row: Contract) => {
-    if (leg === "long" && row.ask && row.ask > 0) { setLongStrike(row.strike); setLongAsk(row.ask); setQuoteOrigin(`Long ask from ${row.symbol}; last trade ${time(row.last_trade_at)}`); }
-    if (leg === "short" && row.bid !== null && row.bid > 0) { setShortStrike(row.strike); setShortBid(row.bid); setQuoteOrigin(`Short bid from ${row.symbol}; last trade ${time(row.last_trade_at)}`); }
+    if (leg === "long" && row.ask && row.ask > 0) { setLongStrike(row.strike); setLongAsk(row.ask); setLongOrigin(`${row.symbol} ask ${dollars(row.ask)}, last trade ${time(row.last_trade_at)}`); }
+    if (leg === "short" && row.bid !== null && row.bid > 0) { setShortStrike(row.strike); setShortBid(row.bid); setShortOrigin(`${row.symbol} bid ${dollars(row.bid)}, last trade ${time(row.last_trade_at)}`); }
   };
-  const setManual = (setter: (value: number | "") => void, value: string) => { setter(value === "" ? "" : Number(value)); setQuoteOrigin(""); };
+  const setManual = (setter: (value: number | "") => void, value: string, leg: "long" | "short") => { setter(value === "" ? "" : Number(value)); if (leg === "long") setLongOrigin(""); else setShortOrigin(""); };
 
   return <div className="options-lab stack">
     <section className="panel options-intro">
@@ -60,27 +65,27 @@ export function OptionsLab({ company, quote, auto }: { company: Company; quote?:
       <div className="panel-heading"><div><p className="eyebrow">PUBLIC OPTIONS CHAIN</p><h2>Choose an expiration and strikes</h2></div><button className="button" onClick={feed.refresh} disabled={feed.loading}>Refresh quotes</button></div>
       {feed.error && <p className="notice error" role="alert">{feed.error} Enter contract prices manually below.</p>}
       {feed.loading && !feed.data && <p className="loading" role="status">Loading available public contracts…</p>}
-      {available.length > 0 && <><label className="options-expiry">Expiration <select value={activeDate} onChange={event => { setExpiration(event.target.value); setLongStrike(""); setLongAsk(""); setShortStrike(""); setShortBid(""); setQuoteOrigin(""); }}>{available.map(item => <option key={item.expiration} value={item.expiration}>{item.expiration}</option>)}</select></label>
+      {available.length > 0 && <><label className="options-expiry">Expiration <select value={activeDate} onChange={event => { setExpiration(event.target.value); setLongStrike(""); setLongAsk(""); setShortStrike(""); setShortBid(""); setLongOrigin(""); setShortOrigin(""); }}>{available.map(item => <option key={item.expiration} value={item.expiration}>{item.expiration}</option>)}</select></label>
         <div className="table-scroll"><table className="options-chain-table"><thead><tr><th>Call strike</th><th>Bid</th><th>Ask</th><th>Volume</th><th>Open interest</th><th>Last trade</th><th>Use quote</th></tr></thead><tbody>{nearCalls.map(row => <tr key={row.symbol}><td>{dollars(row.strike)}</td><td>{dollars(row.bid)}</td><td>{dollars(row.ask)}</td><td>{row.volume ?? "—"}</td><td>{row.open_interest ?? "—"}</td><td>{time(row.last_trade_at)}</td><td><div className="options-row-actions"><button disabled={!row.ask} onClick={() => choose("long", row)}>Buy at ask</button><button disabled={!row.bid} onClick={() => choose("short", row)}>Sell at bid</button></div></td></tr>)}</tbody></table></div>
         <p className="source">{feed.data?.source} · fetched {time(feed.data?.fetched_at)}. {feed.data?.methodology} Bid/ask can change before execution; the quoted legs are not guaranteed to fill together.</p></>}
       {!feed.loading && !available.length && <p className="note">No usable call quotes are available. You can still study a manual scenario below.</p>}
     </section>
     <section className="panel"><div className="panel-heading"><div><p className="eyebrow">EDITABLE SCENARIO</p><h2>Set the position and risk limit</h2></div></div>
       <div className="options-inputs">
-        <label>Long call strike<input type="number" min="0.01" step="0.01" value={longStrike} onChange={e => setManual(setLongStrike, e.target.value)} /></label>
-        <label>Long call ask / share<input type="number" min="0.01" step="0.01" value={longAsk} onChange={e => setManual(setLongAsk, e.target.value)} /></label>
-        <label>Short call strike<input type="number" min="0.01" step="0.01" value={shortStrike} onChange={e => setManual(setShortStrike, e.target.value)} /></label>
-        <label>Short call bid / share<input type="number" min="0" step="0.01" value={shortBid} onChange={e => setManual(setShortBid, e.target.value)} /></label>
+        <label>Long call strike<input type="number" min="0.01" step="0.01" value={longStrike} onChange={e => setManual(setLongStrike, e.target.value, "long")} /></label>
+        <label>Long call ask / share<input type="number" min="0.01" step="0.01" value={longAsk} onChange={e => setManual(setLongAsk, e.target.value, "long")} /></label>
+        <label>Short call strike<input type="number" min="0.01" step="0.01" value={shortStrike} onChange={e => setManual(setShortStrike, e.target.value, "short")} /></label>
+        <label>Short call bid / share<input type="number" min="0" step="0.01" value={shortBid} onChange={e => setManual(setShortBid, e.target.value, "short")} /></label>
         <label>Contracts<input type="number" min="1" step="1" value={contracts} onChange={e => setContracts(Number(e.target.value))} /></label>
         <label>Shares per contract<input type="number" min="1" step="1" value={multiplier} onChange={e => setMultiplier(Number(e.target.value))} /></label>
         <label>Maximum loss budget ($)<input type="number" min="1" step="1" value={budget} onChange={e => setBudget(Number(e.target.value))} /></label>
         <label>Manual expiration (if no chain)<input type="date" value={available.length ? activeDate : expiration} disabled={available.length > 0} onChange={e => setExpiration(e.target.value)} /></label>
       </div>
-      <p className="source">{quoteOrigin ? `Most recently selected quote: ${quoteOrigin}. Other inputs may have been edited manually. ` : "Manual inputs are hypothetical, not live quotes. "}Confirm contract multiplier and expiration with your broker. Calculations exclude fees, slippage, early exercise, and assignment effects.</p>
+      <p className="source">{longOrigin ? `Long leg: ${longOrigin}. ` : "Long leg: manual scenario. "}{shortOrigin ? `Short leg: ${shortOrigin}. ` : "Short leg: manual scenario. "}Confirm contract multiplier and expiration with your broker. Calculations exclude fees, slippage, early exercise, and assignment effects.</p>
     </section>
     <section className="panel"><div className="panel-heading"><div><p className="eyebrow">AT-EXPIRATION PAYOFF</p><h2>Compare cost, break-even, and upside</h2></div></div>
       <div className="options-strategies"><button className={selected === "long-call" ? "selected" : ""} onClick={() => setSelected("long-call")} aria-pressed={selected === "long-call"}><span>Long call</span><strong>{long ? dollars(long.maxLoss) : "Add a valid long call"}</strong><small>Maximum premium at risk · upside uncapped at expiration</small><em>Break-even {long ? dollars(long.breakEven) : "—"}</em></button><button className={selected === "bull-call-spread" ? "selected" : ""} onClick={() => setSelected("bull-call-spread")} aria-pressed={selected === "bull-call-spread"}><span>Debit call spread</span><strong>{spread ? dollars(spread.maxLoss) : "Add a valid higher short strike"}</strong><small>Maximum debit at risk · capped upside {spread ? dollars(spread.maxGain) : "—"}</small><em>Break-even {spread ? dollars(spread.breakEven) : "—"}</em></button></div>
-      {result ? <><div className="options-result-grid"><div><span>Maximum loss</span><strong>{dollars(result.maxLoss)}</strong><small>{result.maxLoss > budget ? "Over your stated budget" : "Within your stated budget"}</small></div><div><span>At-expiry break-even</span><strong>{dollars(result.breakEven)}</strong><small>{spot ? `${((result.breakEven / spot - 1) * 100).toFixed(1)}% above observed share price` : "Price unavailable"}</small></div><div><span>Maximum gain</span><strong>{result.maxGain === null ? "Uncapped" : dollars(result.maxGain)}</strong><small>At expiration, before fees</small></div><div><span>Outlay vs share cost</span><strong>{result.capitalAtRiskPct.toFixed(1)}%</strong><small>Relative to buying {contracts * multiplier} shares; the entire option outlay can be lost</small></div></div>
+      {result ? <><div className="options-result-grid"><div><span>Maximum loss</span><strong>{dollars(result.maxLoss)}</strong><small>{result.maxLoss > budget ? "Over your stated budget" : "Within your stated budget"}</small></div><div><span>At-expiry break-even</span><strong>{dollars(result.breakEven)}</strong><small>{breakEvenContext}</small></div><div><span>Maximum gain</span><strong>{result.maxGain === null ? "Uncapped" : dollars(result.maxGain)}</strong><small>At expiration, before fees</small></div><div><span>Outlay vs share cost</span><strong>{result.capitalAtRiskPct.toFixed(1)}%</strong><small>Relative to buying {contracts * multiplier} shares; the entire option outlay can be lost</small></div></div>
         {result.maxLoss > budget && <p className="notice error" role="alert">The selected position exceeds your maximum loss budget by {dollars(result.maxLoss - budget)}. Reduce contracts or change the premium/strikes.</p>}
         <div className="options-chart" role="img" aria-label="At-expiration dollar profit and loss across possible share prices for a long call and debit call spread"><ResponsiveContainer width="100%" height="100%"><LineChart data={points} margin={{ top: 16, right: 24, left: 8, bottom: 12 }}><CartesianGrid stroke="var(--border)" strokeDasharray="3 5" /><XAxis dataKey="price" tickFormatter={value => `$${Number(value).toFixed(0)}`} tick={{ fill: "var(--muted)", fontSize: 11 }} /><YAxis tickFormatter={value => `$${Number(value).toFixed(0)}`} tick={{ fill: "var(--muted)", fontSize: 11 }} /><Tooltip contentStyle={{ background: "var(--panel)", border: "1px solid var(--border)", color: "var(--text)" }} formatter={value => dollars(Number(value))} labelFormatter={value => `Share price at expiry ${dollars(Number(value))}`} /><ReferenceLine y={0} stroke="var(--muted)" /><ReferenceLine x={spot} stroke="var(--accent)" strokeDasharray="4 4" /><Line name="Long call" type="linear" dataKey="longCall" stroke="var(--positive)" strokeWidth={3} dot={false} isAnimationActive={false} /><Line name="Debit call spread" type="linear" dataKey="spread" stroke="var(--purple)" strokeWidth={3} dot={false} isAnimationActive={false} /></LineChart></ResponsiveContainer></div>
         <div className="options-legend"><span><i /> Long call</span><span><i /> Debit call spread</span><small>Dashed vertical line: observed share price</small></div>
