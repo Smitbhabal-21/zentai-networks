@@ -18,6 +18,7 @@ import {
   Moon,
   Monitor,
   Newspaper,
+  Network,
   TrendingUp,
   Pause,
   Play,
@@ -44,9 +45,11 @@ import { FinancialChart, Lines, PriceChart } from "./charts";
 import { BrandMark } from "./brand-mark";
 import { AnalystReport } from "./analyst-report";
 import { OptionsLab } from "./options-lab";
+import { SignalMap } from "./signal-map";
 import { headlinePriority } from "@/lib/news-priority";
 const navigation = [
   { id: "overview", label: "Market overview", icon: LayoutDashboard },
+  { id: "signals", label: "Signal map", icon: Network },
   { id: "news", label: "Newsroom", icon: Newspaper },
   { id: "financials", label: "Company research", icon: BarChart3 },
   { id: "analyst", label: "Analyst report", icon: FileText },
@@ -940,6 +943,7 @@ export default function Dashboard() {
               </section>
             </>
           )}
+          {page === "signals" && <SignalMap market={market} company={company} auto={auto} onSelect={setCompany} onOptions={() => navigate("options-lab")} />}
           {page === "news" && (
             <section className="panel full-news">
               <PanelTitle
