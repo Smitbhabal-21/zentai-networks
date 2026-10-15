@@ -6,9 +6,10 @@ import type { Company } from "@/lib/companies";
 import type { Quote } from "@/lib/types";
 import { expirationProfit, optionResult, type OptionInputs } from "@/lib/options-lab";
 import { useFeed } from "./use-feed";
+import { SignalTradeWorkflow, type OptionsChain } from "./signal-trade-workflow";
 
 type Contract = { symbol: string; strike: number; bid: number | null; ask: number | null; last_price: number | null; volume: number | null; open_interest: number | null; last_trade_at: string | null };
-type Chain = { source: string; as_of: string; methodology: string; expirations: { expiration: string; calls: Contract[] }[]; fetched_at: string };
+type Chain = OptionsChain;
 const dollars = (n: number | null) => n === null || !Number.isFinite(n) ? "—" : new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 }).format(n);
 const time = (value?: string | null) => value && !Number.isNaN(Date.parse(value)) ? new Date(value).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }) : "unavailable";
 
@@ -58,7 +59,7 @@ export function OptionsLab({ company, quote, auto }: { company: Company; quote?:
     <section className="panel options-intro">
       <p className="eyebrow">DEFINED-RISK STRATEGY WORKSPACE</p>
       <h2>Understand the trade before the trade</h2>
-      <p>Compare a long call with a debit call spread using your own budget. Public option quotes are reference snapshots and may be delayed. Zentai does not place trades or recommend a contract.</p>
+      <p>Connect an explainable stock signal to a call or put research plan, then compare long calls and debit call spreads using your own budget. Public option quotes are reference snapshots and may be delayed. Zentai does not place trades or recommend a contract.</p>
       <div className="options-spot"><span>{company.ticker} observed share price</span><strong>{dollars(spot || null)}</strong><small>{quote ? `${quote.source} · ${time(quote.asOf)} · ${quote.feedLabel}` : "Price feed unavailable. Payoff analysis waits for an observed share price."}</small></div>
     </section>
     <section className="panel">
@@ -70,6 +71,7 @@ export function OptionsLab({ company, quote, auto }: { company: Company; quote?:
         <p className="source">{feed.data?.source} · fetched {time(feed.data?.fetched_at)}. {feed.data?.methodology} Bid/ask can change before execution; the quoted legs are not guaranteed to fill together.</p></>}
       {!feed.loading && !available.length && <p className="note">No usable call quotes are available. You can still study a manual scenario below.</p>}
     </section>
+    <SignalTradeWorkflow quote={quote} chain={feed.data} />
     <section className="panel"><div className="panel-heading"><div><p className="eyebrow">EDITABLE SCENARIO</p><h2>Set the position and risk limit</h2></div></div>
       <div className="options-inputs">
         <label>Long call strike<input type="number" min="0.01" step="0.01" value={longStrike} onChange={e => setManual(setLongStrike, e.target.value, "long")} /></label>

@@ -27,10 +27,16 @@ class AccuracyTests(unittest.TestCase):
         with patch('backend.data_generators.options_flow.yf.Ticker') as ticker:
             ticker.return_value.options = ['2026-11-20']
             ticker.return_value.option_chain.return_value.calls = rows
+            ticker.return_value.option_chain.return_value.puts = pd.DataFrame([{'contractSymbol': 'AAPL261120P00340000', 'strike': 340.0,
+                              'bid': 5.1, 'ask': 5.6, 'lastPrice': 5.3,
+                              'volume': 8, 'openInterest': 90,
+                              'lastTradeDate': pd.Timestamp('2026-10-14T15:45:00Z')}])
             result = get_options_chain('AAPL')
         self.assertEqual(result['expirations'][0]['calls'][0]['ask'], 4.8)
         self.assertIsNone(result['expirations'][0]['calls'][1]['bid'])
         self.assertIn('2026-10-14', result['expirations'][0]['calls'][0]['last_trade_at'])
+        self.assertEqual(result['expirations'][0]['puts'][0]['symbol'], 'AAPL261120P00340000')
+        self.assertEqual(result['expirations'][0]['puts'][0]['ask'], 5.6)
     def test_sec_facts_keep_period_and_original_concept(self):
         facts = {'us-gaap': {'NetIncomeLoss': {'units': {'USD': [
             {'form': '10-K', 'start': '2024-01-01', 'end': '2024-12-31', 'filed': '2025-02-01', 'val': 2e9, 'accn': 'a'},

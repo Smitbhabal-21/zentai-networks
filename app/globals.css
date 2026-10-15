@@ -2421,8 +2421,34 @@ footer button {
 .options-legend span:nth-child(2) i { background: var(--purple); }
 .options-legend small { color: var(--muted); }
 .options-risk-note { margin-top: 16px; padding: 13px 16px; border-left: 3px solid var(--warning); border-radius: 8px; background: var(--warning-bg); color: var(--muted); font-size: .79rem; }
+.trade-workflow { scroll-margin-top: 90px; }
+.trade-workflow > .source { margin: 9px 0 18px; }
+.trade-steps, .trade-quote { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 18px 0; }
+.trade-steps > div, .trade-quote > div { padding: 16px; border: 1px solid var(--border); border-radius: 14px; background: var(--panel2); }
+.trade-steps span, .trade-steps small, .trade-quote span, .trade-quote small { display: block; color: var(--muted); font-size: .72rem; line-height: 1.45; }
+.trade-steps strong, .trade-quote strong { display: block; margin: 5px 0; font-size: 1.05rem; letter-spacing: -.02em; }
+.trade-steps strong.bullish { color: var(--positive); }
+.trade-steps strong.bearish { color: var(--red); }
+.trade-form { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 20px 0; }
+.trade-form label, .trade-journal-form label { display: grid; gap: 6px; min-width: 0; color: var(--muted); font-size: .74rem; font-weight: 650; }
+.trade-form input, .trade-form select, .trade-journal-form input, .trade-journal-form select { width: 100%; min-height: 42px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 9px; background: var(--bg); color: var(--text); font-size: .8rem; }
+.trade-evidence { padding: 12px 15px; border: 1px solid var(--border); border-radius: 11px; background: var(--panel2); font-size: .78rem; }
+.trade-evidence summary { cursor: pointer; font-weight: 700; }
+.trade-evidence p { margin-top: 10px; color: var(--muted); line-height: 1.6; overflow-wrap: anywhere; }
+.trade-journal-form { display: flex; align-items: end; flex-wrap: wrap; gap: 12px; margin: 20px 0 10px; }
+.trade-journal-form label { width: min(200px, 100%); }
+.trade-journal-form button:disabled { opacity: .5; cursor: not-allowed; }
+.trade-history { margin-top: 28px; padding-top: 18px; border-top: 1px solid var(--border); }
+.trade-history h3 { margin-bottom: 10px; font-size: .95rem; }
+.trade-history-row { display: flex; justify-content: space-between; align-items: center; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.trade-history-row strong, .trade-history-row small { display: block; }
+.trade-history-row strong { font-size: .8rem; }
+.trade-history-row small { margin-top: 3px; color: var(--muted); font-size: .69rem; overflow-wrap: anywhere; }
+.trade-history-row button { flex-shrink: 0; color: var(--muted); font-size: .72rem; text-decoration: underline; }
 @media (max-width: 1000px) { .options-inputs, .options-result-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 650px) { .options-intro { grid-template-columns: 1fr; } .options-intro > .eyebrow, .options-intro > h2, .options-intro > p:not(.eyebrow), .options-spot { grid-column: 1; } .options-spot { grid-row: auto; } .options-strategies, .options-inputs, .options-result-grid { grid-template-columns: 1fr; } .options-chart { height: 290px; } }
+@media (max-width: 1000px) { .trade-form { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 650px) { .trade-steps, .trade-quote, .trade-form { grid-template-columns: 1fr; } .trade-history-row { align-items: flex-start; } }
 
 .signal-intro { display: grid; grid-template-columns: minmax(0, 1fr) minmax(230px, 320px); gap: 18px 26px; align-items: center; }
 .signal-intro h2 { font-size: clamp(1.5rem, 2.2vw, 2.2rem); margin: 7px 0 10px; }

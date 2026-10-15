@@ -11,7 +11,7 @@ def _finite(value):
         return None
 
 def get_options_chain(ticker):
-    """Public call quotes for the strategy lab. Quotes can be delayed or absent."""
+    """Public call and put quotes for the strategy lab. Quotes can be delayed or absent."""
     try:
         stock = yf.Ticker(ticker)
         expirations = list(stock.options)[:3]
@@ -19,25 +19,26 @@ def get_options_chain(ticker):
             return {"error": "No listed options expirations available from the provider."}
         chains = []
         for expiration in expirations:
-            calls = stock.option_chain(expiration).calls
-            contracts = []
-            for _, row in calls.iterrows():
-                strike = _finite(row.get('strike'))
-                if strike is None or strike == 0:
-                    continue
-                trade = row.get('lastTradeDate')
-                trade_time = trade.isoformat() if hasattr(trade, 'isoformat') else None
-                contracts.append({
-                    "symbol": str(row.get('contractSymbol', '')),
-                    "strike": strike,
-                    "bid": _finite(row.get('bid')),
-                    "ask": _finite(row.get('ask')),
-                    "last_price": _finite(row.get('lastPrice')),
-                    "volume": _finite(row.get('volume')),
-                    "open_interest": _finite(row.get('openInterest')),
-                    "last_trade_at": trade_time,
-                })
-            chains.append({"expiration": expiration, "calls": contracts})
+            chain = stock.option_chain(expiration)
+            def contracts(frame):
+                result = []
+                for _, row in frame.iterrows():
+                    strike = _finite(row.get('strike'))
+                    if strike is None or strike == 0:
+                        continue
+                    trade = row.get('lastTradeDate')
+                    result.append({
+                        "symbol": str(row.get('contractSymbol', '')),
+                        "strike": strike,
+                        "bid": _finite(row.get('bid')),
+                        "ask": _finite(row.get('ask')),
+                        "last_price": _finite(row.get('lastPrice')),
+                        "volume": _finite(row.get('volume')),
+                        "open_interest": _finite(row.get('openInterest')),
+                        "last_trade_at": trade.isoformat() if hasattr(trade, 'isoformat') else None,
+                    })
+                return result
+            chains.append({"expiration": expiration, "calls": contracts(chain.calls), "puts": contracts(chain.puts)})
         return {"source": "Yahoo Finance via yfinance", "as_of": datetime.now(timezone.utc).isoformat(),
                 "multiplier_assumption": 100, "expirations": chains,
                 "methodology": "Available public bid/ask snapshots; may be delayed, stale, or incomplete. Verify contract size, quotes, liquidity, and exercise terms with a broker."}
