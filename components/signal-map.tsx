@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { CartesianGrid, Line, LineChart, ReferenceDot, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { ArrowRight, Clock3, ExternalLink } from "lucide-react";
-import { companies, type Company } from "@/lib/companies";
+import { ArrowRight, Clock3, ExternalLink, Search } from "lucide-react";
+import { companies, companyFromHolding, type Company } from "@/lib/companies";
 import type { MarketResponse, NewsResponse, Quote } from "@/lib/types";
-import { signalHistory, signalTransitions } from "@/lib/signal-map";
+import type { UniverseSnapshot } from "@/lib/ivv-universe";
+import { signalHistory, signalTransitions, type SignalFactor } from "@/lib/signal-map";
 import { headlinePriority } from "@/lib/news-priority";
 import { useFeed } from "./use-feed";
 import { AverageObservationEvidence } from "./observation-evidence";
@@ -14,39 +15,104 @@ const date = (value?: string) => value ? new Date(value).toLocaleString("en-US",
 const day = (value?: string) => value ? new Date(value).toLocaleDateString("en-US", { dateStyle: "medium" }) : "Unavailable";
 const cash = (value?: number) => value === undefined ? "—" : new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 }).format(value);
 
-export function SignalMap({ market, company, selectedQuote, auto, onSelect, onOptions }: {
+type SignalSummary = { symbol: string; score: number | null; state: "Bullish" | "Mixed" | "Bearish" | null; close: number | null; observedAt: string | null; quoteAsOf: string | null; source: string | null; factors: SignalFactor[]; error: string | null };
+const summaryFromQuote = (quote: Quote): SignalSummary => {
+  const signal = signalHistory(quote.history).at(-1);
+  return { symbol: quote.symbol, score: signal?.score ?? null, state: signal?.state ?? null, close: signal?.close ?? null,
+    observedAt: signal?.date ?? null, quoteAsOf: quote.asOf, source: quote.source, factors: signal?.factors ?? [],
+    error: signal ? null : "Fewer than 30 valid observations." };
+};
+const signalTitle = (item: Company, signal?: SignalSummary) => signal?.state
+  ? `${item.name} · ${signal.state} ${signal.score! > 0 ? "+" : ""}${signal.score}/5\nObserved ${signal.observedAt?.slice(0, 10)} · ${signal.source}\n${signal.factors.map(factor => `${factor.name}: ${factor.contribution > 0 ? "+" : ""}${factor.contribution} (${factor.reading})`).join("\n")}\nOpen for rule thresholds and history.`
+  : `${item.name} · ${signal?.error || "Not scanned yet"}. Open to calculate its signal from dated chart observations.`;
+
+export function SignalMap({ market, universe, company, selectedQuote, auto, onSelect, onOptions }: {
   market: { data: MarketResponse | null; loading: boolean; error: string | null; refresh: () => void };
+  universe: UniverseSnapshot | null;
   company: Company;
   selectedQuote?: Quote;
   auto: boolean;
   onSelect: (company: Company) => void;
   onOptions: () => void;
 }) {
-  const rows = useMemo(() => [...companies, ...(companies.some(item => item.ticker === company.ticker) ? [] : [company])].map(item => {
-    const quote = item.ticker === company.ticker && selectedQuote ? selectedQuote : market.data?.quotes.find(value => value.symbol === item.ticker);
-    const timeline = quote ? signalHistory(quote.history) : [];
-    return { company: item, quote, timeline, signal: timeline.at(-1) };
-  }).sort((a, b) => (b.signal?.score ?? -99) - (a.signal?.score ?? -99)), [market.data, company, selectedQuote]);
-  const selected = rows.find(row => row.company.key === company.key)!;
-  const counts = { bullish: rows.filter(row => row.signal?.state === "Bullish").length, bearish: rows.filter(row => row.signal?.state === "Bearish").length, mixed: rows.filter(row => row.signal?.state === "Mixed").length };
+  const [query, setQuery] = useState("");
+  const [sector, setSector] = useState("All sectors");
+  const [scanned, setScanned] = useState<Record<string, SignalSummary>>(() => {
+    if (typeof window === "undefined") return {};
+    try {
+      const saved = JSON.parse(sessionStorage.getItem("zentai-signal-scan") || "null");
+      return saved && Date.now() - saved.savedAt < 300000 && saved.results && typeof saved.results === "object" ? saved.results : {};
+    } catch { return {}; }
+  });
+  const [scanActive, setScanActive] = useState(false);
+  const [scanProgress, setScanProgress] = useState({ done: 0, total: 0 });
+  const [scanError, setScanError] = useState<string | null>(null);
+  const scanControl = useRef<AbortController | null>(null);
+  useEffect(() => () => scanControl.current?.abort(), []);
+  useEffect(() => {
+    try { sessionStorage.setItem("zentai-signal-scan", JSON.stringify({ savedAt: Date.now(), results: scanned })); } catch {}
+  }, [scanned]);
+  const holdings = useMemo(() => {
+    const items: Company[] = universe?.holdings.map(companyFromHolding) || [...companies];
+    if (!items.some(item => item.ticker === company.ticker)) items.unshift(company);
+    return items;
+  }, [universe, company]);
+  const quoteMap = useMemo(() => new Map((market.data?.quotes || []).map(quote => [quote.symbol, quote])), [market.data]);
+  const rows = useMemo(() => holdings.map(item => {
+    const quote = item.ticker === company.ticker && selectedQuote ? selectedQuote : quoteMap.get(item.ticker);
+    return { company: item, summary: quote ? summaryFromQuote(quote) : scanned[item.ticker] };
+  }), [holdings, company, selectedQuote, quoteMap, scanned]);
+  const selectedQuoteValue = selectedQuote || quoteMap.get(company.ticker);
+  const selectedTimeline = selectedQuoteValue ? signalHistory(selectedQuoteValue.history) : [];
+  const selected = { quote: selectedQuoteValue, timeline: selectedTimeline, signal: selectedTimeline.at(-1) };
+  const filteredRows = rows.filter(row => (sector === "All sectors" || row.company.sector === sector) && `${row.company.ticker} ${row.company.name}`.toLowerCase().includes(query.trim().toLowerCase()));
+  const sectors = [...new Set(rows.map(row => row.company.sector))].sort();
+  const groups = sectors.filter(name => sector === "All sectors" || name === sector).map(name => ({ name, rows: filteredRows.filter(row => row.company.sector === name) })).filter(group => group.rows.length);
+  const counts = { bullish: rows.filter(row => row.summary?.state === "Bullish").length, bearish: rows.filter(row => row.summary?.state === "Bearish").length, mixed: rows.filter(row => row.summary?.state === "Mixed").length };
+  const pending = rows.length - counts.bullish - counts.mixed - counts.bearish;
+  const scan = async () => {
+    const targets = filteredRows.filter(row => !row.summary?.state).map(row => row.company.ticker);
+    if (!targets.length) return;
+    const controller = new AbortController();
+    scanControl.current = controller;
+    setScanActive(true);
+    setScanError(null);
+    setScanProgress({ done: 0, total: targets.length });
+    try {
+      for (let index = 0; index < targets.length; index += 8) {
+        const batch = targets.slice(index, index + 8);
+        const response = await fetch(`/api/signals?symbols=${batch.join(",")}`, { signal: controller.signal });
+        if (!response.ok) throw new Error("Signal provider could not complete this batch. You can retry the remaining names.");
+        const data: { results: SignalSummary[] } = await response.json();
+        if (controller.signal.aborted) break;
+        setScanned(current => ({ ...current, ...Object.fromEntries(data.results.map(result => [result.symbol, result])) }));
+        setScanProgress({ done: Math.min(index + batch.length, targets.length), total: targets.length });
+      }
+    } catch (error) {
+      if (!controller.signal.aborted) setScanError(error instanceof Error ? error.message : "Signal scan stopped.");
+    } finally {
+      if (scanControl.current === controller) scanControl.current = null;
+      setScanActive(false);
+    }
+  };
   const news = useFeed<NewsResponse>(`/api/news?symbol=${company.ticker}`, 180000, auto);
   const transitions = signalTransitions(selected.timeline);
   const chart = selected.timeline.map(item => ({ ...item, day: item.date.slice(0, 10) }));
   return <div className="signal-map stack">
     <section className="panel signal-intro">
-      <div><p className="eyebrow">OBSERVED DATA → EXPLAINABLE MODEL → SOURCE CONTEXT</p><h2>Follow the market, then inspect the evidence</h2><p>Each company moves between bullish, mixed, and bearish buckets as its observed close, trend, and volume change. Select a name to see the exact five rules behind its current score.</p></div>
-      <div className="signal-summary"><div><strong>{counts.bullish}</strong><span>Bullish</span></div><div><strong>{counts.mixed}</strong><span>Mixed</span></div><div><strong>{counts.bearish}</strong><span>Bearish</span></div></div>
-      <p className="source"><Clock3 size={12} /> Public Yahoo Finance chart observations · feed fetched {date(market.data?.fetchedAt)}. The newest observation can be incomplete during market hours. {market.error ? `Latest refresh failed: ${market.error}` : "Quotes may be delayed."}</p>
+      <div><p className="eyebrow">SECTOR → COMPANY → OBSERVED SIGNAL → EVIDENCE</p><h2>Follow the full market sideways</h2><p>Browse every company in the IVV holdings universe by sector. The featured names have an initial signal; scan more names on demand, then open any card to inspect the five rules, dated chart, and source context.</p></div>
+      <div className="signal-summary"><div><strong>{counts.bullish}</strong><span>Bullish</span></div><div><strong>{counts.mixed}</strong><span>Mixed</span></div><div><strong>{counts.bearish}</strong><span>Bearish</span></div><div><strong>{pending}</strong><span>Unscanned</span></div></div>
+      <p className="source"><Clock3 size={12} /> {rows.length} equity lines · IVV holdings as of {universe?.asOf || "loading"}. Scores use dated Yahoo Finance chart observations, not the holdings price. {market.error ? `Featured quote refresh failed: ${market.error}` : "Quotes may be delayed."}</p>
     </section>
-    <section className="panel"><div className="panel-heading"><div><p className="eyebrow">UNIVERSE SCAN</p><h2>Relative signal map</h2></div><button className="button" onClick={market.refresh} disabled={market.loading}>Refresh scan</button></div>
-      <div className="signal-flow" aria-label="Research workflow"><span>Featured scan + selected company</span><ArrowRight size={15} /><span>5 visible rules</span><ArrowRight size={15} /><span>Rank and inspect</span></div>
-      <div className="signal-scale"><span>BEARISH −5</span><span>MIXED 0</span><span>BULLISH +5</span></div>
-      <div className="signal-list">{rows.map(row => <button key={row.company.ticker} className={`signal-row ${row.company.ticker === company.ticker ? "active" : ""}`} onClick={() => onSelect(row.company)} aria-pressed={row.company.ticker === company.ticker} title={row.signal ? `${row.company.name}: ${row.signal.score > 0 ? "+" : ""}${row.signal.score}/5. Open to inspect every rule.` : `${row.company.name}: insufficient price history`}>
-        <span className="signal-identity"><i style={{ background: row.company.color }} /><strong>{row.company.ticker}</strong><small>{row.company.name}</small></span>
-        <span className="signal-track"><span className="signal-midline" /><span className={`signal-marker ${row.signal?.state.toLowerCase() || "missing"}`} style={{ left: `${50 + (row.signal?.score ?? 0) * 9}%` }} /></span>
-        <span className={`signal-score ${row.signal?.state.toLowerCase() || "missing"}`}>{row.signal ? `${row.signal.score > 0 ? "+" : ""}${row.signal.score} · ${row.signal.state}` : "Data missing"}</span>
-      </button>)}</div>
-      <p className="source">Scores range from −5 to +5. Bullish requires +2 or more; bearish requires −2 or less; all others are mixed. This is a descriptive screen, not an order-block or options-flow signal. Missing histories are unranked.</p>
+    <section className="panel signal-universe"><div className="panel-heading"><div><p className="eyebrow">SIDEWAYS UNIVERSE FLOW</p><h2>Sector lanes · {filteredRows.length} {filteredRows.length === 1 ? "company" : "companies"}</h2></div><button className="button" onClick={() => { market.refresh(); setScanned({}); }} disabled={scanActive || market.loading}>Refresh signals</button></div>
+      <div className="signal-map-controls"><label><Search size={15} /><input type="search" value={query} onChange={event => setQuery(event.target.value)} placeholder="Find ticker or company" aria-label="Search signal map" /></label><select value={sector} onChange={event => setSector(event.target.value)} aria-label="Filter signal map by sector"><option>All sectors</option>{sectors.map(name => <option key={name}>{name}</option>)}</select><button className="button primary" onClick={scan} disabled={scanActive || !filteredRows.some(row => !row.summary?.state)}>Scan {sector === "All sectors" ? "remaining companies" : sector}</button>{scanActive && <button className="button" onClick={() => scanControl.current?.abort()}>Stop scan</button>}</div>
+      {scanProgress.total > 0 && <div className="signal-scan-progress" role="status"><span>{scanActive ? "Scanning" : "Last scan"}: {scanProgress.done} / {scanProgress.total}</span><progress value={scanProgress.done} max={scanProgress.total} /></div>}
+      {scanError && <p className="notice error" role="alert">{scanError}</p>}
+      <div className="signal-flow" aria-label="Research workflow"><span>{sectors.length} sectors</span><ArrowRight size={15} /><span>{rows.length} companies</span><ArrowRight size={15} /><span>5 dated rules per scanned name</span><ArrowRight size={15} /><span>Open evidence below</span></div>
+      <div className="signal-flow-legend"><span className="bullish">● Bullish</span><span className="mixed">● Mixed</span><span className="bearish">● Bearish</span><span>○ Not yet scanned</span><small>Scroll lanes sideways →</small></div>
+      <div className="signal-flow-board">{groups.map(group => <div className="signal-sector-lane" key={group.name}><div className="signal-sector-name"><strong>{group.name}</strong><span>{group.rows.length} names</span></div><div className="signal-lane-track">{group.rows.map(row => <button key={row.company.ticker} className={`signal-node ${row.summary?.state?.toLowerCase() || "pending"} ${row.company.ticker === company.ticker ? "active" : ""}`} onClick={() => onSelect(row.company)} aria-pressed={row.company.ticker === company.ticker} aria-label={`${row.company.ticker}, ${row.company.name}: ${row.summary?.state ? `${row.summary.state}, score ${row.summary.score} of 5` : row.summary?.error || "not scanned"}`} title={signalTitle(row.company, row.summary)}><span className="signal-node-head"><b>{row.company.ticker}</b><em>{row.summary?.score == null ? "○" : `${row.summary.score > 0 ? "+" : ""}${row.summary.score}`}</em></span><span className="signal-node-name">{row.company.name}</span><small>{row.summary?.state || (row.summary?.error ? "Unavailable" : "Open to scan")}</small></button>)}</div><div className="signal-lane-end"><strong>{group.rows.filter(row => row.summary?.state).length}/{group.rows.length}</strong><span>scanned</span><small><i className="bullish">{group.rows.filter(row => row.summary?.state === "Bullish").length} ↑</i> <i className="bearish">{group.rows.filter(row => row.summary?.state === "Bearish").length} ↓</i></small></div></div>)}</div>
+      {!groups.length && <p className="note">No company matches this search.</p>}
+      <p className="source">Each lane is ordered by IVV portfolio weight. Grey cards have no computed state; an unavailable chart never becomes a neutral signal. Scanning requests at most eight company histories per batch and may take time for the full universe. Scores range from −5 to +5: +2 or above bullish, −2 or below bearish, otherwise mixed. Hover a scored card for its dated inputs, then open it for rule thresholds.</p>
     </section>
     <section className="panel"><div className="panel-heading"><div><p className="eyebrow">COMPANY DRILLDOWN</p><h2>{company.name} · {company.ticker}</h2></div><button className="button" onClick={onOptions}>Build option plan <ArrowRight size={14} /></button></div>
       {selected.signal ? <><div className="signal-detail-header"><div className={`signal-state ${selected.signal.state.toLowerCase()}`}><span>Current model state</span><strong>{selected.signal.state}</strong><small>{selected.signal.score > 0 ? "+" : ""}{selected.signal.score} / 5</small></div><div><span>Latest daily chart point</span><strong>{cash(selected.signal.close)}</strong><small>{day(selected.signal.date)} · quote observed {date(selected.quote?.asOf)} · {selected.quote?.feedLabel}</small></div><div><span>20-observation move</span><strong>{selected.signal.return20 > 0 ? "+" : ""}{selected.signal.return20.toFixed(1)}%</strong><small>Chart point versus 20 observations earlier</small></div><div><span>Recent state changes</span><strong>{transitions.length}</strong><small>Up to eight most recent changes shown</small></div></div>
@@ -54,7 +120,7 @@ export function SignalMap({ market, company, selectedQuote, auto, onSelect, onOp
         <div className="signal-chart-key"><span><i /> Observed close</span><span><i /> 10-observation average</span><span><i /> 30-observation average</span><small>Colored dots mark changes in the model bucket; they are not trade entries or exits.</small></div>
         {selected.quote && <AverageObservationEvidence quote={selected.quote} />}
         <div className="signal-detail-grid"><div><h3>How the model reached this state</h3><p>Each rule adds +1, −1, or 0. Expand a factor to see its threshold and current inputs.</p><div className="signal-factors">{selected.signal.factors.map(factor => <details key={factor.name}><summary><span>{factor.name}</span><strong className={factor.contribution > 0 ? "bullish" : factor.contribution < 0 ? "bearish" : "mixed"}>{factor.contribution > 0 ? "+" : ""}{factor.contribution}</strong></summary><p><b>Observed:</b> {factor.reading}<br /><b>Rule:</b> {factor.rule}</p></details>)}</div></div><div><h3>State-change history</h3><p>The screen recalculates from observations available at each chart point. A transition is a model change, not a validated trade.</p><div className="signal-transitions">{transitions.length ? transitions.slice(-5).reverse().map(item => <div key={item.date}><span className={item.state.toLowerCase()}>{item.state}</span><strong>{item.date.slice(0, 10)}</strong><small>{cash(item.close)} · score {item.score > 0 ? "+" : ""}{item.score}</small></div>) : <p>No bucket change in this window.</p>}</div></div></div>
-      </> : <p className="note">At least 30 valid price observations are required for this screen. The provider has not returned enough data for {company.ticker}.</p>}
+      </> : <p className="note">{selected.quote ? `At least 30 valid price observations are required. The provider has not returned enough for ${company.ticker}.` : `Fetching dated price history for ${company.ticker}… If it remains unavailable, retry after the provider responds.`}</p>}
       <p className="source">This screen uses closes and reported volume, not order-book depth, option positioning, or hidden institutional orders. It does not estimate a probability of profit. Open the options lab to study a separate expiration payoff.</p>
     </section>
     <section className="panel"><div className="panel-heading"><div><p className="eyebrow">SOURCE CONTEXT</p><h2>Recent headlines for {company.ticker}</h2></div></div>

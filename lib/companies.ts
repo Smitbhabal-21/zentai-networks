@@ -72,7 +72,9 @@ export const companies = [
 ] as const;
 export type Company = { key: string; ticker: string; name: string; sector: string; color: string };
 export function companyFromHolding(holding: { ticker: string; name: string; sector: string }): Company {
-  return companies.find(company => company.ticker === holding.ticker) || {
+  const featured = companies.find(company => company.ticker === holding.ticker);
+  if (featured) return { ...featured, sector: holding.sector };
+  return {
     key: `ivv_${holding.ticker.toLowerCase().replaceAll("-", "_")}`,
     ticker: holding.ticker,
     name: holding.name,

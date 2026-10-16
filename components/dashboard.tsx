@@ -53,7 +53,7 @@ import type { UniverseSnapshot } from "@/lib/ivv-universe";
 import { headlinePriority } from "@/lib/news-priority";
 const navigation = [
   { id: "overview", label: "Market overview", icon: LayoutDashboard, group: "Monitor", description: "Prices, market context, and your watchlist in one glance." },
-  { id: "signals", label: "Signal map", icon: Network, group: "Monitor", description: "Rank the universe and inspect every rule behind a signal." },
+  { id: "signals", label: "Signal map", icon: Network, group: "Monitor", description: "Browse sideways sector lanes and inspect the dated rules behind each scanned signal." },
   { id: "universe", label: "S&P 500 universe", icon: Search, group: "Monitor", description: "Search the broad market and fetch details only for companies you open." },
   { id: "news", label: "Newsroom", icon: Newspaper, group: "Monitor", description: "Recent company headlines with source links and timing." },
   { id: "financials", label: "Company research", icon: BarChart3, group: "Research", description: "Reported fundamentals and company-level context." },
@@ -432,11 +432,11 @@ export default function Dashboard() {
     auto,
   );
   const quotes = market.data?.quotes || [];
-  const quote = !featured ? broadQuote.data?.quote :
+  const quote = !featured ? (broadQuote.data?.quote.symbol === company.ticker ? broadQuote.data.quote : undefined) :
     range === "3mo"
       ? quotes.find((q) => q.symbol === company.ticker)
       : selected.data?.quotes[0];
-  const quoteBySymbol = (s: string) => s === company.ticker && !featured ? broadQuote.data?.quote : quotes.find((q) => q.symbol === s);
+  const quoteBySymbol = (s: string) => s === company.ticker && !featured ? (broadQuote.data?.quote.symbol === s ? broadQuote.data.quote : undefined) : quotes.find((q) => q.symbol === s);
   const active = navigation.find((n) => n.id === page);
   const navigate = (id: string) => {
     setPage(id);
@@ -930,7 +930,7 @@ export default function Dashboard() {
               </section>
             </>
           )}
-          {page === "signals" && <SignalMap market={market} company={company} selectedQuote={quote} auto={auto} onSelect={setCompany} onOptions={() => navigate("options-lab")} />}
+          {page === "signals" && <SignalMap market={market} universe={universe.data} company={company} selectedQuote={quote} auto={auto} onSelect={setCompany} onOptions={() => navigate("options-lab")} />}
           {page === "universe" && <Sp500Universe onOpen={(item, destination) => { setCompany(item); navigate(destination); }} />}
           {page === "news" && (
             <section className="panel full-news">
