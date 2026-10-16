@@ -46,10 +46,12 @@ import { BrandMark } from "./brand-mark";
 import { AnalystReport } from "./analyst-report";
 import { OptionsLab } from "./options-lab";
 import { SignalMap } from "./signal-map";
+import { Sp500Universe } from "./sp500-universe";
 import { headlinePriority } from "@/lib/news-priority";
 const navigation = [
   { id: "overview", label: "Market overview", icon: LayoutDashboard, group: "Monitor", description: "Prices, market context, and your watchlist in one glance." },
   { id: "signals", label: "Signal map", icon: Network, group: "Monitor", description: "Rank the universe and inspect every rule behind a signal." },
+  { id: "universe", label: "S&P 500 universe", icon: Search, group: "Monitor", description: "Search the broad market and fetch details only for companies you open." },
   { id: "news", label: "Newsroom", icon: Newspaper, group: "Monitor", description: "Recent company headlines with source links and timing." },
   { id: "financials", label: "Company research", icon: BarChart3, group: "Research", description: "Reported fundamentals and company-level context." },
   { id: "analyst", label: "Analyst report", icon: FileText, group: "Research", description: "Valuation, credit screening, evidence, and assumptions." },
@@ -592,7 +594,7 @@ export default function Dashboard() {
               <BrandMark className="hero-brand-symbol" />
               <span className="hero-orbit-point" />
             </div>
-            <div className="header-actions">
+            {page !== "universe" && <div className="header-actions">
               <button
                 className="button"
                 onClick={refresh}
@@ -605,9 +607,9 @@ export default function Dashboard() {
                 <Sparkles size={15} />
                 Quick briefing
               </button>
-            </div>
+            </div>}
           </div>
-          <div className="control-strip">
+          {page !== "universe" && <div className="control-strip">
             <div className="entity-control">
               <Search size={15} />
               <label htmlFor="company" className="sr-only">
@@ -652,7 +654,7 @@ export default function Dashboard() {
                 {auto ? <Pause size={14} /> : <Play size={14} />}
               </button>
             </div>
-          </div>
+          </div>}
           {page === "overview" && (
             <>
               <FeedStatus
@@ -932,6 +934,7 @@ export default function Dashboard() {
             </>
           )}
           {page === "signals" && <SignalMap market={market} company={company} auto={auto} onSelect={setCompany} onOptions={() => navigate("options-lab")} />}
+          {page === "universe" && <Sp500Universe onCuratedSelect={item => { setCompany(item); navigate("financials"); }} />}
           {page === "news" && (
             <section className="panel full-news">
               <PanelTitle
