@@ -217,7 +217,7 @@ function FilingsPanel({ report }: { report: AnalystSnapshot }) {
   const filings = report.filings;
   return <section className="panel report-section">
     <div className="panel-heading"><div><p className="eyebrow">PRIMARY FILINGS</p><h2>SEC evidence & data quality</h2></div><span className="quiet-badge">EDGAR</span></div>
-    {filings.status !== "available" ? <p className="note">{filings.reason} <a href={`https://www.sec.gov/edgar/browse/?CIK=${filings.cik}`} target="_blank" rel="noopener noreferrer">Review SEC filings directly <ExternalLink size={13} /></a></p> : <>
+    {filings.status !== "available" ? <p className="note">{filings.reason} <a href={filings.cik ? `https://www.sec.gov/edgar/browse/?CIK=${filings.cik}` : `https://www.sec.gov/edgar/search/#/q=${encodeURIComponent(report.ticker)}`} target="_blank" rel="noopener noreferrer">Review SEC filings directly <ExternalLink size={13} /></a></p> : <>
       <p className="report-context">These are extracted XBRL facts, each with its own reporting period and taxonomy concept. They do not silently overwrite the market-data provider's figures.</p>
       <div className="filing-facts">{Object.entries(filings.facts).map(([key, fact]) => {
         const sourceUrl = fact.accession ? `https://www.sec.gov/Archives/edgar/data/${filings.cik}/${fact.accession.replaceAll("-", "")}/${fact.accession}-index.htm` : `https://www.sec.gov/edgar/browse/?CIK=${filings.cik}`;

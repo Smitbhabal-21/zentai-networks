@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 import {
   companies,
+  companyFromHolding,
   macroSymbols,
   ranges,
   type Company,
@@ -47,6 +48,8 @@ import { AnalystReport } from "./analyst-report";
 import { OptionsLab } from "./options-lab";
 import { SignalMap } from "./signal-map";
 import { Sp500Universe } from "./sp500-universe";
+import { CompanyPicker } from "./company-picker";
+import type { UniverseSnapshot } from "@/lib/ivv-universe";
 import { headlinePriority } from "@/lib/news-priority";
 const navigation = [
   { id: "overview", label: "Market overview", icon: LayoutDashboard, group: "Monitor", description: "Prices, market context, and your watchlist in one glance." },
@@ -405,10 +408,21 @@ export default function Dashboard() {
     interval,
     auto,
   );
+  const universe = useFeed<UniverseSnapshot>("/api/universe", 3600000);
+  const allCompanies: Company[] = universe.data
+    ? universe.data.holdings.map(companyFromHolding)
+    : [...companies];
+  if (!allCompanies.some(item => item.ticker === company.ticker)) allCompanies.unshift(company);
+  const featured = companies.some(item => item.ticker === company.ticker);
   const selected = useFeed<MarketResponse>(
-    range === "3mo"
+    range === "3mo" || !featured
       ? null
       : `/api/market?symbols=${company.ticker}&range=${range}`,
+    interval,
+    auto,
+  );
+  const broadQuote = useFeed<{ quote: Quote }>(
+    featured ? null : `/api/universe/quote?symbol=${encodeURIComponent(company.ticker)}&range=${range}`,
     interval,
     auto,
   );
@@ -418,11 +432,11 @@ export default function Dashboard() {
     auto,
   );
   const quotes = market.data?.quotes || [];
-  const quote =
+  const quote = !featured ? broadQuote.data?.quote :
     range === "3mo"
       ? quotes.find((q) => q.symbol === company.ticker)
       : selected.data?.quotes[0];
-  const quoteBySymbol = (s: string) => quotes.find((q) => q.symbol === s);
+  const quoteBySymbol = (s: string) => s === company.ticker && !featured ? broadQuote.data?.quote : quotes.find((q) => q.symbol === s);
   const active = navigation.find((n) => n.id === page);
   const navigate = (id: string) => {
     setPage(id);
@@ -433,6 +447,7 @@ export default function Dashboard() {
   const refresh = () => {
     market.refresh();
     selected.refresh();
+    broadQuote.refresh();
     news.refresh();
     window.dispatchEvent(new Event("zentai-refresh"));
   };
@@ -610,25 +625,7 @@ export default function Dashboard() {
             </div>}
           </div>
           {page !== "universe" && <div className="control-strip">
-            <div className="entity-control">
-              <Search size={15} />
-              <label htmlFor="company" className="sr-only">
-                Select company
-              </label>
-              <select
-                id="company"
-                value={company.key}
-                onChange={(e) =>
-                  setCompany(companies.find((c) => c.key === e.target.value)!)
-                }
-              >
-                {companies.map((c) => (
-                  <option key={c.key} value={c.key}>
-                    {c.name} · {c.ticker}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <CompanyPicker companies={allCompanies} value={company} onChange={setCompany} label="Search and select company" />
             <div className={`refresh-control ${auto && market.loading ? "is-fetching" : ""}`}>
               <span className={`status-dot ${auto ? "" : "paused"}`} />
               <span>{auto ? "Auto refresh" : "Refresh paused"}</span>
@@ -933,8 +930,8 @@ export default function Dashboard() {
               </section>
             </>
           )}
-          {page === "signals" && <SignalMap market={market} company={company} auto={auto} onSelect={setCompany} onOptions={() => navigate("options-lab")} />}
-          {page === "universe" && <Sp500Universe onCuratedSelect={item => { setCompany(item); navigate("financials"); }} />}
+          {page === "signals" && <SignalMap market={market} company={company} selectedQuote={quote} auto={auto} onSelect={setCompany} onOptions={() => navigate("options-lab")} />}
+          {page === "universe" && <Sp500Universe onOpen={(item, destination) => { setCompany(item); navigate(destination); }} />}
           {page === "news" && (
             <section className="panel full-news">
               <PanelTitle
@@ -1031,7 +1028,7 @@ export default function Dashboard() {
                   )}
                 </Analytics>
               </section>
-              <Comparison company={company} auto={auto} />
+              <Comparison company={company} companies={allCompanies} auto={auto} />
             </div>
           )}
           {page === "analyst" && (
@@ -1300,7 +1297,7 @@ function Options({ company, auto }: { company: Company; auto: boolean }) {
     </>
   );
 }
-function Comparison({ company, auto }: { company: Company; auto: boolean }) {
+function Comparison({ company, companies: choices, auto }: { company: Company; companies: Company[]; auto: boolean }) {
   const [other, setOther] = useState("microsoft");
   const key =
     other === company.key
@@ -1308,6 +1305,7 @@ function Comparison({ company, auto }: { company: Company; auto: boolean }) {
         ? "nvidia"
         : "apple"
       : other;
+  const comparisonCompany = choices.find(item => item.key === key) || companies.find(item => item.key === key) || companies[0];
   const left = useFeed<any>(
       `/api/analytics?section=financials&company=${company.key}`,
       300000,
@@ -1324,19 +1322,7 @@ function Comparison({ company, auto }: { company: Company; auto: boolean }) {
         eyebrow="REPORTED METRICS · NO SIMULATED SCORES"
         title="Company comparison"
       >
-        <select
-          aria-label="Comparison company"
-          value={key}
-          onChange={(e) => setOther(e.target.value)}
-        >
-          {companies
-            .filter((c) => c.key !== company.key)
-            .map((c) => (
-              <option key={c.key} value={c.key}>
-                {c.name}
-              </option>
-            ))}
-        </select>
+        <CompanyPicker companies={choices.filter(item => item.key !== company.key)} value={comparisonCompany} onChange={item => setOther(item.key)} label="Search comparison company" />
       </PanelTitle>
       <FeedStatus {...left} hasData={!!left.data} retry={left.refresh} />
       <FeedStatus {...right} hasData={!!right.data} retry={right.refresh} />
@@ -1346,7 +1332,7 @@ function Comparison({ company, auto }: { company: Company; auto: boolean }) {
             <tr>
               <th>Metric</th>
               <th>{company.name}</th>
-              <th>{companies.find((c) => c.key === key)?.name}</th>
+              <th>{comparisonCompany.name}</th>
             </tr>
           </thead>
           <tbody>

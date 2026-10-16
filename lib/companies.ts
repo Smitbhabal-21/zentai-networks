@@ -70,7 +70,16 @@ export const companies = [
     color: "#74d7db",
   },
 ] as const;
-export type Company = (typeof companies)[number];
+export type Company = { key: string; ticker: string; name: string; sector: string; color: string };
+export function companyFromHolding(holding: { ticker: string; name: string; sector: string }): Company {
+  return companies.find(company => company.ticker === holding.ticker) || {
+    key: `ivv_${holding.ticker.toLowerCase().replaceAll("-", "_")}`,
+    ticker: holding.ticker,
+    name: holding.name,
+    sector: holding.sector,
+    color: "#5b8f6a",
+  };
+}
 export const macroSymbols = ["SPY", "^IXIC", "^VIX", "GC=F"] as const;
 export const allowedSymbols = new Set<string>([
   ...companies.map((c) => c.ticker),

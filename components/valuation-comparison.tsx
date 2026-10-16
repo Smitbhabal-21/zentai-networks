@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import type { Range } from "@/lib/companies";
+import { companies, type Range } from "@/lib/companies";
 import type { AnalystSnapshot, MarketResponse, NewsResponse, Quote } from "@/lib/types";
 import { buildMultipleBasis, marketMultiples, multipleValues, type MultipleInputs, type MultipleKey } from "@/lib/valuation-models";
 import { matchFilingsToHistory, matchNewsToHistory, summarizeHistory } from "@/lib/chart-context";
@@ -51,8 +51,11 @@ export function ValuationComparison({ report, quote, news, dcfValue, auto }: { r
   };
   const reset = () => { setEdited(null); try { localStorage.removeItem(storageKey); } catch {} };
   const [range, setRange] = useState<Range>("1y");
-  const history = useFeed<MarketResponse>(`/api/market?symbols=${report.ticker}&range=${range}`, 300000, auto);
-  const observed = history.data?.quotes.find(item => item.symbol === report.ticker);
+  const featured = companies.some(item => item.ticker === report.ticker);
+  const history = useFeed<MarketResponse>(featured ? `/api/market?symbols=${report.ticker}&range=${range}` : null, 300000, auto);
+  const broadHistory = useFeed<{ quote: Quote }>(featured ? null : `/api/universe/quote?symbol=${encodeURIComponent(report.ticker)}&range=${range}`, 300000, auto);
+  const historyStatus = featured ? history : broadHistory;
+  const observed = featured ? history.data?.quotes.find(item => item.symbol === report.ticker) : broadHistory.data?.quote;
   const priceHistory = observed?.history || [];
   const summary = summarizeHistory(priceHistory);
   const newsContext = matchNewsToHistory(priceHistory, news?.articles || []);
@@ -106,8 +109,8 @@ export function ValuationComparison({ report, quote, news, dcfValue, auto }: { r
       <div><span>Largest peak-to-trough decline</span><strong className="negative">−{summary.maxDrawdownPercent.toFixed(1)}%</strong><small>{shortDate(summary.drawdownPeak.date)} → {shortDate(summary.drawdownTrough.date)}</small></div>
     </div>}
     {summary && <p className="history-reading"><strong>Reading the largest move:</strong> {signedPercent(summary.largestMove.percent)} between {shortDate(summary.largestMove.from.date)} and {shortDate(summary.largestMove.to.date)}. {biggestMoveFilings.length ? <>A {biggestMoveFilings.map(item => item.filing.form).join(", ")} filing date aligns with the later observation; <a href={biggestMoveFilings[0].filing.url} target="_blank" rel="noopener noreferrer">review the filing ↗</a> for context. Its publication time is not available here. </> : null}{biggestMoveNews.length ? `${biggestMoveNews.length} recent headline${biggestMoveNews.length === 1 ? "" : "s"} align with the later observation; timing alone cannot establish a driver.` : "The seven-day news feed has no matching headline; the cause is not established here."}</p>}
-    {history.error && <p className="notice error" role="alert">Price history unavailable: {history.error} <button onClick={history.refresh}>Retry</button></p>}
-    {priceHistory.length ? <ValuationHistoryChart data={priceHistory} lines={selected} newsMarkers={newsMarkers} filingMarkers={filingMarkers} eventNotes={eventNotes} selectedNewsDate={selectedNews?.observation?.date} /> : <div className="loading" role="status">{history.loading ? "Loading observed price history…" : "No historical prices available for this range."}</div>}
+    {historyStatus.error && <p className="notice error" role="alert">Price history unavailable: {historyStatus.error} <button onClick={historyStatus.refresh}>Retry</button></p>}
+    {priceHistory.length ? <ValuationHistoryChart data={priceHistory} lines={selected} newsMarkers={newsMarkers} filingMarkers={filingMarkers} eventNotes={eventNotes} selectedNewsDate={selectedNews?.observation?.date} /> : <div className="loading" role="status">{historyStatus.loading ? "Loading observed price history…" : "No historical prices available for this range."}</div>}
     <div className="valuation-legend"><span className="valuation-price-key">Observed price</span><span className="valuation-news-key">News · red if flagged</span><span className="valuation-filing-key">SEC filing</span>{references.map(item => <label key={item.name} style={{ color: colors[item.name] }}><input type="checkbox" checked={!!visible[item.name]} onChange={event => setVisible(current => ({ ...current, [item.name]: event.target.checked }))} />{item.name} {money(item.value)}</label>)}</div>
     <div className="chart-context-grid">
       <div className="chart-context-panel"><div className="chart-context-heading"><div><span className="eyebrow">DATED CONTEXT</span><h4>News near the chart</h4></div><span className="quiet-badge">LAST 7 DAYS</span></div>

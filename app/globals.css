@@ -685,6 +685,17 @@ h1 {
   font-weight: 500;
   max-width: 260px;
 }
+.company-picker { position: relative; min-width: min(340px, 100%); max-width: 100%; z-index: 20; }
+.company-picker-input { display: flex; align-items: center; gap: 8px; color: var(--muted); }
+.company-picker-input input { width: 100%; min-width: 0; border: 0; background: transparent; padding: 8px 4px; color: var(--text); font: inherit; font-size: .8125rem; }
+.company-picker-input input::placeholder { color: var(--muted); opacity: 1; }
+.company-picker-results { position: absolute; top: calc(100% + 10px); left: -8px; width: min(420px, 85vw); max-height: 340px; overflow: auto; padding: 6px; border: 1px solid var(--border); border-radius: 14px; background: var(--panel); box-shadow: 0 16px 40px rgba(0,0,0,.22); }
+.company-picker-results button { display: flex; width: 100%; gap: 12px; align-items: center; text-align: left; padding: 9px 10px; border: 0; border-radius: 9px; background: transparent; color: var(--text); cursor: pointer; }
+.company-picker-results button:hover, .company-picker-results button:focus-visible, .company-picker-results button[aria-selected="true"] { background: var(--panel2); }
+.company-picker-results button strong { min-width: 48px; font-size: .76rem; }
+.company-picker-results button span, .company-picker-results p { color: var(--muted); font-size: .76rem; }
+.company-picker-results p { padding: 8px; }
+.universe-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 16px; }
 .refresh-control {
   display: flex;
   align-items: center;

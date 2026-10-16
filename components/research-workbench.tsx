@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { ExternalLink, FileDown, Info } from "lucide-react";
 import type { AnalystSnapshot, MarketResponse, Quote } from "@/lib/types";
+import { companies } from "@/lib/companies";
 import { compareRevisions, evaluateForecast, researchPoints, revisionOf, type Forecast, type ResearchRevision } from "@/lib/research";
 import { useFeed } from "./use-feed";
 
@@ -61,8 +62,10 @@ function TrackRecord({ report, quote }: { report: AnalystSnapshot; quote?: Quote
   const [days, setDays] = useState(30);
   const [message, setMessage] = useState("");
   const hasDue = records.some(item => !item.result && Date.now() >= Date.parse(item.dueAt));
-  const outcomeFeed = useFeed<MarketResponse>(hasDue ? `/api/market?symbols=${report.ticker}&range=1y` : null, 0, false);
-  const outcomeHistory = outcomeFeed.data?.quotes.find(item => item.symbol === report.ticker)?.history || quote?.history || [];
+  const featured = companies.some(item => item.ticker === report.ticker);
+  const outcomeFeed = useFeed<MarketResponse>(hasDue && featured ? `/api/market?symbols=${report.ticker}&range=1y` : null, 0, false);
+  const broadOutcome = useFeed<{ quote: Quote }>(hasDue && !featured ? `/api/universe/quote?symbol=${encodeURIComponent(report.ticker)}&range=1y` : null, 0, false);
+  const outcomeHistory = (featured ? outcomeFeed.data?.quotes.find(item => item.symbol === report.ticker)?.history : broadOutcome.data?.quote.history) || quote?.history || [];
   useEffect(() => { setRecords(readArray<Forecast>(forecastsKey(report.ticker)).filter(item => item?.ticker === report.ticker && typeof item.predictedPrice === "number")); }, [report.ticker]);
   useEffect(() => {
     if (!outcomeHistory.length) return;
@@ -74,7 +77,7 @@ function TrackRecord({ report, quote }: { report: AnalystSnapshot; quote?: Quote
       }
       return current;
     });
-  }, [outcomeFeed.data, quote, report.ticker]);
+  }, [outcomeFeed.data, broadOutcome.data, quote, report.ticker]);
   const add = () => {
     const predictedPrice = Number(target);
     if (!quote || !Number.isFinite(quote.price) || quote.price <= 0 || !Number.isFinite(predictedPrice) || predictedPrice <= 0 || target.trim() === "") { setMessage("Enter a positive target and wait for a valid observed quote."); return; }
@@ -103,7 +106,7 @@ function TrackRecord({ report, quote }: { report: AnalystSnapshot; quote?: Quote
   return <section className="panel report-section">
     <div className="panel-heading"><div><p className="eyebrow">CREDIBILITY RECORD</p><h2>Prediction track record</h2></div><button className="button" onClick={exportRecords} disabled={!records.length}><FileDown size={14} /> Export data</button></div>
     <p className="report-context">Lock a dated price prediction and the current model assumptions. After its horizon, the first completed Yahoo Finance daily close within seven calendar days is used to score absolute percentage error and direction from the starting quote. A missing close stays unscored.</p>
-    {outcomeFeed.error && hasDue && <p className="note">Historical price check could not refresh: {outcomeFeed.error}. Due predictions remain unscored until data is available.</p>}
+    {(featured ? outcomeFeed.error : broadOutcome.error) && hasDue && <p className="note">Historical price check could not refresh: {featured ? outcomeFeed.error : broadOutcome.error}. Due predictions remain unscored until data is available.</p>}
     <div className="record-form"><label>Predicted price / share<input type="number" min="0.01" step="0.01" placeholder="USD" value={target} onChange={event => setTarget(event.target.value)} /></label><label>Horizon<select value={days} onChange={event => setDays(Number(event.target.value))}><option value={30}>30 days</option><option value={90}>90 days</option></select></label><button className="button primary" onClick={add}>Lock prediction</button></div>
     {message && <p className="source" role="status">{message}</p>}
     <div className="record-metrics"><div><span>Scored predictions</span><strong>{scored.length} / {records.length}</strong></div><div><span>Mean absolute % error <Info size={12} /></span><strong>{meanError == null ? "Awaiting outcomes" : `${amount(meanError, 1)}%`}</strong></div><div><span>Direction correct</span><strong>{directionRate == null ? "Awaiting outcomes" : `${amount(directionRate, 0)}%`}</strong></div></div>

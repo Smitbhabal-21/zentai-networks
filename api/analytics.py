@@ -62,7 +62,7 @@ def execute(params):
         from backend.data_generators.portfolio_optimizer import optimize_portfolio
         capital=float(params.get('capital','10000'))
         if not math.isfinite(capital) or not 100<=capital<=1e9: raise ValueError('Capital must be between 100 and 1 billion.')
-        symbols=list(dict.fromkeys(params.get('symbols',','.join(v['ticker'] for v in COMPANY_MAP.values())).split(',')))
+        symbols=list(dict.fromkeys(params.get('symbols',','.join(v['ticker'] for v in list(COMPANY_MAP.values())[:10])).split(',')))
         if not 2<=len(symbols)<=10 or any(t not in {v['ticker'] for v in COMPANY_MAP.values()} for t in symbols): raise ValueError('Select between 2 and 10 supported assets.')
         result=optimize_portfolio(symbols,investment_amount=capital)
     else: raise ValueError('Unsupported analytics section.')

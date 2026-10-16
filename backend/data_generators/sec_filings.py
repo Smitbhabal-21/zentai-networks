@@ -3,6 +3,8 @@
 import os
 from datetime import date
 import requests
+from functools import lru_cache
+from backend.data_generators.company_map import COMPANY_MAP
 
 CIKS = {
     "citi_bank": 831001, "jpmorgan": 19617, "apple": 320193,
@@ -34,6 +36,13 @@ def _json(url: str, user_agent: str) -> dict:
     }, timeout=8)
     response.raise_for_status()
     return response.json()
+
+
+@lru_cache(maxsize=1)
+def _sec_ticker_ciks(user_agent: str) -> dict[str, int]:
+    directory = _json("https://www.sec.gov/files/company_tickers.json", user_agent)
+    return {entry["ticker"].upper().replace(".", "-"): int(entry["cik_str"])
+            for entry in directory.values() if entry.get("ticker") and entry.get("cik_str")}
 
 
 def _fact(facts: dict, aliases: tuple[str, ...], annual: bool) -> dict | None:
@@ -70,7 +79,7 @@ def _fact(facts: dict, aliases: tuple[str, ...], annual: bool) -> dict | None:
 
 
 def get_sec_filing_snapshot(company_key: str) -> dict:
-    cik = CIKS[company_key]
+    cik = CIKS.get(company_key)
     contact = os.environ.get("SEC_USER_AGENT", "").strip()
     if "@" not in contact:
         return {
@@ -78,6 +87,16 @@ def get_sec_filing_snapshot(company_key: str) -> dict:
             "reason": "SEC filing data needs a declared SEC_USER_AGENT with a contact email.",
             "facts": {}, "filings": [],
         }
+    if cik is None:
+        try:
+            ticker = COMPANY_MAP[company_key]["ticker"]
+            cik = _sec_ticker_ciks(contact).get(ticker)
+        except Exception:
+            cik = None
+        if cik is None:
+            return {"status": "unavailable", "cik": None,
+                    "reason": "No matching SEC issuer record was available for this ticker.",
+                    "facts": {}, "filings": []}
     try:
         company_facts = _json(f"https://data.sec.gov/api/xbrl/companyfacts/CIK{cik:010d}.json", contact)
         submissions = _json(f"https://data.sec.gov/submissions/CIK{cik:010d}.json", contact)

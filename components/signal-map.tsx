@@ -14,18 +14,19 @@ const date = (value?: string) => value ? new Date(value).toLocaleString("en-US",
 const day = (value?: string) => value ? new Date(value).toLocaleDateString("en-US", { dateStyle: "medium" }) : "Unavailable";
 const cash = (value?: number) => value === undefined ? "—" : new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 }).format(value);
 
-export function SignalMap({ market, company, auto, onSelect, onOptions }: {
+export function SignalMap({ market, company, selectedQuote, auto, onSelect, onOptions }: {
   market: { data: MarketResponse | null; loading: boolean; error: string | null; refresh: () => void };
   company: Company;
+  selectedQuote?: Quote;
   auto: boolean;
   onSelect: (company: Company) => void;
   onOptions: () => void;
 }) {
-  const rows = useMemo(() => companies.map(item => {
-    const quote = market.data?.quotes.find(value => value.symbol === item.ticker);
+  const rows = useMemo(() => [...companies, ...(companies.some(item => item.ticker === company.ticker) ? [] : [company])].map(item => {
+    const quote = item.ticker === company.ticker && selectedQuote ? selectedQuote : market.data?.quotes.find(value => value.symbol === item.ticker);
     const timeline = quote ? signalHistory(quote.history) : [];
     return { company: item, quote, timeline, signal: timeline.at(-1) };
-  }).sort((a, b) => (b.signal?.score ?? -99) - (a.signal?.score ?? -99)), [market.data]);
+  }).sort((a, b) => (b.signal?.score ?? -99) - (a.signal?.score ?? -99)), [market.data, company, selectedQuote]);
   const selected = rows.find(row => row.company.key === company.key)!;
   const counts = { bullish: rows.filter(row => row.signal?.state === "Bullish").length, bearish: rows.filter(row => row.signal?.state === "Bearish").length, mixed: rows.filter(row => row.signal?.state === "Mixed").length };
   const news = useFeed<NewsResponse>(`/api/news?symbol=${company.ticker}`, 180000, auto);
@@ -38,7 +39,7 @@ export function SignalMap({ market, company, auto, onSelect, onOptions }: {
       <p className="source"><Clock3 size={12} /> Public Yahoo Finance chart observations · feed fetched {date(market.data?.fetchedAt)}. The newest observation can be incomplete during market hours. {market.error ? `Latest refresh failed: ${market.error}` : "Quotes may be delayed."}</p>
     </section>
     <section className="panel"><div className="panel-heading"><div><p className="eyebrow">UNIVERSE SCAN</p><h2>Relative signal map</h2></div><button className="button" onClick={market.refresh} disabled={market.loading}>Refresh scan</button></div>
-      <div className="signal-flow" aria-label="Research workflow"><span>10 supported stocks</span><ArrowRight size={15} /><span>5 visible rules</span><ArrowRight size={15} /><span>Rank and inspect</span></div>
+      <div className="signal-flow" aria-label="Research workflow"><span>Featured scan + selected company</span><ArrowRight size={15} /><span>5 visible rules</span><ArrowRight size={15} /><span>Rank and inspect</span></div>
       <div className="signal-scale"><span>BEARISH −5</span><span>MIXED 0</span><span>BULLISH +5</span></div>
       <div className="signal-list">{rows.map(row => <button key={row.company.ticker} className={`signal-row ${row.company.ticker === company.ticker ? "active" : ""}`} onClick={() => onSelect(row.company)} aria-pressed={row.company.ticker === company.ticker} title={row.signal ? `${row.company.name}: ${row.signal.score > 0 ? "+" : ""}${row.signal.score}/5. Open to inspect every rule.` : `${row.company.name}: insufficient price history`}>
         <span className="signal-identity"><i style={{ background: row.company.color }} /><strong>{row.company.ticker}</strong><small>{row.company.name}</small></span>

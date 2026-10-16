@@ -67,7 +67,7 @@ export type AnalystSnapshot = {
     reason?: string;
     source?: string;
     methodology?: string;
-    cik: number;
+    cik: number | null;
     facts: Record<string, { value_m: number; period_end: string; filed?: string; form?: string; accession?: string; concept: string }>;
     filings: Array<{ form: string; filed: string; accession: string; url: string }>;
   };

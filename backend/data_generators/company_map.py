@@ -101,3 +101,23 @@ COMPANY_MAP = {
         "color": "#0026B2"
     },
 }
+
+# Broad-market keys use the dated IVV holdings snapshot bundled with the web app.
+# Featured entries above retain their stable keys and display names.
+import json
+from pathlib import Path
+
+_holdings_file = Path(__file__).resolve().parents[2] / "lib" / "ivv-fallback.json"
+try:
+    _holdings = json.loads(_holdings_file.read_text(encoding="utf-8"))["holdings"]
+except (OSError, ValueError, KeyError):
+    _holdings = []
+_featured_tickers = {item["ticker"] for item in COMPANY_MAP.values()}
+for _holding in _holdings:
+    _ticker = _holding.get("ticker", "")
+    if _ticker in _featured_tickers or not _ticker:
+        continue
+    COMPANY_MAP[f"ivv_{_ticker.lower().replace('-', '_')}"] = {
+        "name": _holding["name"], "ticker": _ticker,
+        "industry": _holding["sector"], "tag": _ticker, "color": "#5b8f6a",
+    }
