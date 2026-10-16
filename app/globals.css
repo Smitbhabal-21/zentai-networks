@@ -2508,6 +2508,65 @@ footer button {
 .signal-flow-legend .bearish, .signal-lane-end .bearish { color: var(--red); }
 .signal-flow-legend .mixed { color: var(--warning); }
 .signal-flow-legend small { margin-left: auto; color: var(--muted); }
+.signal-river-shell { margin: 12px 0 24px; border: 1px solid var(--border); border-radius: 18px; overflow: hidden; background: var(--panel2); }
+.signal-river-scroll { width: 100%; overflow-x: auto; }
+.signal-river { display: block; width: 100%; min-width: 760px; height: auto; max-height: 610px; }
+.signal-river-label { fill: var(--muted); font-size: 11px; font-weight: 750; letter-spacing: .11em; }
+.signal-river-sector { cursor: pointer; }
+.signal-river-sector rect { fill: var(--panel); stroke: var(--border); }
+.signal-river-sector:hover rect { stroke: var(--positive); }
+.signal-river-sector text { fill: var(--text); font-size: 11px; font-weight: 650; }
+.signal-river-bucket rect { fill: var(--panel); stroke: var(--border); }
+.signal-river-bucket.bullish rect { fill: color-mix(in srgb, var(--positive) 12%, var(--panel)); stroke: color-mix(in srgb, var(--positive) 38%, var(--border)); }
+.signal-river-bucket.mixed rect { fill: color-mix(in srgb, var(--warning) 12%, var(--panel)); stroke: color-mix(in srgb, var(--warning) 38%, var(--border)); }
+.signal-river-bucket.bearish rect { fill: color-mix(in srgb, var(--red) 10%, var(--panel)); stroke: color-mix(in srgb, var(--red) 38%, var(--border)); }
+.signal-river-bucket-name { fill: var(--text); font-size: 16px; font-weight: 760; }
+.signal-river-bucket-count { fill: var(--muted); font-size: 11px; }
+.signal-river-path, .signal-river-highlight, .signal-river-stream, .signal-river-hit { fill: none; }
+.signal-river-path { stroke-width: 1.3; pointer-events: none; }
+.signal-river-path.unscanned { stroke: var(--muted); opacity: .09; }
+.signal-river-path.bullish { stroke: var(--positive); opacity: .48; }
+.signal-river-path.mixed { stroke: var(--warning); opacity: .48; }
+.signal-river-path.bearish { stroke: var(--red); opacity: .48; }
+.signal-river-hit { stroke: transparent; stroke-width: 12; cursor: pointer; pointer-events: stroke; }
+.signal-river g:hover > .signal-river-path { stroke-width: 4; opacity: 1; }
+.signal-river-stream { stroke-width: 2; stroke-dasharray: 1 20; stroke-linecap: round; opacity: .75; pointer-events: none; animation: signal-river-motion 7s linear infinite; }
+.signal-river-stream.bullish, .signal-river-highlight.bullish { stroke: var(--positive); }
+.signal-river-stream.mixed, .signal-river-highlight.mixed { stroke: var(--warning); }
+.signal-river-stream.bearish, .signal-river-highlight.bearish { stroke: var(--red); }
+.signal-river-highlight { stroke-width: 3; opacity: .9; pointer-events: none; }
+.signal-river-highlight.unscanned { stroke: var(--muted); stroke-dasharray: 5 6; }
+.signal-river-point { fill: var(--panel); stroke-width: 3; pointer-events: none; }
+.signal-river-point.bullish { stroke: var(--positive); }
+.signal-river-point.mixed { stroke: var(--warning); }
+.signal-river-point.bearish { stroke: var(--red); }
+.signal-river-point.unscanned { stroke: var(--muted); }
+@keyframes signal-river-motion { to { stroke-dashoffset: -42; } }
+.signal-river-focus { display: grid; grid-template-columns: 155px minmax(220px, 1fr) minmax(170px, 240px); gap: 8px 18px; align-items: center; padding: 16px 20px; border-top: 1px solid var(--border); background: var(--panel); }
+.signal-river-focus > .eyebrow { grid-column: 1 / -1; margin: 0 0 2px; }
+.signal-river-ticker { font-size: 1.35rem; color: var(--text); }
+.signal-river-focus h3 { margin: 0; font-size: 1.05rem; }
+.signal-river-sector-label { color: var(--muted); font-size: .75rem; }
+.signal-river-focus-state { display: flex; flex-direction: column; gap: 2px; padding: 9px 11px; border-radius: 10px; background: var(--panel2); }
+.signal-river-focus-state strong { font-size: .9rem; }
+.signal-river-focus-state span { font-size: .7rem; color: var(--muted); }
+.signal-river-focus-state.bullish strong, .signal-river-factor-list .bullish { color: var(--positive); }
+.signal-river-focus-state.bearish strong, .signal-river-factor-list .bearish { color: var(--red); }
+.signal-river-focus-state.mixed strong, .signal-river-factor-list .mixed { color: var(--warning); }
+.signal-river-facts { display: grid; gap: 3px; font-size: .7rem; color: var(--muted); }
+.signal-river-facts span { display: flex; justify-content: space-between; gap: 12px; }
+.signal-river-facts b { color: var(--text); font-weight: 650; text-align: right; }
+.signal-river-factor-list { display: grid; gap: 3px; }
+.signal-river-factor-list span { display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: .7rem; }
+.signal-river-factor-list small { color: var(--muted); }
+.signal-river-focus > .note { grid-column: 3; margin: 0; font-size: .7rem; }
+.signal-river-focus > .button { width: max-content; }
+.signal-river-focus > .source { grid-column: 2 / -1; display: flex; align-items: center; gap: 4px; margin: 0; }
+.signal-lane-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 15px; margin: 18px 0 10px; }
+.signal-lane-heading h3 { margin: 0; font-size: .95rem; }
+.signal-lane-heading p { margin: 0; font-size: .7rem; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { .signal-river-stream { animation: none; } }
+@media (max-width: 760px) { .signal-river-focus { grid-template-columns: 1fr 1fr; } .signal-river-focus > .eyebrow, .signal-river-focus > .source { grid-column: 1 / -1; } .signal-river-focus > .note { grid-column: auto; } .signal-lane-heading { display: block; } }
 .signal-flow-board { display: grid; gap: 8px; margin: 0 0 14px; }
 .signal-sector-lane { display: grid; grid-template-columns: 138px minmax(0, 1fr) 76px; align-items: stretch; gap: 10px; padding: 9px; border: 1px solid var(--border); border-radius: 15px; background: var(--panel2); }
 .signal-sector-name { display: flex; flex-direction: column; justify-content: center; padding-left: 9px; border-left: 3px solid var(--positive); }
