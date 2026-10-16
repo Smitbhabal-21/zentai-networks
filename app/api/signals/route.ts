@@ -19,14 +19,17 @@ export async function GET(req: NextRequest) {
     try {
       const quote = await getQuote(symbol, "3mo");
       const signal = signalHistory(quote.history).at(-1);
+      const volume = quote.history.findLast(point => point.date === signal?.date)?.volume ?? null;
       return { symbol, score: signal?.score ?? null, state: signal?.state ?? null,
         close: signal?.close ?? null, observedAt: signal?.date ?? null,
         quoteAsOf: quote.asOf, source: quote.source,
+        volume, relativeVolume: signal?.relativeVolume ?? null, dayReturn: signal?.dayReturn ?? null,
         factors: signal?.factors ?? [],
         error: signal ? null : "Fewer than 30 valid observations." };
     } catch {
       return { symbol, score: null, state: null, close: null, observedAt: null,
-        quoteAsOf: null, source: null, factors: [], error: "Chart unavailable; retry this company later." };
+        quoteAsOf: null, source: null, volume: null, relativeVolume: null, dayReturn: null,
+        factors: [], error: "Chart unavailable; retry this company later." };
     }
   }));
   return NextResponse.json({ results, fetchedAt: new Date().toISOString() }, {

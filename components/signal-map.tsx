@@ -11,16 +11,19 @@ import { headlinePriority } from "@/lib/news-priority";
 import { useFeed } from "./use-feed";
 import { AverageObservationEvidence } from "./observation-evidence";
 import { SignalFlowChart } from "./signal-flow-chart";
+import { VolumeLeaders } from "./volume-leaders";
 
 const date = (value?: string) => value ? new Date(value).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }) : "Unavailable";
 const day = (value?: string) => value ? new Date(value).toLocaleDateString("en-US", { dateStyle: "medium" }) : "Unavailable";
 const cash = (value?: number) => value === undefined ? "—" : new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 }).format(value);
 
-type SignalSummary = { symbol: string; score: number | null; state: "Bullish" | "Mixed" | "Bearish" | null; close: number | null; observedAt: string | null; quoteAsOf: string | null; source: string | null; factors: SignalFactor[]; error: string | null };
+type SignalSummary = { symbol: string; score: number | null; state: "Bullish" | "Mixed" | "Bearish" | null; close: number | null; observedAt: string | null; quoteAsOf: string | null; source: string | null; volume: number | null; relativeVolume: number | null; dayReturn: number | null; factors: SignalFactor[]; error: string | null };
 const summaryFromQuote = (quote: Quote): SignalSummary => {
   const signal = signalHistory(quote.history).at(-1);
+  const volume = quote.history.findLast(point => point.date === signal?.date)?.volume ?? null;
   return { symbol: quote.symbol, score: signal?.score ?? null, state: signal?.state ?? null, close: signal?.close ?? null,
-    observedAt: signal?.date ?? null, quoteAsOf: quote.asOf, source: quote.source, factors: signal?.factors ?? [],
+    observedAt: signal?.date ?? null, quoteAsOf: quote.asOf, source: quote.source,
+    volume, relativeVolume: signal?.relativeVolume ?? null, dayReturn: signal?.dayReturn ?? null, factors: signal?.factors ?? [],
     error: signal ? null : "Fewer than 30 valid observations." };
 };
 const signalTitle = (item: Company, signal?: SignalSummary) => signal?.state
@@ -109,6 +112,7 @@ export function SignalMap({ market, universe, company, selectedQuote, auto, onSe
       <div className="signal-map-controls"><label><Search size={15} /><input type="search" value={query} onChange={event => setQuery(event.target.value)} placeholder="Find ticker or company" aria-label="Search signal map" /></label><select value={sector} onChange={event => setSector(event.target.value)} aria-label="Filter signal map by sector"><option>All sectors</option>{sectors.map(name => <option key={name}>{name}</option>)}</select><button className="button primary" onClick={scan} disabled={scanActive || !filteredRows.some(row => !row.summary?.state)}>Scan {sector === "All sectors" ? "remaining companies" : sector}</button>{scanActive && <button className="button" onClick={() => scanControl.current?.abort()}>Stop scan</button>}</div>
       {scanProgress.total > 0 && <div className="signal-scan-progress" role="status"><span>{scanActive ? "Scanning" : "Last scan"}: {scanProgress.done} / {scanProgress.total}</span><progress value={scanProgress.done} max={scanProgress.total} /></div>}
       {scanError && <p className="notice error" role="alert">{scanError}</p>}
+      <VolumeLeaders rows={filteredRows} universeCount={rows.length} selectedTicker={company.ticker} onSelect={onSelect} />
       <div className="signal-flow" aria-label="Research workflow"><span>{sectors.length} sectors</span><ArrowRight size={15} /><span>{rows.length} companies</span><ArrowRight size={15} /><span>5 dated rules per scanned name</span><ArrowRight size={15} /><span>Open evidence below</span></div>
       <div className="signal-flow-legend"><span className="bullish">● Bullish</span><span className="mixed">● Mixed</span><span className="bearish">● Bearish</span><span>○ Not yet scanned</span><small>Hover curves to inspect · scroll lanes sideways →</small></div>
       <SignalFlowChart rows={filteredRows} selectedTicker={company.ticker} onSelect={onSelect} onSectorSelect={setSector} />

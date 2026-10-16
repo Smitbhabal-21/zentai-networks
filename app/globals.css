@@ -2503,6 +2503,36 @@ footer button {
 .signal-map-controls select { min-width: 160px; max-width: 230px; padding: 10px; border: 1px solid var(--border); border-radius: 11px; background: var(--panel2); color: var(--text); font: inherit; font-size: .78rem; }
 .signal-scan-progress { display: flex; align-items: center; gap: 14px; margin: 13px 0; color: var(--muted); font-size: .72rem; }
 .signal-scan-progress progress { flex: 1; height: 7px; accent-color: var(--positive); }
+.volume-rank { margin: 17px 0 22px; padding: 20px; border: 1px solid var(--border); border-radius: 18px; background: var(--panel2); }
+.volume-rank-heading { display: flex; justify-content: space-between; align-items: start; gap: 18px; }
+.volume-rank-heading h3 { margin: 4px 0 5px; font-size: 1.15rem; }
+.volume-rank-heading p:not(.eyebrow) { margin: 0; color: var(--muted); font-size: .73rem; }
+.volume-rank-switch { display: flex; flex-shrink: 0; gap: 3px; padding: 3px; border: 1px solid var(--border); border-radius: 11px; background: var(--panel); }
+.volume-rank-switch button { padding: 7px 11px; border-radius: 8px; color: var(--muted); font-size: .7rem; font-weight: 700; }
+.volume-rank-switch button[aria-pressed="true"] { background: var(--text); color: var(--panel); }
+.volume-rank-meta { display: flex; gap: 9px 17px; flex-wrap: wrap; margin: 16px 0 11px; padding: 10px 12px; border-radius: 10px; background: var(--panel); color: var(--muted); font-size: .7rem; }
+.volume-rank-meta strong { color: var(--text); }
+.volume-rank-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.volume-rank-list { min-width: 0; padding: 12px; border: 1px solid var(--border); border-radius: 14px; background: var(--panel); }
+.volume-rank-list-head { display: flex; justify-content: space-between; gap: 10px; margin: 0 2px 8px; font-size: .79rem; font-weight: 750; }
+.volume-rank-list.high .volume-rank-list-head { color: var(--positive); }
+.volume-rank-list.low .volume-rank-list-head { color: var(--warning); }
+.volume-rank-list-head small { color: var(--muted); font-size: .64rem; font-weight: 500; }
+.volume-rank-row { display: grid; grid-template-columns: 20px minmax(0, 1fr) auto; align-items: center; column-gap: 8px; width: 100%; min-height: 52px; padding: 6px 7px; border-top: 1px solid var(--border); text-align: left; }
+.volume-rank-row:hover, .volume-rank-row.selected { background: var(--panel2); }
+.volume-rank-number { color: var(--muted); font-size: .7rem; }
+.volume-rank-company, .volume-rank-value { display: flex; flex-direction: column; min-width: 0; gap: 1px; }
+.volume-rank-company strong, .volume-rank-value strong { font-size: .78rem; font-variant-numeric: tabular-nums; }
+.volume-rank-company small { overflow: hidden; color: var(--muted); font-size: .63rem; text-overflow: ellipsis; white-space: nowrap; }
+.volume-rank-value { text-align: right; }
+.volume-rank-value small { color: var(--muted); font-size: .64rem; }
+.volume-rank-value small.up { color: var(--positive); }
+.volume-rank-value small.down { color: var(--red); }
+.volume-rank-track { grid-column: 2 / -1; height: 3px; margin-top: 5px; border-radius: 3px; background: var(--panel2); }
+.volume-rank-track i { display: block; height: 100%; border-radius: inherit; background: var(--positive); }
+.volume-rank-list.low .volume-rank-track i { background: var(--warning); }
+.volume-rank > .source { margin: 12px 2px 0; font-size: .65rem; line-height: 1.5; }
+@media (max-width: 900px) { .volume-rank-heading { flex-direction: column; } .volume-rank-columns { grid-template-columns: 1fr; } }
 .signal-flow-legend { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; margin: -10px 0 13px; font-size: .7rem; color: var(--muted); }
 .signal-flow-legend .bullish, .signal-lane-end .bullish { color: var(--positive); }
 .signal-flow-legend .bearish, .signal-lane-end .bearish { color: var(--red); }
