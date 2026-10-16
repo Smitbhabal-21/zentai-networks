@@ -49,6 +49,7 @@ import { OptionsLab } from "./options-lab";
 import { SignalMap } from "./signal-map";
 import { Sp500Universe } from "./sp500-universe";
 import { CompanyPicker } from "./company-picker";
+import { Methodology } from "./methodology";
 import type { UniverseSnapshot } from "@/lib/ivv-universe";
 import { headlinePriority } from "@/lib/news-priority";
 const navigation = [
@@ -1704,66 +1705,6 @@ function Operations({ company, auto }: { company: Company; auto: boolean }) {
             </>
           )}
         </Analytics>
-      </section>
-    </div>
-  );
-}
-function Methodology() {
-  return (
-    <div className="stack">
-      <section className="panel prose">
-        <PanelTitle
-          eyebrow="TRANSPARENCY BY DESIGN"
-          title="Know what you are looking at"
-        />
-        <h3>Prices & automatic refresh</h3>
-        <p>
-          Yahoo Finance supplies timestamped quotes and price history. The
-          public feed may be delayed and can fail or be rate-limited. Automatic
-          checks run every 60 seconds by default while the browser tab is
-          visible. News checks every 3 minutes; analytical screens every 5
-          minutes. Refreshing does not make a delayed source real-time. The
-          displayed quote timestamp always refers to the provider observation.
-        </p>
-        <h3>News</h3>
-        <p>
-          Google News RSS matches headlines by company name. We retain source
-          links and publication times, deduplicate stories, exclude future-dated
-          stories and limit the feed to seven days. Headlines are publisher
-          claims, not independently verified facts.
-        </p>
-        <h3>Calculations, not certainty</h3>
-        <p>
-          The risk model measures relative anomalies, the portfolio lab uses
-          inverse volatility, and the DCF is an assumption-based approximation.
-          Backtests include per-side costs and lagged positions. Historical
-          similarity is exploratory. None of these outputs is a calibrated
-          prediction or a guarantee.
-        </p>
-        <h3>No manufactured observations</h3>
-        <p>
-          Missing values stay missing. Options activity does not reveal who
-          traded or where they were located. Geography is a static reference.
-          Sentiment remains unavailable unless a sentiment model is explicitly
-          configured. A feed failure is never silently converted into a neutral
-          or positive assessment.
-        </p>
-        <h3>Source references</h3>
-        <div className="reference-links">
-          <a href="https://finance.yahoo.com/" target="_blank" rel="noreferrer">
-            Yahoo Finance <External size={14} />
-          </a>
-          <a href="https://news.google.com/" target="_blank" rel="noreferrer">
-            Google News <External size={14} />
-          </a>
-          <a
-            href="https://www.sec.gov/edgar/search/"
-            target="_blank"
-            rel="noreferrer"
-          >
-            SEC filings search <External size={14} />
-          </a>
-        </div>
       </section>
     </div>
   );

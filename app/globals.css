@@ -1637,6 +1637,35 @@ input[type="checkbox"] {
   min-height: 44px;
   font-size: 0.8125rem;
 }
+.method-page { max-width: 1240px; }
+.method-hero { padding: clamp(22px, 3vw, 38px); background: linear-gradient(135deg, color-mix(in srgb, var(--positive) 11%, var(--panel)), var(--panel) 56%); }
+.method-hero h2 { margin: 8px 0 12px; font-size: clamp(1.7rem, 3vw, 2.45rem); line-height: 1.12; letter-spacing: -.035em; }
+.method-hero > p:not(.eyebrow) { max-width: 760px; color: var(--muted); font-size: .89rem; line-height: 1.7; }
+.method-process { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; margin: 22px 0; }
+.method-process span { padding: 9px 12px; border: 1px solid var(--border); border-radius: 9px; background: var(--panel); font-size: .72rem; font-weight: 700; }
+.method-process svg { color: var(--positive); }
+.method-hero nav { display: flex; flex-direction: row; flex-wrap: wrap; gap: 7px; padding-top: 17px; border-top: 1px solid var(--border); }
+.method-hero nav a { padding: 8px 11px; border: 1px solid var(--border); border-radius: 999px; background: var(--panel); color: var(--muted); font-size: .7rem; }
+.method-hero nav a:hover { border-color: var(--positive); color: var(--text); }
+.method-section { scroll-margin-top: 18px; }
+.method-section-head { display: flex; align-items: start; gap: 16px; margin-bottom: 19px; }
+.method-section-head > span { display: grid; place-items: center; flex-shrink: 0; width: 36px; height: 36px; border-radius: 10px; background: color-mix(in srgb, var(--positive) 15%, var(--panel)); color: var(--positive); font-size: .72rem; font-weight: 800; }
+.method-section-head h2 { margin: 0 0 5px; font-size: 1.3rem; letter-spacing: -.025em; }
+.method-section-head p, .method-section > p { color: var(--muted); font-size: .79rem; line-height: 1.65; }
+.method-section > p { margin: 0 0 15px; }
+.method-source-grid, .method-formulas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.method-source-grid > div, .method-formula { min-width: 0; padding: 15px 16px; border: 1px solid var(--border); border-radius: 13px; background: var(--panel2); }
+.method-source-grid strong, .method-formula h4 { display: block; margin: 0 0 7px; color: var(--text); font-size: .83rem; }
+.method-source-grid p, .method-formula p, .method-callout p, .method-details-body p { margin: 0; color: var(--muted); font-size: .74rem; line-height: 1.65; }
+.method-formula code { display: block; overflow-wrap: anywhere; margin: 9px 0; padding: 10px 12px; border-left: 3px solid var(--positive); border-radius: 0 8px 8px 0; background: var(--panel); color: var(--text); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .73rem; line-height: 1.55; }
+.method-callout { margin-top: 15px; padding: 14px 16px; border: 1px solid color-mix(in srgb, var(--positive) 35%, var(--border)); border-radius: 12px; background: color-mix(in srgb, var(--positive) 7%, var(--panel)); }
+.method-callout strong { display: block; margin-bottom: 5px; font-size: .78rem; }
+.method-section .reference-links { margin-top: 12px; }
+.method-details { margin-top: 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--panel2); }
+.method-details summary { padding: 13px 16px; cursor: pointer; font-size: .78rem; font-weight: 700; }
+.method-details-body { display: grid; gap: 8px; padding: 0 16px 15px; }
+.method-section > .method-note { margin: 13px 1px 0; }
+@media (max-width: 760px) { .method-source-grid, .method-formulas { grid-template-columns: 1fr; } .method-process { gap: 6px; } .method-process span { padding: 7px 9px; } .method-section-head { gap: 10px; } }
 .block {
   display: block;
   margin-top: 5px;
