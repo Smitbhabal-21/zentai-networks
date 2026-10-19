@@ -595,7 +595,7 @@ export default function Dashboard() {
           </div>
         </header>
         <main id="main-content" tabIndex={-1}>
-          <div className={`page-header ${page === "overview" ? "" : "page-header-compact"}`}>
+          {page !== "signals" && <div className={`page-header ${page === "overview" ? "" : "page-header-compact"}`}>
             <div className="hero-copy">
               <p className="eyebrow">{page === "overview" ? "THE BIG PICTURE, IN FOCUS" : active?.group?.toUpperCase() || "WORKSPACE"}</p>
               <h1 id="page-title" tabIndex={-1}>
@@ -627,8 +627,8 @@ export default function Dashboard() {
                 Quick briefing
               </button>
             </div>}
-          </div>
-          {page !== "universe" && page !== "fpa" && <div className="control-strip">
+          </div>}
+          {page !== "universe" && page !== "fpa" && page !== "signals" && <div className="control-strip">
             <CompanyPicker companies={allCompanies} value={company} onChange={setCompany} label="Search and select company" />
             <div className={`refresh-control ${auto && market.loading ? "is-fetching" : ""}`}>
               <span className={`status-dot ${auto ? "" : "paused"}`} />
