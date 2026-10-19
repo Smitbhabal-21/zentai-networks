@@ -29,6 +29,7 @@ import {
   Sparkles,
   Star,
   Wallet,
+  Calculator,
   X,
   Zap,
 } from "lucide-react";
@@ -50,6 +51,7 @@ import { SignalMap } from "./signal-map";
 import { Sp500Universe } from "./sp500-universe";
 import { CompanyPicker } from "./company-picker";
 import { Methodology } from "./methodology";
+import { FpaWorkspace } from "./fpa-workspace";
 import type { UniverseSnapshot } from "@/lib/ivv-universe";
 import { headlinePriority } from "@/lib/news-priority";
 const navigation = [
@@ -62,6 +64,7 @@ const navigation = [
   { id: "risk", label: "Risk intelligence", icon: ShieldCheck, group: "Research", description: "Examine market risk measures and their limits." },
   { id: "options-lab", label: "Options lab", icon: TrendingUp, group: "Plan", description: "Connect a signal to a contract, risk plan, and outcome." },
   { id: "portfolio", label: "Portfolio lab", icon: Wallet, group: "Plan", description: "Explore allocation and portfolio scenarios." },
+  { id: "fpa", label: "FP&A workspace", icon: Calculator, group: "Plan", description: "Expense actuals, staffing forecasts, allocations, and month-end controls." },
   { id: "backtest", label: "Strategy backtester", icon: Activity, group: "Plan", description: "Review historical strategy behavior and assumptions." },
   { id: "operations", label: "Global operations", icon: Globe2, group: "Explore", description: "Explore wider market and operational signals." },
 ] as const;
@@ -610,7 +613,7 @@ export default function Dashboard() {
               <BrandMark className="hero-brand-symbol" />
               <span className="hero-orbit-point" />
             </div>
-            {page !== "universe" && <div className="header-actions">
+            {page !== "universe" && page !== "fpa" && <div className="header-actions">
               <button
                 className="button"
                 onClick={refresh}
@@ -625,7 +628,7 @@ export default function Dashboard() {
               </button>
             </div>}
           </div>
-          {page !== "universe" && <div className="control-strip">
+          {page !== "universe" && page !== "fpa" && <div className="control-strip">
             <CompanyPicker companies={allCompanies} value={company} onChange={setCompany} label="Search and select company" />
             <div className={`refresh-control ${auto && market.loading ? "is-fetching" : ""}`}>
               <span className={`status-dot ${auto ? "" : "paused"}`} />
@@ -1092,6 +1095,7 @@ export default function Dashboard() {
           )}
           {page === "options-lab" && <OptionsLab key={company.key} company={company} quote={quoteBySymbol(company.ticker)} auto={auto} />}
           {page === "portfolio" && <Portfolio auto={auto} />}
+          {page === "fpa" && <FpaWorkspace />}
           {page === "backtest" && <Backtest company={company} />}
           {page === "operations" && (
             <Operations company={company} auto={auto} />
