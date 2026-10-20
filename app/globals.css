@@ -2568,6 +2568,7 @@ footer button {
 .signal-flow-legend .mixed { color: var(--warning); }
 .signal-flow-legend small { margin-left: auto; color: var(--muted); }
 .signal-river-shell { margin: 12px 0 24px; border: 1px solid var(--border); border-radius: 18px; overflow: hidden; background: var(--panel2); }
+.signal-river-stage { position: relative; min-height: 0; }
 .signal-river-scroll { width: 100%; overflow-x: auto; }
 .signal-river { display: block; width: 100%; min-width: 960px; height: auto; }
 .signal-river-label { fill: var(--muted); font-size: 11px; font-weight: 750; letter-spacing: .11em; }
@@ -2588,6 +2589,8 @@ footer button {
 .signal-river-path.mixed { stroke: var(--warning); opacity: .48; }
 .signal-river-path.bearish { stroke: var(--red); opacity: .48; }
 .signal-river-hit { stroke: transparent; stroke-width: 12; cursor: pointer; pointer-events: stroke; }
+.signal-river-sector:focus-visible rect, .signal-river-hit:focus-visible { stroke: var(--positive); stroke-width: 5; }
+.signal-river-hit:focus, .signal-river-sector:focus { outline: none; }
 .signal-river g:hover > .signal-river-path { stroke-width: 4; opacity: 1; }
 .signal-river-stream { stroke-width: 2; stroke-dasharray: 1 20; stroke-linecap: round; opacity: .75; pointer-events: none; animation: signal-river-motion 7s linear infinite; }
 .signal-river-stream.bullish, .signal-river-highlight.bullish { stroke: var(--positive); }
@@ -2621,12 +2624,64 @@ footer button {
 .signal-river-focus > .note { grid-column: 3; margin: 0; font-size: .7rem; }
 .signal-river-focus > .button { width: max-content; }
 .signal-river-focus > .source { grid-column: 2 / -1; display: flex; align-items: center; gap: 4px; margin: 0; }
+.signal-river-inspector { position: absolute; z-index: 5; top: 12px; bottom: 12px; right: 12px; display: flex; flex-direction: column; width: min(410px, calc(100% - 24px)); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; background: var(--panel); box-shadow: 0 18px 60px rgba(0, 0, 0, .2); }
+.signal-river-inspector-head { display: flex; justify-content: space-between; gap: 12px; padding: 16px 17px 10px; }
+.signal-river-inspector-head .eyebrow { margin: 0 0 5px; font-size: .59rem; }
+.signal-river-inspector-head h3 { display: flex; align-items: baseline; flex-wrap: wrap; gap: 7px; margin: 0; font-size: 1.25rem; }
+.signal-river-inspector-head h3 span { color: var(--muted); font-size: .75rem; font-weight: 550; }
+.signal-river-inspector-close { display: grid; place-items: center; flex: 0 0 29px; width: 29px; height: 29px; border: 1px solid var(--border); border-radius: 8px; color: var(--muted); }
+.signal-river-inspector-close:hover { color: var(--text); background: var(--panel2); }
+.signal-river-inspector-state { display: flex; justify-content: space-between; align-items: center; margin: 0 17px 10px; padding: 9px 11px; border-radius: 9px; background: var(--panel2); font-size: .76rem; }
+.signal-river-inspector-state strong { font-size: .9rem; }
+.signal-river-inspector-state.bullish strong { color: var(--positive); }
+.signal-river-inspector-state.bearish strong { color: var(--red); }
+.signal-river-inspector-state.mixed strong { color: var(--warning); }
+.signal-river-inspector-body { flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 0 17px 14px; }
+.signal-river-inspector-body > .note, .signal-river-inspector-body > .notice { margin: 4px 0 10px; font-size: .72rem; }
+.signal-river-inspector-section { border-top: 1px solid var(--border); padding: 13px 0; }
+.signal-river-inspector-section h4 { margin: 0 0 8px; font-size: .79rem; }
+.signal-river-inspector-section .source { margin: 7px 0 0; font-size: .64rem; line-height: 1.45; }
+.signal-river-inspector-section .note { margin: 6px 0; font-size: .72rem; }
+.signal-river-inspector-facts { display: grid; grid-template-columns: 1fr 1fr; gap: 7px 12px; margin: 0; }
+.signal-river-inspector-facts div { display: flex; flex-direction: column; padding: 8px; border-radius: 8px; background: var(--panel2); }
+.signal-river-inspector-facts dt { color: var(--muted); font-size: .62rem; }
+.signal-river-inspector-facts dd { margin: 3px 0 0; font-size: .78rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.signal-river-inspector-rules { display: grid; gap: 6px; margin-top: 10px; }
+.signal-river-inspector-rules > div { padding: 8px 9px; border: 1px solid var(--border); border-radius: 8px; }
+.signal-river-inspector-rules > div > div { display: flex; justify-content: space-between; gap: 10px; font-size: .73rem; }
+.signal-river-inspector-rules small { display: block; margin-top: 4px; color: var(--muted); font-size: .64rem; line-height: 1.35; }
+.signal-river-inspector-rules b.bullish, .signal-river-inspector-transitions .bullish { color: var(--positive); }
+.signal-river-inspector-rules b.bearish, .signal-river-inspector-transitions .bearish { color: var(--red); }
+.signal-river-inspector-rules b.mixed, .signal-river-inspector-transitions .mixed { color: var(--warning); }
+.signal-river-history { padding: 4px 7px 9px; border: 1px solid var(--border); border-radius: 10px; background: var(--panel2); }
+.signal-river-history svg { display: block; width: 100%; height: auto; }
+.signal-river-axis { stroke: var(--border); }
+.signal-river-history-line { fill: none; stroke: var(--positive); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+.signal-river-history-point { stroke: var(--panel); stroke-width: 2; fill: var(--warning); }
+.signal-river-history-point.bullish { fill: var(--positive); }
+.signal-river-history-point.bearish { fill: var(--red); }
+.signal-river-history-latest { fill: var(--text); stroke: var(--panel); stroke-width: 2; }
+.signal-river-history-dates { display: flex; justify-content: space-between; color: var(--muted); font-size: .6rem; }
+.signal-river-history > small { display: block; margin-top: 5px; color: var(--muted); font-size: .6rem; }
+.signal-river-inspector-transitions { margin-top: 9px; }
+.signal-river-inspector-transitions > div { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; border-top: 1px solid var(--border); padding: 6px 0; font-size: .65rem; }
+.signal-river-inspector-transitions small { color: var(--muted); font-size: .61rem; }
+.signal-river-inspector-news { display: grid; gap: 7px; }
+.signal-river-inspector-news a { position: relative; display: grid; gap: 4px; padding: 8px 26px 8px 9px; border: 1px solid var(--border); border-radius: 8px; color: var(--text); text-decoration: none; }
+.signal-river-inspector-news a:hover { border-color: var(--positive); }
+.signal-river-inspector-news a.important { border-left: 3px solid var(--red); }
+.signal-river-inspector-news a small { color: var(--muted); font-size: .61rem; }
+.signal-river-inspector-news a strong { font-size: .69rem; line-height: 1.35; }
+.signal-river-inspector-news a em { color: var(--red); font-size: .61rem; font-style: normal; }
+.signal-river-inspector-news a svg { position: absolute; top: 9px; right: 8px; }
+.signal-river-full-report { display: flex; justify-content: center; align-items: center; gap: 6px; margin: 0 17px 13px; }
 .signal-lane-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 15px; margin: 18px 0 10px; }
 .signal-lane-heading > div { min-width: 0; }
 .signal-lane-heading h3 { margin: 0; font-size: .95rem; }
 .signal-lane-heading p { margin: 0; font-size: .7rem; color: var(--muted); }
 @media (prefers-reduced-motion: reduce) { .signal-river-stream { animation: none; } }
 @media (max-width: 760px) { .signal-river-focus { grid-template-columns: 1fr 1fr; } .signal-river-focus > .eyebrow, .signal-river-focus > .source { grid-column: 1 / -1; } .signal-river-focus > .note { grid-column: auto; } .signal-lane-heading { display: block; } }
+@media (max-width: 760px) { .signal-river-inspector { position: fixed; inset: auto 9px 9px; z-index: 50; width: auto; max-height: min(76vh, 620px); } }
 body:has(.signal-map) main { max-width: none; padding: 18px clamp(16px, 2.2vw, 36px) 0; }
 body:has(.signal-map) .signal-map { gap: 16px; }
 body:has(.signal-map) .signal-intro { grid-template-columns: minmax(0, 1fr) auto auto; gap: 6px 18px; padding: 16px 20px; }
