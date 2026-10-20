@@ -100,7 +100,7 @@ export function AnalystReport({ company, quote, news, auto }: {
                   <small>{Math.round(factor.weight * 100)}% weight · {factor.points} points</small>
                 </div>)}
               </div>
-              <p className="report-context">EBITDA / interest expense: {credit.metrics?.ebitda_interest_coverage == null ? "Unavailable" : `${num(credit.metrics.ebitda_interest_coverage, 2)}×`}. Shown as context, not included in the tier.</p>
+              <p className="report-context">EBITDA / interest expense: {credit.metrics?.ebitda_interest_coverage == null ? "Unavailable" : `${num(credit.metrics.ebitda_interest_coverage, 2)}×`}. Shown as context, not included in the score.</p>
               <div className="credit-review-grid">
                 <div><span>Current ratio <Explain label="Current ratio">Current assets divided by current liabilities from the latest Yahoo balance sheet. It is context only and does not change the score.</Explain></span><strong>{credit.metrics?.current_ratio == null ? "Unavailable" : `${num(credit.metrics.current_ratio, 2)}×`}</strong></div>
                 <div><span>Current long-term debt <Explain label="Current debt">SEC XBRL current portion of long-term debt, when tagged. This is not a complete debt maturity ladder.</Explain></span><strong>{report.filings.facts.current_debt_m ? `${cash(report.filings.facts.current_debt_m.value_m)}M` : "Unavailable"}</strong></div>
