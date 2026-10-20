@@ -8,6 +8,8 @@ export type AuditEntry = { at: string; action: string; detail: string };
 export type CloseEntry = { month: string; check: string; reviewer: string; note: string; at: string };
 export type FpaModel = {
   version: 1;
+  dataSource?: "demo" | "imported";
+  importMeta?: { importedAt: string; fileName: string; sourceRows: number; budgetTotalsByCurrency: Record<Currency, number>; actualTotalsByCurrency: Record<Currency, number>; accountMap: Record<string, Expense | "Shared services" | ""> };
   rows: LedgerRow[];
   drivers: Driver[];
   fx: Record<Currency, number>;
@@ -37,7 +39,7 @@ export function demoModel(): FpaModel {
     return { id: `${month}-${unitIndex}-${categoryIndex}`, month, unit: d.unit, category, currency: d.currency, budget, actual: index < 9 ? Math.round(budget * (1 + drift)) : null };
   })));
   const sharedActuals = Object.fromEntries(MONTHS.map((month, index) => [month, index < 9 ? Math.round(76000 * (1 + Math.sin(index + 2) * 0.04)) : null]));
-  return { version: 1, rows, drivers, fx: { USD: 1, EUR: 1.08, GBP: 1.28 }, sharedPool: 76000, sharedActuals, allocation: "Headcount", fixedWeights: { "North America": 50, Europe: 30, "United Kingdom": 20 }, inflation: 3, scenario: "Base", audit: [], close: [] };
+  return { version: 1, dataSource: "demo", rows, drivers, fx: { USD: 1, EUR: 1.08, GBP: 1.28 }, sharedPool: 76000, sharedActuals, allocation: "Headcount", fixedWeights: { "North America": 50, Europe: 30, "United Kingdom": 20 }, inflation: 3, scenario: "Base", audit: [], close: [] };
 }
 
 export const usd = (amount: number, currency: Currency, fx: FpaModel["fx"]) => amount * fx[currency];
@@ -113,7 +115,7 @@ export function closeChecks(model: FpaModel, month: string) {
 export function validImport(value: unknown): value is FpaModel {
   if (!value || typeof value !== "object") return false;
   const v = value as Partial<FpaModel>;
-  return v.version === 1 && Array.isArray(v.rows) && v.rows.length === 108 && new Set(v.rows.map(row => row.id)).size === 108 && v.rows.every(row =>
+  return v.version === 1 && (v.dataSource === undefined || ["demo", "imported"].includes(v.dataSource)) && Array.isArray(v.rows) && v.rows.length === 108 && new Set(v.rows.map(row => row.id)).size === 108 && v.rows.every(row =>
     typeof row.id === "string" && MONTHS.includes(row.month) && UNITS.includes(row.unit) && CATEGORIES.includes(row.category) &&
     ["USD", "EUR", "GBP"].includes(row.currency) && Number.isFinite(row.budget) && row.budget >= 0 &&
     (row.actual === null || Number.isFinite(row.actual) && row.actual >= 0)) &&

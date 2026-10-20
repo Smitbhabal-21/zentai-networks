@@ -11,6 +11,7 @@ import { headlinePriority } from "@/lib/news-priority";
 import { useFeed } from "./use-feed";
 import { AverageObservationEvidence } from "./observation-evidence";
 import { SignalFlowChart } from "./signal-flow-chart";
+import { SignalFlowOverview } from "./signal-flow-overview";
 import { VolumeLeaders } from "./volume-leaders";
 
 const date = (value?: string) => value ? new Date(value).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }) : "Unavailable";
@@ -43,6 +44,7 @@ export function SignalMap({ market, universe, company, selectedQuote, auto, onSe
   const [sector, setSector] = useState("All sectors");
   const [showLanes, setShowLanes] = useState(false);
   const [focusMode, setFocusMode] = useState(true);
+  const [flowMode, setFlowMode] = useState<"overview" | "paths">("overview");
   const [scanned, setScanned] = useState<Record<string, SignalSummary>>(() => {
     if (typeof window === "undefined") return {};
     try {
@@ -72,6 +74,7 @@ export function SignalMap({ market, universe, company, selectedQuote, auto, onSe
   const selectedTimeline = selectedQuoteValue ? signalHistory(selectedQuoteValue.history) : [];
   const selected = { quote: selectedQuoteValue, timeline: selectedTimeline, signal: selectedTimeline.at(-1) };
   const filteredRows = rows.filter(row => (sector === "All sectors" || row.company.sector === sector) && `${row.company.ticker} ${row.company.name}`.toLowerCase().includes(query.trim().toLowerCase()));
+  const showPaths = flowMode === "paths" || sector !== "All sectors" || query.trim().length > 0;
   const sectors = [...new Set(rows.map(row => row.company.sector))].sort();
   const groups = sectors.filter(name => sector === "All sectors" || name === sector).map(name => ({ name, rows: filteredRows.filter(row => row.company.sector === name) })).filter(group => group.rows.length);
   const counts = { bullish: rows.filter(row => row.summary?.state === "Bullish").length, bearish: rows.filter(row => row.summary?.state === "Bearish").length, mixed: rows.filter(row => row.summary?.state === "Mixed").length };
@@ -116,8 +119,9 @@ export function SignalMap({ market, universe, company, selectedQuote, auto, onSe
       {scanProgress.total > 0 && <div className="signal-scan-progress" role="status"><span>{scanActive ? "Scanning" : "Last scan"}: {scanProgress.done} / {scanProgress.total}</span><progress value={scanProgress.done} max={scanProgress.total} /></div>}
       {scanError && <p className="notice error" role="alert">{scanError}</p>}
       <div className="signal-flow" aria-label="Research workflow"><span>{sectors.length} sectors</span><ArrowRight size={15} /><span>{rows.length} companies</span><ArrowRight size={15} /><span>5 dated rules per scanned name</span><ArrowRight size={15} /><span>Inspect evidence in the map</span></div>
-      <div className="signal-flow-legend"><span className="bullish">● Bullish</span><span className="mixed">● Mixed</span><span className="bearish">● Bearish</span><span>○ Not yet scanned</span><small>Hover to preview · click or press Enter for evidence · scroll sideways →</small></div>
-      <SignalFlowChart rows={filteredRows} selectedTicker={company.ticker} selectedQuote={selectedQuoteValue} timeline={selectedTimeline} articles={news.data?.articles || []} newsLoading={news.loading} newsError={news.error} onSelect={onSelect} onSectorSelect={setSector} />
+      <div className="signal-flow-legend"><span className="bullish">● Bullish</span><span className="mixed">● Mixed</span><span className="bearish">● Bearish</span><span>○ Not yet scanned</span><small>{showPaths ? "Hover to preview · click or press Enter for evidence · scroll sideways →" : "Select a sector to inspect company paths · scroll sideways →"}</small></div>
+      <div className="signal-map-view-switch" role="group" aria-label="Signal flow view"><button aria-pressed={!showPaths} onClick={() => { setFlowMode("overview"); setSector("All sectors"); setQuery(""); }}>Sector overview</button><button aria-pressed={showPaths} onClick={() => setFlowMode("paths")}>Company paths</button></div>
+      {showPaths ? <SignalFlowChart rows={filteredRows} selectedTicker={company.ticker} selectedQuote={selectedQuoteValue} timeline={selectedTimeline} articles={news.data?.articles || []} newsLoading={news.loading} newsError={news.error} onSelect={onSelect} onSectorSelect={setSector} /> : <SignalFlowOverview rows={rows} onSectorSelect={setSector} />}
       <VolumeLeaders rows={filteredRows} universeCount={rows.length} selectedTicker={company.ticker} onSelect={onSelect} />
       <div className="signal-lane-heading"><div><h3>Company lanes</h3><p>Browse the individual company cards when you need a ticker-by-ticker view.</p></div><button className="button" aria-expanded={showLanes} onClick={() => setShowLanes(value => !value)}>{showLanes ? "Hide company lanes" : `Show ${filteredRows.length} company lanes`}</button></div>
       {showLanes && <div className="signal-flow-board">{groups.map(group => <div className="signal-sector-lane" key={group.name}><div className="signal-sector-name"><strong>{group.name}</strong><span>{group.rows.length} names</span></div><div className="signal-lane-track">{group.rows.map(row => <button key={row.company.ticker} className={`signal-node ${row.summary?.state?.toLowerCase() || "pending"} ${row.company.ticker === company.ticker ? "active" : ""}`} onClick={() => onSelect(row.company)} aria-pressed={row.company.ticker === company.ticker} aria-label={`${row.company.ticker}, ${row.company.name}: ${row.summary?.state ? `${row.summary.state}, score ${row.summary.score} of 5` : row.summary?.error || "not scanned"}`} title={signalTitle(row.company, row.summary)}><span className="signal-node-head"><b>{row.company.ticker}</b><em>{row.summary?.score == null ? "○" : `${row.summary.score > 0 ? "+" : ""}${row.summary.score}`}</em></span><span className="signal-node-name">{row.company.name}</span><small>{row.summary?.state || (row.summary?.error ? "Unavailable" : "Open to scan")}</small></button>)}</div><div className="signal-lane-end"><strong>{group.rows.filter(row => row.summary?.state).length}/{group.rows.length}</strong><span>scanned</span><small><i className="bullish">{group.rows.filter(row => row.summary?.state === "Bullish").length} ↑</i> <i className="bearish">{group.rows.filter(row => row.summary?.state === "Bearish").length} ↓</i></small></div></div>)}</div>}

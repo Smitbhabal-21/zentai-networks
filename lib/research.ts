@@ -34,7 +34,7 @@ export function researchPoints(report: AnalystSnapshot, quote?: Quote): Research
   });
   rows.push({ key: "credit", label: "Internal credit score", value: report.credit.score, unit: "/100", source: provider, period,
     url: yahooUrl(report.ticker, "balance-sheet"), formula: report.credit.status === "available"
-      ? `${report.credit.factors?.map(f => `${f.points} × ${Math.round(f.weight * 100)}% (${f.name})`).join(" + ")} = ${report.credit.score}. Grade ${report.credit.grade} uses fixed bands; not an agency rating.`
+      ? `${report.credit.factors?.map(f => `${f.points} × ${Math.round(f.weight * 100)}% (${f.name})`).join(" + ")} = ${report.credit.score}. ${report.credit.grade} is an internal concern band, not an agency rating.`
       : report.credit.reason || "Insufficient inputs." });
   rows.push({ key: "dcf", label: "Zentai DCF estimate", value: report.valuation.intrinsic_value ?? null, unit: "USD/share", source: "Yahoo Finance inputs · Zentai model", period: report.fetched_at,
     url: yahooUrl(report.ticker, "cash-flow"), formula: `Five years of FCF per share plus discounted terminal value. FCF ${report.valuation.free_cash_flow_m ?? "?"}M ÷ shares ${report.valuation.shares_outstanding_m ?? "?"}M; growth ${report.valuation.assumptions?.growth_rate ?? "?"}, discount ${report.valuation.assumptions?.discount_rate ?? "?"}, terminal growth ${report.valuation.assumptions?.terminal_growth ?? "?"}.` });
@@ -87,7 +87,7 @@ export function stressCredit(report: AnalystSnapshot) {
   const p2 = points(nextDebtAssets, [[.1, 95], [.25, 80], [.4, 65], [.55, 50], [.7, 30], [1, 10]]);
   const p3 = shockedDebt === 0 ? 100 : points(cashDebt, [[.1, 15], [.25, 35], [.5, 55], [1, 75], [Infinity, 95]]);
   const score = Math.round((p1 * .45 + p2 * .3 + p3 * .25) * 10) / 10;
-  const grade = ([[85, "AAA"], [75, "AA"], [65, "A"], [55, "BBB"], [45, "BB"], [35, "B"], [0, "CCC"]] as const).find(([minimum]) => score >= minimum)![1];
+  const grade = ([[75, "Low concern"], [55, "Moderate concern"], [35, "Elevated concern"], [0, "High concern"]] as const).find(([minimum]) => score >= minimum)![1];
   return { score, grade, factors: { leverage, debtAssets: nextDebtAssets, cashDebt }, points: [p1, p2, p3],
     assumptions: "EBITDA −20%, cash −20%, debt +20%; assets held constant." };
 }

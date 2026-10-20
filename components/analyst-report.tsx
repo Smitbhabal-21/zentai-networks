@@ -11,6 +11,8 @@ import { challengeDcf, stressCredit } from "@/lib/research";
 import { ResearchWorkbench } from "./research-workbench";
 import { headlinePriority } from "@/lib/news-priority";
 import { ValuationComparison } from "./valuation-comparison";
+import { analystEvidenceChecks } from "@/lib/data-quality";
+import { researchPoints } from "@/lib/research";
 
 const cash = (value?: number | null) =>
   value == null || !Number.isFinite(value)
@@ -47,6 +49,7 @@ export function AnalystReport({ company, quote, news, auto }: {
   const kpi = report?.financials.latest_kpis;
   const valuation = report?.valuation;
   const articles = news.data?.articles.slice(0, 4) || [];
+  const evidenceChecks = report ? analystEvidenceChecks(report, quote) : [];
   const [activeExplain, setActiveExplain] = useState<string | null>(null);
   useEffect(() => {
     const close = (event: PointerEvent) => { if (!(event.target instanceof Element) || !event.target.closest(".report-explain")) setActiveExplain(null); };
@@ -79,16 +82,17 @@ export function AnalystReport({ company, quote, news, auto }: {
       {report && <div className="report-content result-reveal" key={company.key}>
         <div className="report-kpis">
           <div className="report-kpi"><Explain label="Market quote">{quote ? `${quote.source} observation at ${stamp(quote.asOf)}; fetched ${stamp(quote.fetchedAt)}. ${quote.feedLabel}. Public quotes may be delayed.` : "The market quote feed did not return a usable price."}</Explain><span>Market quote</span><strong>{cash(quote?.price)}</strong><small>{quote ? `${quote.feedLabel} · ${stamp(quote.asOf)}` : "Quote unavailable"}</small></div>
-          <div className="report-kpi"><Explain label="Internal credit tier">{credit?.status === "available" ? `Weighted points: ${credit.factors?.map(f => `${f.name} ${f.points} × ${Math.round(f.weight * 100)}%`).join(" + ")} = ${num(credit.score)}. Grade bands are in the credit section. This is not an agency rating.` : credit?.reason || "A grade is withheld when required data is missing."}</Explain><span>Internal credit tier</span><strong className={credit?.status === "available" ? "tier-value" : ""}>{credit?.grade || "Not assessed"}</strong><small>{credit?.status === "available" ? `Screen score ${num(credit.score)} / 100` : credit?.reason}</small></div>
+          <div className="report-kpi"><Explain label="Balance-sheet concern">{credit?.status === "available" ? `Weighted points: ${credit.factors?.map(f => `${f.name} ${f.points} × ${Math.round(f.weight * 100)}%`).join(" + ")} = ${num(credit.score)}. Concern bands are in the credit section. This is not an agency rating.` : credit?.reason || "A concern band is withheld when required data is missing."}</Explain><span>Balance-sheet concern</span><strong className={credit?.status === "available" ? "tier-value" : ""}>{credit?.grade || "Not assessed"}</strong><small>{credit?.status === "available" ? `Screen score ${num(credit.score)} / 100` : credit?.reason}</small></div>
           <div className="report-kpi"><Explain label="Quarterly revenue">Latest reported Yahoo Finance income-statement revenue, in USD millions, for fiscal period {report.as_of || "unavailable"}. Check the SEC filing facts below before relying on it.</Explain><span>Latest quarterly revenue</span><strong>{kpi?.revenue_m == null ? "—" : `${cash(kpi.revenue_m)}M`}</strong><small>Fiscal period {report.as_of || "unavailable"}</small></div>
           <div className="report-kpi"><Explain label="Zentai DCF estimate">A five-year free-cash-flow-per-share calculation using Yahoo Finance inputs and a terminal value. Growth, discount rate and terminal growth assumptions are visible and editable below. This is a model scenario, not a price target.</Explain><span>DCF model estimate / share</span><strong>{cash(valuation?.intrinsic_value)}</strong><small>{valuation?.error || "Illustrative scenario, not a price target"}</small></div>
         </div>
+        <section className="panel report-evidence-status" aria-label="Data quality and evidence coverage"><div className="panel-heading"><div><p className="eyebrow">SOURCE COVERAGE · REVIEW BEFORE USE</p><h2>Evidence status</h2></div><span className="quiet-badge">{evidenceChecks.filter(check => check.state === "available").length} OF {evidenceChecks.length} PRESENT</span></div><p className="note">These checks describe available inputs, not the accuracy of a valuation or the probability of an outcome. A flagged item needs source review.</p><div className="report-evidence-grid">{evidenceChecks.map(check => <div key={check.label} className={`report-evidence-item ${check.state}`}><strong>{check.label}</strong><span>{check.state === "available" ? "Present" : check.state === "review" ? "Review" : "Missing"}</span><small>{check.detail}</small></div>)}</div></section>
 
         <div className="report-columns">
           <section className="panel report-section">
             <div className="panel-heading"><div><p className="eyebrow">CREDIT RISK</p><h2>Balance-sheet screen</h2></div><span className="quiet-badge">INTERNAL MODEL</span></div>
             {credit?.status === "available" ? <>
-              <div className="credit-score"><strong>{credit.grade}</strong><div><span>Indicative internal tier</span><b>{num(credit.score)} / 100</b></div></div>
+              <div className="credit-score"><strong>{credit.grade}</strong><div><span>Internal concern band</span><b>{num(credit.score)} / 100</b></div></div>
               <div className="credit-factors">
                 {credit.factors?.map((factor) => <div className="credit-factor" key={factor.name}>
                   <div><span>{factor.name} <Explain label={factor.name}>{factor.name === "Net debt / TTM EBITDA" ? `max(0, total debt ${num(kpi?.total_debt_m)}M − cash ${num(kpi?.cash_m)}M) ÷ four-quarter EBITDA ${num(credit.metrics?.ttm_ebitda_m)}M.` : factor.name === "Debt / assets" ? `Total debt ${num(kpi?.total_debt_m)}M divided by total assets; the source ratio is ${num(kpi?.debt_to_assets, 3)}.` : `Cash ${num(kpi?.cash_m)}M divided by total debt ${num(kpi?.total_debt_m)}M.`} This factor receives {factor.points} of 100 possible points and carries a {Math.round(factor.weight * 100)}% weight.</Explain></span><strong>{num(factor.value, 2)}{factor.name === "Debt / assets" ? "" : "×"}</strong></div>
@@ -98,14 +102,14 @@ export function AnalystReport({ company, quote, news, auto }: {
               </div>
               <p className="report-context">EBITDA / interest expense: {credit.metrics?.ebitda_interest_coverage == null ? "Unavailable" : `${num(credit.metrics.ebitda_interest_coverage, 2)}×`}. Shown as context, not included in the tier.</p>
               <div className="credit-review-grid">
-                <div><span>Current ratio <Explain label="Current ratio">Current assets divided by current liabilities from the latest Yahoo balance sheet. It is context only and does not change the grade.</Explain></span><strong>{credit.metrics?.current_ratio == null ? "Unavailable" : `${num(credit.metrics.current_ratio, 2)}×`}</strong></div>
+                <div><span>Current ratio <Explain label="Current ratio">Current assets divided by current liabilities from the latest Yahoo balance sheet. It is context only and does not change the score.</Explain></span><strong>{credit.metrics?.current_ratio == null ? "Unavailable" : `${num(credit.metrics.current_ratio, 2)}×`}</strong></div>
                 <div><span>Current long-term debt <Explain label="Current debt">SEC XBRL current portion of long-term debt, when tagged. This is not a complete debt maturity ladder.</Explain></span><strong>{report.filings.facts.current_debt_m ? `${cash(report.filings.facts.current_debt_m.value_m)}M` : "Unavailable"}</strong></div>
                 <div><span>Debt covenants</span><strong>Manual filing review</strong></div>
                 <div><span>Full maturities</span><strong>Manual filing review</strong></div>
               </div>
             </> : <><p className="note">{credit?.reason || "No credit assessment is available."}</p>{report.industry === "Financials" && <BankReview report={report} />}</>}
             <p className="report-disclosure">{credit?.caveat}</p>
-            {credit?.methodology && <details className="report-method"><summary>Scoring method and grade bands</summary><p>{credit.methodology}</p></details>}
+            {credit?.methodology && <details className="report-method"><summary>Scoring method and concern bands</summary><p>{credit.methodology}</p></details>}
           </section>
 
           <section className="panel report-section">
@@ -164,11 +168,13 @@ function ScenarioLab({ ticker, report, valuation, quote, news, auto }: { ticker:
     const next = { ...model, [key]: value };
     setModel(next);
     try { localStorage.setItem(`zentai-model-${ticker}`, JSON.stringify(next)); } catch {}
+    window.dispatchEvent(new CustomEvent("zentai-model-change", { detail: ticker }));
   };
   const reset = () => {
     const next = { growth: ratePct(defaults.growth_rate), discount: ratePct(defaults.discount_rate), terminal: ratePct(defaults.terminal_growth) };
     setModel(next);
     try { localStorage.removeItem(`zentai-model-${ticker}`); } catch {}
+    window.dispatchEvent(new CustomEvent("zentai-model-change", { detail: ticker }));
   };
   const base: ModelInputs = { freeCashFlowM: valuation.free_cash_flow_m || 0, sharesM: valuation.shares_outstanding_m || 0,
     growth: model.growth / 100, discount: model.discount / 100, terminal: model.terminal / 100 };
@@ -187,7 +193,7 @@ function ScenarioLab({ ticker, report, valuation, quote, news, auto }: { ticker:
         <strong>{cash(result?.value)}</strong><small>{note}</small>
         <p>{result && quote?.price ? `${num((result.value / quote.price - 1) * 100)}% versus observed quote` : "Quote comparison unavailable"}</p>
       </div>)}</div>
-      <div className="challenge-summary"><h3>Challenge the conclusion</h3><div className="challenge-grid"><div><span>Equity model versus quote</span><strong>{scenarios.every(item => item.aboveQuote === true) ? "Above in all cases" : scenarios.every(item => item.aboveQuote === false) ? "Below in all cases" : scenarios.some(item => item.aboveQuote == null) ? "Insufficient data" : "Changes with assumptions"}</strong><small>Bear, base, and bull values compared with the observed quote. This is not a buy/sell signal.</small></div><div><span>Internal credit tier under stress</span><strong>{creditStress ? `${report.credit.grade} → ${creditStress.grade}` : "Unavailable"}</strong><small>{creditStress ? `${creditStress.assumptions} Score ${num(report.credit.score)} → ${num(creditStress.score)}.` : "No eligible corporate credit screen to stress."}</small></div></div><p>Inspect the model and factor explanations before drawing a conclusion. Stress cases are deterministic illustrations, not forecasts or agency ratings.</p></div>
+      <div className="challenge-summary"><h3>Challenge the conclusion</h3><div className="challenge-grid"><div><span>Equity model versus quote</span><strong>{scenarios.every(item => item.aboveQuote === true) ? "Above in all cases" : scenarios.every(item => item.aboveQuote === false) ? "Below in all cases" : scenarios.some(item => item.aboveQuote == null) ? "Insufficient data" : "Changes with assumptions"}</strong><small>Bear, base, and bull values compared with the observed quote. This is not a buy/sell signal.</small></div><div><span>Balance-sheet concern under stress</span><strong>{creditStress ? `${report.credit.grade} → ${creditStress.grade}` : "Unavailable"}</strong><small>{creditStress ? `${creditStress.assumptions} Score ${num(report.credit.score)} → ${num(creditStress.score)}.` : "No eligible corporate credit screen to stress."}</small></div></div><p>Inspect the model and factor explanations before drawing a conclusion. Stress cases are deterministic illustrations, not forecasts or agency ratings.</p></div>
       <details className="report-method"><summary>See five-year base-case cash flow calculation</summary>{scenarios[1].result && <div className="table-scroll"><table><thead><tr><th>Year</th><th>Forecast FCF / share</th><th>Present value</th></tr></thead><tbody>{scenarios[1].result.years.map(row => <tr key={row.year}><td>{row.year}</td><td>{cash(row.forecast)}</td><td>{cash(row.presentValue)}</td></tr>)}<tr><td>Terminal</td><td>Year 5 × (1 + terminal growth) ÷ (discount − terminal growth)</td><td>{cash(scenarios[1].result?.terminalPresentValue)}</td></tr></tbody></table></div>}</details>
       <p className="note">Illustrative FCF-per-share model. Revenue growth is only a proxy for FCF growth; capital structure, dilution, cyclicality and terminal assumptions require analyst review. No investment recommendation is generated.</p>
     </>}
@@ -210,7 +216,7 @@ function BankReview({ report }: { report: AnalystSnapshot }) {
   const samePeriod = (a?: typeof assets, b?: typeof assets) => !!a && !!b && a.period_end === b.period_end;
   const capital = samePeriod(assets, equity) && assets.value_m > 0 ? equity.value_m / assets.value_m * 100 : null;
   const reserve = samePeriod(loans, allowance) && loans.value_m > 0 ? allowance.value_m / loans.value_m * 100 : null;
-  return <div className="bank-review"><h3>Bank-specific context <Explain label="Bank review">Deposits, loans, reserves, and equity use SEC XBRL tags. Ratios are calculated only when the source periods match. These are context, not a regulatory capital or issuer rating model.</Explain></h3><div className="credit-review-grid"><div><span>Equity / assets</span><strong>{capital == null ? "Unavailable" : `${num(capital, 2)}%`}</strong></div><div><span>Loan allowance / net loans</span><strong>{reserve == null ? "Unavailable" : `${num(reserve, 2)}%`}</strong></div><div><span>Deposits</span><strong>{facts.bank_deposits_m ? `${cash(facts.bank_deposits_m.value_m)}M` : "Unavailable"}</strong></div><div><span>Regulatory capital / asset quality</span><strong>Review filing</strong></div></div><p className="report-context">No bank letter tier is issued. CET1 capital, nonperforming assets, funding concentration, and stress results require verified bank disclosures.</p></div>;
+  return <div className="bank-review"><h3>Bank-specific context <Explain label="Bank review">Deposits, loans, reserves, and equity use SEC XBRL tags. Ratios are calculated only when the source periods match. These are context, not a regulatory capital or issuer rating model.</Explain></h3><div className="credit-review-grid"><div><span>Equity / assets</span><strong>{capital == null ? "Unavailable" : `${num(capital, 2)}%`}</strong></div><div><span>Loan allowance / net loans</span><strong>{reserve == null ? "Unavailable" : `${num(reserve, 2)}%`}</strong></div><div><span>Deposits</span><strong>{facts.bank_deposits_m ? `${cash(facts.bank_deposits_m.value_m)}M` : "Unavailable"}</strong></div><div><span>Regulatory capital / asset quality</span><strong>Review filing</strong></div></div><p className="report-context">No bank concern band is issued. CET1 capital, nonperforming assets, funding concentration, and stress results require verified bank disclosures.</p></div>;
 }
 
 function FilingsPanel({ report }: { report: AnalystSnapshot }) {
@@ -234,7 +240,7 @@ function FilingsPanel({ report }: { report: AnalystSnapshot }) {
 function ResearchMemo({ report, quote }: { report: AnalystSnapshot; quote?: Quote }) {
   const [notes, setNotes] = useState("");
   const [reviewed, setReviewed] = useState(false);
-  const revision = [report.as_of, report.credit.grade, report.filings.filings[0]?.accession, report.valuation.free_cash_flow_m].join("|");
+  const revision = [report.as_of, report.credit.score, report.filings.filings[0]?.accession, report.valuation.free_cash_flow_m, report.valuation.shares_outstanding_m, quote?.asOf, JSON.stringify(report.quality_checks)].join("|");
   useEffect(() => {
     try {
       const saved = JSON.parse(localStorage.getItem(`zentai-memo-${report.ticker}`) || "null");
@@ -246,15 +252,33 @@ function ResearchMemo({ report, quote }: { report: AnalystSnapshot; quote?: Quot
     setNotes(nextNotes); setReviewed(nextReviewed);
     try { localStorage.setItem(`zentai-memo-${report.ticker}`, JSON.stringify({ notes: nextNotes, reviewed: nextReviewed, revision })); } catch {}
   };
+  useEffect(() => {
+    const invalidate = (event: Event) => {
+      if ((event as CustomEvent<string>).detail !== report.ticker) return;
+      setReviewed(false);
+      try { localStorage.setItem(`zentai-memo-${report.ticker}`, JSON.stringify({ notes, reviewed: false, revision })); } catch {}
+    };
+    window.addEventListener("zentai-model-change", invalidate);
+    return () => window.removeEventListener("zentai-model-change", invalidate);
+  }, [report.ticker, notes, revision]);
+  const downloadPacket = () => {
+    let assumptions: unknown = report.valuation.assumptions || null;
+    try { assumptions = JSON.parse(localStorage.getItem(`zentai-model-${report.ticker}`) || "null") || assumptions; } catch {}
+    const packet = { schemaVersion: 1, generatedAt: new Date().toISOString(), model: "Zentai analyst screen v1", ticker: report.ticker,
+      memo: { notes, reviewed, revision }, quote: quote ? { symbol: quote.symbol, price: quote.price, asOf: quote.asOf, fetchedAt: quote.fetchedAt, source: quote.source, feedLabel: quote.feedLabel } : null,
+      assumptions, evidenceChecks: analystEvidenceChecks(report, quote), evidencePoints: researchPoints(report, quote), analystSnapshot: report };
+    const url = URL.createObjectURL(new Blob([JSON.stringify(packet, null, 2)], { type: "application/json" }));
+    const anchor = document.createElement("a"); anchor.href = url; anchor.download = `zentai-evidence-${report.ticker}-${new Date().toISOString().slice(0, 10)}.json`; anchor.click(); URL.revokeObjectURL(url);
+  };
   const risks = [
-    report.credit.status !== "available" ? "Credit tier is not available for this issuer." : report.credit.factors?.filter(f => f.points < 55).map(f => `${f.name} is a weaker credit factor (${f.points}/100 points).`).join(" "),
+    report.credit.status !== "available" ? "Balance-sheet screen is not available for this issuer." : report.credit.factors?.filter(f => f.points < 55).map(f => `${f.name} is a weaker credit factor (${f.points}/100 points).`).join(" "),
     report.valuation.error ? "The valuation scenario lacks usable source inputs." : report.valuation.upside_pct != null && report.valuation.upside_pct < 0 ? "The Zentai DCF estimate is below the observed market price; assumptions need challenge." : "The valuation is sensitive to growth, discount and terminal assumptions.",
     report.filings.status !== "available" ? "Primary SEC filing facts are not yet connected." : "Debt covenants and a complete maturity schedule still need review in the original filing.",
   ].filter(Boolean);
   return <section className="panel report-section research-memo">
-    <div className="panel-heading"><div><p className="eyebrow">RESEARCH WORKFLOW</p><h2>Evidence memo</h2></div><span className="quiet-badge">DRAFT · HUMAN REVIEW</span></div>
+    <div className="panel-heading"><div><p className="eyebrow">RESEARCH WORKFLOW</p><h2>Evidence memo</h2></div><div className="report-actions"><span className="quiet-badge">DRAFT · HUMAN REVIEW</span><button className="button" onClick={downloadPacket}><FileDown size={15} /> Download evidence JSON</button></div></div>
     <p className="report-context">A structured draft from displayed facts, not a buy/sell call. Edit your notes and mark review complete when you have checked the underlying sources.</p>
-    <div className="memo-grid"><div><h3>Observed evidence <Explain label="Memo evidence">Each line comes from the report's source-labeled fields. The memo does not infer facts from a headline alone.</Explain></h3><ul><li>{report.company} reported {report.financials.latest_kpis.revenue_m == null ? "unavailable" : `${cash(report.financials.latest_kpis.revenue_m)}M`} of revenue for {report.as_of || "an unavailable fiscal period"}.</li><li>Observed quote: {cash(quote?.price)} at {stamp(quote?.asOf)}.</li><li>Internal credit screen: {report.credit.grade || "not assessed"}{report.credit.score == null ? "" : ` (${num(report.credit.score)}/100)`}.</li><li>Zentai DCF scenario: {cash(report.valuation.intrinsic_value)} per share.</li></ul></div><div><h3>Challenges & open diligence</h3><ul>{risks.map((item, index) => <li key={index}>{item}</li>)}</ul></div></div>
+    <div className="memo-grid"><div><h3>Observed evidence <Explain label="Memo evidence">Each line comes from the report's source-labeled fields. The memo does not infer facts from a headline alone.</Explain></h3><ul><li>{report.company} reported {report.financials.latest_kpis.revenue_m == null ? "unavailable" : `${cash(report.financials.latest_kpis.revenue_m)}M`} of revenue for {report.as_of || "an unavailable fiscal period"}.</li><li>Observed quote: {cash(quote?.price)} at {stamp(quote?.asOf)}.</li><li>Balance-sheet screen: {report.credit.grade || "not assessed"}{report.credit.score == null ? "" : ` (${num(report.credit.score)}/100)`}.</li><li>Zentai DCF scenario: {cash(report.valuation.intrinsic_value)} per share.</li></ul></div><div><h3>Challenges & open diligence</h3><ul>{risks.map((item, index) => <li key={index}>{item}</li>)}</ul></div></div>
     <label className="memo-notes">Analyst notes<textarea value={notes} onChange={event => save(event.target.value, false)} placeholder="Write your thesis, counterarguments, management questions, and source checks…" rows={5} /></label>
     <label className="memo-signoff"><input type="checkbox" checked={reviewed} onChange={event => save(notes, event.target.checked)} /> I reviewed the source figures and assumptions for this report revision.</label>
     <p className="source">{reviewed ? "Marked reviewed in this browser." : "Draft pending review."} Notes and review state stay in this browser; this is not institutional approval or a regulated recommendation.</p>

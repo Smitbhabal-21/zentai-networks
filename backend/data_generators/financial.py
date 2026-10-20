@@ -111,6 +111,7 @@ def get_financials(company_key: str) -> dict:
             "net_margin_pct": latest.get("net_margin_pct"),
             "revenue_growth_pct": rev_growth,
             "cash_m": round(cash, 1) if cash is not None else None,
+            "total_assets_m": round(total_assets, 1) if total_assets is not None else None,
             "total_debt_m": round(total_debt, 1) if total_debt is not None else None,
             "debt_to_assets": debt_to_assets,
             "current_assets_m": round(current_assets, 1) if current_assets is not None else None,

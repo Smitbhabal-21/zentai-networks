@@ -65,10 +65,10 @@ const navigation = [
   { id: "options-lab", label: "Options lab", icon: TrendingUp, group: "Plan", description: "Connect a signal to a contract, risk plan, and outcome." },
   { id: "portfolio", label: "Portfolio lab", icon: Wallet, group: "Plan", description: "Explore allocation and portfolio scenarios." },
   { id: "fpa", label: "FP&A workspace", icon: Calculator, group: "Plan", description: "Expense actuals, staffing forecasts, allocations, and month-end controls." },
-  { id: "backtest", label: "Strategy backtester", icon: Activity, group: "Plan", description: "Review historical strategy behavior and assumptions." },
-  { id: "operations", label: "Global operations", icon: Globe2, group: "Explore", description: "Explore wider market and operational signals." },
+  { id: "backtest", label: "Strategy backtester", icon: Activity, group: "Experimental", description: "Review historical strategy behavior and assumptions." },
+  { id: "operations", label: "Scenario references", icon: Globe2, group: "Experimental", description: "Explore illustrative operating locations and zones." },
 ] as const;
-const navigationGroups = ["Monitor", "Research", "Plan", "Explore"] as const;
+const navigationGroups = ["Monitor", "Research", "Plan"] as const;
 const money = (v: unknown, currency = "USD") =>
   typeof v === "number" && Number.isFinite(v)
     ? new Intl.NumberFormat("en-US", {
@@ -507,6 +507,14 @@ export default function Dashboard() {
               ))}
             </div>
           ))}
+          <details className="nav-experimental">
+            <summary>Experimental tools</summary>
+            {navigation.filter(item => item.group === "Experimental").map(({ id, label, icon: Icon }) => (
+              <button key={id} className={page === id ? "active" : ""} aria-current={page === id ? "page" : undefined} onClick={() => navigate(id)}>
+                <Icon size={17} />{label}
+              </button>
+            ))}
+          </details>
         </nav>
         <div className="watchlist-title">
           <span>YOUR WATCHLIST</span>

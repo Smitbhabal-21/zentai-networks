@@ -1,4 +1,4 @@
-"""Source-labeled analyst snapshot and an explicitly internal credit tier."""
+"""Source-labeled analyst snapshot and an internal balance-sheet screen."""
 
 from concurrent.futures import ThreadPoolExecutor
 from datetime import date
@@ -10,8 +10,8 @@ from backend.data_generators.financial import get_financials
 from backend.data_generators.sec_filings import get_sec_filing_snapshot
 
 
-GRADE_BANDS = ((85, "AAA"), (75, "AA"), (65, "A"), (55, "BBB"),
-               (45, "BB"), (35, "B"), (0, "CCC"))
+SCREEN_BANDS = ((75, "Low concern"), (55, "Moderate concern"),
+                (35, "Elevated concern"), (0, "High concern"))
 
 
 def _finite(value):
@@ -27,8 +27,7 @@ def _points(value, thresholds):
 
 def credit_tier(financials: dict, industry: str) -> dict:
     caveat = (
-        "Zentai internal screening tier, not an issuer credit rating from "
-        "S&P, Moody's, Fitch, or another rating agency. It does not estimate "
+        "Zentai internal balance-sheet concern band, not an issuer credit rating. It does not estimate "
         "default probability or replace credit underwriting."
     )
     if industry == "Financials":
@@ -71,7 +70,7 @@ def credit_tier(financials: dict, industry: str) -> dict:
                                                   (.5, 55), (1, 75), (float("inf"), 95))), .25),
     ]
     score = round(sum(points * weight for _, _, points, weight in factors), 1)
-    grade = next(label for minimum, label in GRADE_BANDS if score >= minimum)
+    grade = next(label for minimum, label in SCREEN_BANDS if score >= minimum)
     return {
         "status": "available", "grade": grade, "score": score,
         "metrics": {
@@ -84,7 +83,7 @@ def credit_tier(financials: dict, industry: str) -> dict:
         },
         "factors": [{"name": name, "value": value, "points": points,
                      "weight": weight} for name, value, points, weight in factors],
-        "methodology": "0–100 weighted screen: net debt/TTM EBITDA 45%, debt/assets 30%, cash/debt 25%. Fixed bands: AAA ≥85, AA ≥75, A ≥65, BBB ≥55, BB ≥45, B ≥35, CCC below 35. Interest coverage is shown as context when available, not scored.",
+        "methodology": "0–100 weighted screen: net debt/TTM EBITDA 45%, debt/assets 30%, cash/debt 25%. Internal concern bands: Low ≥75, Moderate ≥55, Elevated ≥35, High below 35. A higher score means lower model concern. Interest coverage is shown as context when available, not scored.",
         "caveat": caveat,
     }
 
@@ -99,21 +98,25 @@ def get_analyst_snapshot(company_key: str) -> dict:
         valuation = valuation_future.result()
         filings = filings_future.result()
     checks = []
-    filing_cash = filings.get("facts", {}).get("cash_m")
-    provider_cash = financials.get("latest_kpis", {}).get("cash_m")
-    if filing_cash and _finite(provider_cash):
+    for key, provider_key, label in (
+            ("cash_m", "cash_m", "Cash and equivalents"),
+            ("assets_m", "total_assets_m", "Total assets")):
+        filing_fact = filings.get("facts", {}).get(key)
+        provider_value = financials.get("latest_kpis", {}).get(provider_key)
+        if not filing_fact or not _finite(provider_value):
+            continue
         try:
-            period_gap = abs((date.fromisoformat(filing_cash["period_end"]) - date.fromisoformat(financials["as_of"])).days)
+            period_gap = abs((date.fromisoformat(filing_fact["period_end"]) - date.fromisoformat(financials["as_of"])).days)
         except (TypeError, ValueError):
             period_gap = 999
-        if period_gap <= 7:
-            difference = abs(filing_cash["value_m"] - provider_cash)
-            relative = difference / max(abs(filing_cash["value_m"]), 1)
-            checks.append({"metric": "Cash and equivalents", "status": "aligned" if relative <= .01 else "mismatch",
-                           "detail": f"SEC {filing_cash['value_m']:,.1f}M ({filing_cash['period_end']}) vs provider {provider_cash:,.1f}M ({financials['as_of']}); {period_gap}-day period gap and {relative * 100:.1f}% value difference."})
-        else:
-            checks.append({"metric": "Cash and equivalents", "status": "different_periods",
+        if period_gap > 7:
+            checks.append({"metric": label, "status": "different_periods",
                            "detail": "SEC and provider periods differ; no numerical reconciliation was made."})
+            continue
+        difference = abs(filing_fact["value_m"] - provider_value)
+        relative = difference / max(abs(filing_fact["value_m"]), 1)
+        checks.append({"metric": label, "status": "aligned" if relative <= .01 else "mismatch",
+                       "detail": f"SEC {filing_fact['value_m']:,.1f}M ({filing_fact['period_end']}) vs provider {provider_value:,.1f}M ({financials['as_of']}); {period_gap}-day period gap and {relative * 100:.1f}% value difference."})
     return {
         "company": financials.get("company", company["name"]),
         "ticker": company["ticker"],

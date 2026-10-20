@@ -65,10 +65,10 @@ class AccuracyTests(unittest.TestCase):
             'latest_kpis': {'total_debt_m': 500, 'cash_m': 100, 'debt_to_assets': .4},
         }
         tier = credit_tier(statement, 'Technology')
-        self.assertEqual(tier['grade'], 'BBB')
+        self.assertEqual(tier['grade'], 'Moderate concern')
         self.assertEqual(tier['metrics']['ebitda_interest_coverage'], 10)
         statement['latest_kpis']['cash_m'] = 0
-        self.assertEqual(credit_tier(statement, 'Technology')['grade'], 'BB')
+        self.assertEqual(credit_tier(statement, 'Technology')['grade'], 'Elevated concern')
         self.assertEqual(credit_tier(statement, 'Financials')['status'], 'not_applicable')
         statement['quarterly'] = statement['quarterly'][:3]
         self.assertEqual(credit_tier(statement, 'Technology')['status'], 'insufficient')
