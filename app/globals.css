@@ -2623,6 +2623,65 @@ footer button {
 .signal-overview-detail strong { font-size: .85rem; }
 .signal-overview-detail span { color: var(--text); }
 .signal-overview-detail small { color: var(--muted); font-size: .65rem; }
+.signal-pulse-shell { margin: 12px 0 24px; border: 1px solid var(--border); border-radius: 18px; overflow: hidden; background: var(--panel2); }
+.signal-pulse-head { display: flex; justify-content: space-between; align-items: end; gap: 24px; padding: 20px 22px 12px; background: var(--panel); }
+.signal-pulse-head .eyebrow { margin: 0 0 5px; }
+.signal-pulse-head h3 { margin: 0 0 5px; font-size: 1.15rem; }
+.signal-pulse-head p:not(.eyebrow) { margin: 0; color: var(--muted); font-size: .74rem; line-height: 1.45; }
+.signal-pulse-metrics { display: flex; gap: 8px; flex-shrink: 0; }
+.signal-pulse-metrics span { display: grid; gap: 2px; min-width: 100px; padding: 9px 11px; border: 1px solid var(--border); border-radius: 10px; color: var(--muted); font-size: .64rem; background: var(--panel2); }
+.signal-pulse-metrics b { color: var(--text); font-size: 1rem; }
+.signal-pulse-metrics .up b { color: var(--positive); }
+.signal-pulse-metrics .down b { color: var(--red); }
+.signal-pulse-tabs { display: flex; gap: 5px; padding: 0 22px 13px; background: var(--panel); }
+.signal-pulse-tabs button { padding: 6px 11px; border: 1px solid var(--border); border-radius: 8px; color: var(--muted); font-size: .7rem; }
+.signal-pulse-tabs button[aria-pressed="true"] { border-color: var(--positive); color: var(--text); background: color-mix(in srgb, var(--positive) 10%, var(--panel)); }
+.signal-pulse-scroll { width: 100%; overflow-x: auto; background: radial-gradient(circle at 52% 35%, color-mix(in srgb, var(--positive) 7%, var(--panel2)), var(--panel2) 70%); }
+.signal-pulse-svg { display: block; width: 100%; min-width: 900px; height: auto; }
+.signal-pulse-zone { fill: var(--panel); stroke: var(--border); }
+.signal-pulse-zone.up { fill: color-mix(in srgb, var(--positive) 4%, var(--panel)); }
+.signal-pulse-zone.down { fill: color-mix(in srgb, var(--red) 3%, var(--panel)); }
+.signal-pulse-link, .signal-pulse-motion { fill: none; pointer-events: none; }
+.signal-pulse-route.up { color: var(--positive); }
+.signal-pulse-route.down { color: var(--red); }
+.signal-pulse-link { stroke: currentColor; opacity: .38; transition: opacity .2s; }
+.signal-pulse-motion { stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-dasharray: 1 25; opacity: .8; animation: signal-river-motion 5s linear infinite; }
+.signal-pulse-route.down .signal-pulse-motion { animation-duration: 7s; }
+.signal-pulse-route.dimmed { opacity: .12; }
+.signal-pulse-route.active .signal-pulse-link { opacity: .95; }
+.signal-pulse-company { cursor: pointer; }
+.signal-pulse-company rect { fill: var(--panel); stroke: var(--border); }
+.signal-pulse-route.active .signal-pulse-company rect, .signal-pulse-company:hover rect, .signal-pulse-company:focus-visible rect { stroke: currentColor; stroke-width: 1.8; }
+.signal-pulse-company text { fill: var(--text); font-size: 11px; pointer-events: none; }
+.signal-pulse-company .signal-pulse-rank { fill: var(--muted); font-size: 9px; }
+.signal-pulse-company .signal-pulse-symbol { font-weight: 760; }
+.signal-pulse-company .signal-pulse-activity { fill: var(--muted); }
+.signal-pulse-company .signal-pulse-return { fill: currentColor; font-weight: 760; }
+.signal-pulse-sector { cursor: pointer; }
+.signal-pulse-sector rect { fill: var(--panel); stroke: var(--border); }
+.signal-pulse-sector.active rect, .signal-pulse-sector:hover rect, .signal-pulse-sector:focus-visible rect { stroke: var(--positive); stroke-width: 1.8; }
+.signal-pulse-sector text { fill: var(--text); font-size: 10px; font-weight: 650; pointer-events: none; }
+.signal-pulse-outcome rect { fill: var(--panel); stroke: var(--border); }
+.signal-pulse-outcome.up rect { fill: color-mix(in srgb, var(--positive) 11%, var(--panel)); stroke: color-mix(in srgb, var(--positive) 40%, var(--border)); }
+.signal-pulse-outcome.down rect { fill: color-mix(in srgb, var(--red) 9%, var(--panel)); stroke: color-mix(in srgb, var(--red) 40%, var(--border)); }
+.signal-pulse-outcome text { fill: var(--text); }
+.signal-pulse-outcome-name { font-size: 15px; font-weight: 750; }
+.signal-pulse-outcome-number { font-size: 26px; font-weight: 800; }
+.signal-pulse-outcome-small { fill: var(--muted) !important; font-size: 11px; }
+.signal-pulse-empty { fill: var(--muted); font-size: 15px; }
+.signal-pulse-inspect { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 13px 24px; min-height: 91px; padding: 14px 22px; border-top: 1px solid var(--border); background: var(--panel); }
+.signal-pulse-inspect .eyebrow { margin: 0 0 4px; font-size: .59rem; }
+.signal-pulse-inspect h4 { margin: 0 0 4px; font-size: 1.05rem; }
+.signal-pulse-inspect h4 span { color: var(--muted); font-size: .75rem; font-weight: 500; }
+.signal-pulse-inspect small { color: var(--muted); font-size: .64rem; }
+.signal-pulse-inspect > div:not(:first-child) { display: grid; gap: 4px; }
+.signal-pulse-inspect > div:not(:first-child) strong { font-size: 1.1rem; }
+.signal-pulse-inspect > div:not(:first-child) span { color: var(--muted); font-size: .63rem; }
+.signal-pulse-inspect-value.up strong { color: var(--positive); }
+.signal-pulse-inspect-value.down strong { color: var(--red); }
+.signal-pulse-source { margin: 0; padding: 11px 22px 14px; border-top: 1px solid var(--border); font-size: .67rem; line-height: 1.5; }
+@media (prefers-reduced-motion: reduce) { .signal-pulse-motion { animation: none; } }
+@media (max-width: 900px) { .signal-pulse-head { align-items: start; flex-direction: column; } .signal-pulse-metrics { flex-wrap: wrap; } }
 .signal-river-stage { position: relative; min-height: 0; }
 .signal-river-scroll { width: 100%; overflow-x: auto; }
 .signal-river { display: block; width: 100%; min-width: 960px; height: auto; }
