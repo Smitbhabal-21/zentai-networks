@@ -3097,6 +3097,68 @@ body:has(.signal-map) .signal-map-controls { margin-top: 8px; }
 .fpa-audit { max-height: 550px; overflow-y: auto; margin-top: 14px; }
 .fpa-audit > div { display: flex; gap: 11px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: .8rem; }
 .fpa-audit p { overflow-wrap: anywhere; }
+.procurement-intro { display: flex; justify-content: space-between; align-items: center; gap: 18px; }
+.procurement-intro .eyebrow { margin-bottom: 5px; }
+.procurement-intro h3 { margin: 0 0 5px; font-size: 1.2rem; }
+.procurement-intro p:not(.eyebrow) { margin: 0; color: var(--muted); font-size: .76rem; line-height: 1.5; }
+.procurement-intro-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.procurement-intro-actions .button, .procurement-import-grid .button { display: inline-flex; align-items: center; gap: 6px; }
+.procurement-intro-actions label, .procurement-import-grid label { cursor: pointer; }
+.procurement-intro-actions input[type="file"], .procurement-import-grid input[type="file"] { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
+.procurement-filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; padding: 12px 14px; border: 1px solid var(--border); border-radius: 14px; background: var(--panel); }
+.procurement-filters label { display: grid; gap: 4px; min-width: 105px; color: var(--muted); font-size: .65rem; font-weight: 650; }
+.procurement-filters select, .procurement-filters input { min-width: 0; width: 100%; padding: 8px 9px; border: 1px solid var(--border); border-radius: 8px; background: var(--panel2); color: var(--text); font: inherit; font-size: .72rem; }
+.procurement-filters .procurement-search { flex: 1 1 170px; }
+.procurement-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.procurement-kpis .panel { display: grid; gap: 6px; padding: 17px; }
+.procurement-kpis span { color: var(--muted); font-size: .69rem; }
+.procurement-kpis strong { font-size: clamp(1.2rem, 2vw, 1.7rem); letter-spacing: -.04em; }
+.procurement-kpis small { color: var(--muted); font-size: .63rem; line-height: 1.45; }
+.procurement-bars { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); align-items: end; gap: 7px; height: 220px; margin: 16px 0 8px; }
+.procurement-bars > div { display: grid; grid-template-rows: 16px minmax(0, 1fr) 17px; gap: 5px; height: 100%; min-width: 0; text-align: center; }
+.procurement-bars span, .procurement-bars small { color: var(--muted); font-size: .62rem; }
+.procurement-bars > div > div { display: flex; align-items: end; border-bottom: 1px solid var(--border); }
+.procurement-bars i { display: block; width: 100%; border-radius: 5px 5px 0 0; background: var(--positive); }
+.procurement-vendor-bars { display: grid; gap: 12px; margin-top: 15px; }
+.procurement-vendor-bars > div > div:first-child { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 6px; font-size: .7rem; }
+.procurement-vendor-bars span { color: var(--muted); }
+.procurement-classification { display: grid; grid-template-columns: minmax(230px, 1.4fr) repeat(3, minmax(130px, 1fr)); gap: 20px; align-items: center; }
+.procurement-classification h3 { margin: 0 0 6px; }
+.procurement-classification p:not(.eyebrow) { margin: 0; color: var(--muted); font-size: .7rem; line-height: 1.5; }
+.procurement-classification > div:not(:first-child) { display: grid; gap: 5px; }
+.procurement-classification strong { font-size: 1.2rem; }
+.procurement-classification span { color: var(--muted); font-size: .66rem; }
+.procurement-exceptions { display: grid; gap: 8px; margin-top: 15px; max-height: 700px; overflow-y: auto; }
+.procurement-exceptions > div { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: start; gap: 12px; padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--panel2); }
+.procurement-exceptions .high { border-left: 3px solid var(--red); }
+.procurement-exceptions .review { border-left: 3px solid var(--warning); }
+.procurement-exceptions svg { color: var(--red); }
+.procurement-exceptions .review svg { color: var(--warning); }
+.procurement-exceptions strong { font-size: .75rem; }
+.procurement-exceptions p { margin: 4px 0 0; color: var(--muted); font-size: .69rem; line-height: 1.45; }
+.procurement-exceptions span { color: var(--muted); font-size: .69rem; font-weight: 650; }
+.procurement-import-grid { display: grid; gap: 8px; margin: 16px 0; }
+.procurement-import-grid > div { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--panel2); }
+.procurement-import-grid > div > div:first-child { display: grid; gap: 4px; }
+.procurement-import-grid strong { text-transform: capitalize; font-size: .76rem; }
+.procurement-import-grid small { color: var(--muted); font-size: .65rem; }
+.procurement-import-grid > div > div:last-child { display: flex; gap: 7px; }
+.procurement-workspace .fpa-table td small { display: block; margin-top: 3px; color: var(--muted); font-size: .62rem; }
+.procurement-workspace .fpa-table td { vertical-align: top; }
+.procurement-flag { display: inline-block; padding: 3px 6px; border-radius: 6px; background: color-mix(in srgb, var(--red) 12%, var(--panel)); color: var(--red); font-size: .62rem; font-weight: 750; white-space: nowrap; }
+.procurement-vendor-picker { display: grid; gap: 5px; width: min(400px, 100%); margin: 14px 0; color: var(--muted); font-size: .7rem; }
+.procurement-vendor-picker select, .procurement-vendor-editor input, .procurement-vendor-editor select { min-width: 0; width: 100%; padding: 9px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--panel2); color: var(--text); font: inherit; font-size: .73rem; }
+.procurement-vendor-editor { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 15px 0; }
+.procurement-vendor-editor label { display: grid; gap: 5px; color: var(--muted); font-size: .68rem; }
+.procurement-vendor-editor fieldset { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; grid-column: 1 / -1; min-width: 0; padding: 13px; border: 1px solid var(--border); border-radius: 10px; }
+.procurement-vendor-editor legend { padding: 0 5px; color: var(--text); font-size: .75rem; font-weight: 750; text-transform: capitalize; }
+.procurement-vendor-editor > button { justify-self: start; }
+.procurement-edit-history { border-top: 1px solid var(--border); padding-top: 13px; }
+.procurement-edit-history summary { cursor: pointer; color: var(--text); font-size: .73rem; font-weight: 700; }
+.procurement-edit-history p { padding: 8px 0; border-bottom: 1px solid var(--border); color: var(--muted); font-size: .68rem; line-height: 1.5; overflow-wrap: anywhere; }
+@media (max-width: 700px) { .procurement-vendor-editor { grid-template-columns: 1fr; } .procurement-vendor-editor fieldset { grid-template-columns: 1fr; } }
+@media (max-width: 1000px) { .procurement-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .procurement-classification { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 650px) { .procurement-intro { align-items: start; flex-direction: column; } .procurement-kpis, .procurement-classification { grid-template-columns: 1fr; } .procurement-bars { gap: 3px; } .procurement-bars small { font-size: .52rem; } }
 .fpa-audit small { color: var(--muted); }
 .fpa-audit-dot { width: 8px; height: 8px; flex-shrink: 0; border-radius: 50%; margin-top: 7px; background: var(--positive); }
 .fpa-disclosure { font-size: .76rem; color: var(--muted); text-align: center; }

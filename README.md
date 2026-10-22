@@ -75,6 +75,14 @@ Cloud saving is optional and remains unavailable until the project owner configu
 3. Copy only the project URL and publishable key into `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` in the Vercel project settings and local `.env.local`. Redeploy after setting production variables. Never put a service-role key in these variables.
 4. Sign in from the FP&A cloud panel and manually save a snapshot. A snapshot can be loaded across devices with the same authenticated account. The local JSON export remains the independent backup.
 
+## Procurement and vendor-spend workspace
+
+Open **FP&A workspace → Procurement & spend** for a separate transaction-level workspace. It starts with clearly labeled illustrative data. Use **Data refresh** to download canonical CSV headers and import five complete exports: `vendors`, `requisitions`, `orders` (POs), `invoices`, and `payments`. The first real CSV clears every sample dataset; subsequent imports replace only their matching dataset. The interface shows missing-source coverage and each file's last import time. CSVs are parsed in the browser, with no ERP connection or background polling. Re-export and re-import current files to refresh.
+
+Vendor IDs connect master records to PRs, POs, and invoices; `req_id`, `po_id`, and `invoice_id` connect the transaction chain. The workspace shows quarterly and ad-hoc spend by supplier, department, category, fiscal year, and currency, with invoice-level payment traces, open PO commitment, and downloadable draft reports. Currencies stay separate; there is no implicit FX conversion. Exception checks flag duplicate identifiers/invoice numbers, missing links, vendor/currency mismatches, PO overbilling, overpayments, inactive vendors, overdue invoices, and classification-evidence gaps. Local vendor corrections are logged but do not update the source system.
+
+Supplier diversity and Indigenous spend count only invoice amounts where the imported vendor status is `yes` **and** an evidence reference with valid-from/until dates covers the invoice issue date. Zentai does not authenticate a certificate or certify compliance. Reports are drafts until source completeness and exceptions have been reviewed. Procurement data stays in browser storage and can be backed up/restored as JSON; it is not included in FP&A Supabase snapshots or automatically reconciled to the aggregate forecast ledger. Confirm company data-handling policy before importing confidential employer exports.
+
 ## Vercel deployment
 
 ```sh

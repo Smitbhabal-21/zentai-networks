@@ -5,13 +5,14 @@ import { Activity, CheckCircle2, Download, FileUp, RotateCcw, ShieldAlert } from
 import { allocationRows, closeChecks, demoModel, forecast, monthlyTotals, MONTHS, UNITS, validImport, variance, variancePercent, usd, type Currency, type Driver, type FpaModel, type LedgerRow, type Unit } from "@/lib/fpa";
 import { FpaCsvImport } from "./fpa-csv-import";
 import { FpaCloudWorkspace } from "./fpa-cloud-workspace";
+import { ProcurementWorkspace } from "./procurement-workspace";
 
 const STORAGE_KEY = "zentai-fpa-v1";
 const fmt = (n: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: Math.abs(n) >= 1_000_000 ? 2 : 0, notation: Math.abs(n) >= 1_000_000 ? "compact" : "standard" }).format(n);
 const exact = (n: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
 const monthLabel = (month: string) => new Date(`${month}-01T12:00:00Z`).toLocaleDateString("en-US", { month: "short", year: "numeric", timeZone: "UTC" });
-type View = "Overview" | "Actuals & budget" | "Forecast drivers" | "Allocations" | "Close & audit";
-const views: View[] = ["Overview", "Actuals & budget", "Forecast drivers", "Allocations", "Close & audit"];
+type View = "Overview" | "Procurement & spend" | "Actuals & budget" | "Forecast drivers" | "Allocations" | "Close & audit";
+const views: View[] = ["Overview", "Procurement & spend", "Actuals & budget", "Forecast drivers", "Allocations", "Close & audit"];
 
 function NumberInput({ value, onCommit, label, step = 1 }: { value: number; onCommit: (n: number) => void; label: string; step?: number }) {
   return <input key={`${label}-${value}`} aria-label={label} type="number" min="0" step={step} defaultValue={value} onBlur={event => {
@@ -99,8 +100,9 @@ export function FpaWorkspace() {
     <FpaCloudWorkspace model={model} onLoad={next => { setModel(next); setNotice("Private cloud snapshot loaded into this browser. Review month-end controls before use."); }} />
     {notice && <div className="notice" role="status">{notice}<button onClick={() => setNotice("")} aria-label="Dismiss notice">Dismiss</button></div>}
     <nav className="fpa-tabs" aria-label="FP&A views">{views.map(item => <button key={item} className={view === item ? "active" : ""} aria-current={view === item ? "page" : undefined} onClick={() => setView(item)}>{item}</button>)}</nav>
-    <div className="fpa-context"><label>Review month <select value={month} onChange={event => setMonth(event.target.value)}>{MONTHS.map(item => <option key={item} value={item}>{monthLabel(item)}</option>)}</select></label><span>USD reporting · source currency retained · FX rates editable</span><span className="fpa-status"><span className="status-dot" /> Saved in this browser</span></div>
+    {view !== "Procurement & spend" && <div className="fpa-context"><label>Review month <select value={month} onChange={event => setMonth(event.target.value)}>{MONTHS.map(item => <option key={item} value={item}>{monthLabel(item)}</option>)}</select></label><span>USD reporting · source currency retained · FX rates editable</span><span className="fpa-status"><span className="status-dot" /> Saved in this browser</span></div>}
 
+    {view === "Procurement & spend" && <ProcurementWorkspace />}
     {view === "Overview" && <>
       <div className="fpa-kpis"><div className="panel"><span>YTD actual · completed months</span><strong>{fmt(ytdActual)}</strong><small>{actualMonths.length} of 12 months complete</small></div><div className="panel"><span>YTD vs budget</span><strong className={ytdActual > ytdBudget ? "fpa-negative" : "fpa-positive"}>{variance(ytdActual, ytdBudget) >= 0 ? "+" : ""}{fmt(variance(ytdActual, ytdBudget))}</strong><small>{variancePercent(ytdActual, ytdBudget)?.toFixed(1) ?? "—"}% · positive means overspend</small></div><div className="panel"><span>Next 12 months · {model.scenario}</span><strong>{fmt(plan.slice(0, 12).reduce((sum, point) => sum + point.total, 0))}</strong><small>Expense forecast in USD</small></div><div className="panel"><span>Close readiness · {monthLabel(month)}</span><strong>{checks.filter(check => check.ok).length} / {checks.length}</strong><small>{allPass ? "Automated checks passed" : "Review open items below"}</small></div></div>
       <section className="panel"><div className="fpa-section-head"><div><p className="eyebrow">2026 OPERATING EXPENSES</p><h3>Where the plan is moving</h3></div><span>Completed actual months where available · scenario from Oct</span></div><TrendChart model={model} /><p className="note">The gap between green actuals and dashed budget is the expense variance. Missing or incomplete actual months are withheld. The lime segment uses staffing and cost-driver assumptions; it is a scenario, not a reported result.</p></section>
