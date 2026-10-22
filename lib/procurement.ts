@@ -1,9 +1,9 @@
 export type ProcurementKind = "vendors" | "requisitions" | "orders" | "invoices" | "payments";
 export type EvidenceStatus = "yes" | "no" | "unknown";
 export type Vendor = { vendor_id: string; name: string; country: string; active: boolean; diversity_status: EvidenceStatus; diversity_ref: string; diversity_from: string; diversity_until: string; indigenous_status: EvidenceStatus; indigenous_ref: string; indigenous_from: string; indigenous_until: string };
-export type Requisition = { req_id: string; date: string; vendor_id: string; department: string; category: string; amount: number; currency: string; status: string };
-export type Order = { po_id: string; req_id: string; date: string; vendor_id: string; department: string; category: string; amount: number; currency: string; status: string };
-export type Invoice = { invoice_id: string; invoice_number: string; po_id: string; vendor_id: string; issue_date: string; due_date: string; department: string; category: string; amount: number; currency: string };
+export type Requisition = { req_id: string; date: string; vendor_id: string; department: string; category: string; project_code?: string; cost_code?: string; amount: number; currency: string; status: string };
+export type Order = { po_id: string; req_id: string; date: string; vendor_id: string; department: string; category: string; project_code?: string; cost_code?: string; amount: number; currency: string; status: string };
+export type Invoice = { invoice_id: string; invoice_number: string; po_id: string; vendor_id: string; issue_date: string; due_date: string; department: string; category: string; project_code?: string; cost_code?: string; amount: number; currency: string };
 export type Payment = { payment_id: string; invoice_id: string; date: string; amount: number; currency: string };
 export type ProcurementData = { version: 1; source: "demo" | "imported"; vendors: Vendor[]; requisitions: Requisition[]; orders: Order[]; invoices: Invoice[]; payments: Payment[]; imports: Partial<Record<ProcurementKind, { file: string; at: string; rows: number }>>; edits?: { at: string; vendor_id: string; detail: string }[] };
 export type ProcurementException = { severity: "high" | "review"; type: string; record: string; detail: string; amount?: number; currency?: string };
@@ -11,12 +11,13 @@ export const procurementKinds: ProcurementKind[] = ["vendors", "requisitions", "
 
 const columns: Record<ProcurementKind, string[]> = {
   vendors: ["vendor_id", "name", "country", "active", "diversity_status", "diversity_ref", "diversity_from", "diversity_until", "indigenous_status", "indigenous_ref", "indigenous_from", "indigenous_until"],
-  requisitions: ["req_id", "date", "vendor_id", "department", "category", "amount", "currency", "status"],
-  orders: ["po_id", "req_id", "date", "vendor_id", "department", "category", "amount", "currency", "status"],
-  invoices: ["invoice_id", "invoice_number", "po_id", "vendor_id", "issue_date", "due_date", "department", "category", "amount", "currency"],
+  requisitions: ["req_id", "date", "vendor_id", "department", "category", "project_code", "cost_code", "amount", "currency", "status"],
+  orders: ["po_id", "req_id", "date", "vendor_id", "department", "category", "project_code", "cost_code", "amount", "currency", "status"],
+  invoices: ["invoice_id", "invoice_number", "po_id", "vendor_id", "issue_date", "due_date", "department", "category", "project_code", "cost_code", "amount", "currency"],
   payments: ["payment_id", "invoice_id", "date", "amount", "currency"],
 };
 export const procurementTemplate = (kind: ProcurementKind) => columns[kind].join(",") + "\n";
+const optionalColumns = new Set(["project_code", "cost_code"]);
 
 function csvRows(text: string): string[][] {
   const rows: string[][] = [];
@@ -66,20 +67,20 @@ export function parseProcurementCsv<K extends ProcurementKind>(kind: K, text: st
   const rows = csvRows(text.replace(/^\uFEFF/, ""));
   if (rows.length < 1 || rows.length > 50_001) throw new Error("CSV needs a header and at most 50,000 data rows.");
   const header = rows[0].map(value => value.trim().toLowerCase());
-  if (new Set(header).size !== header.length || columns[kind].some(key => !header.includes(key))) throw new Error(`Required columns: ${columns[kind].join(", ")}.`);
+  if (new Set(header).size !== header.length || columns[kind].some(key => !optionalColumns.has(key) && !header.includes(key))) throw new Error(`Required columns: ${columns[kind].filter(key => !optionalColumns.has(key)).join(", ")}. Optional: project_code, cost_code.`);
   const records = rows.slice(1).map((cells, index) => {
     const line = index + 2;
     if (cells.length !== header.length) throw new Error(`Row ${line}: column count does not match the header.`);
-    const get = (key: string) => cells[header.indexOf(key)].trim();
+    const get = (key: string) => header.includes(key) ? cells[header.indexOf(key)].trim() : "";
     if (kind === "vendors") return {
       vendor_id: code(get("vendor_id"), line, "vendor_id"), name: code(get("name"), line, "name"), country: code(get("country"), line, "country", true),
       active: get("active").toLowerCase() === "true" ? true : get("active").toLowerCase() === "false" ? false : (() => { throw new Error(`Row ${line}: active must be true or false.`); })(),
       diversity_status: status(get("diversity_status"), line), diversity_ref: code(get("diversity_ref"), line, "diversity_ref", true), diversity_from: date(get("diversity_from"), line, "diversity_from", true), diversity_until: date(get("diversity_until"), line, "diversity_until", true),
       indigenous_status: status(get("indigenous_status"), line), indigenous_ref: code(get("indigenous_ref"), line, "indigenous_ref", true), indigenous_from: date(get("indigenous_from"), line, "indigenous_from", true), indigenous_until: date(get("indigenous_until"), line, "indigenous_until", true),
     } satisfies Vendor;
-    if (kind === "requisitions") return { req_id: code(get("req_id"), line, "req_id"), date: date(get("date"), line, "date"), vendor_id: code(get("vendor_id"), line, "vendor_id", true), department: code(get("department"), line, "department"), category: code(get("category"), line, "category"), amount: amount(get("amount"), line), currency: currency(get("currency"), line), status: code(get("status"), line, "status") } satisfies Requisition;
-    if (kind === "orders") return { po_id: code(get("po_id"), line, "po_id"), req_id: code(get("req_id"), line, "req_id", true), date: date(get("date"), line, "date"), vendor_id: code(get("vendor_id"), line, "vendor_id"), department: code(get("department"), line, "department"), category: code(get("category"), line, "category"), amount: amount(get("amount"), line), currency: currency(get("currency"), line), status: code(get("status"), line, "status") } satisfies Order;
-    if (kind === "invoices") return { invoice_id: code(get("invoice_id"), line, "invoice_id"), invoice_number: code(get("invoice_number"), line, "invoice_number"), po_id: code(get("po_id"), line, "po_id", true), vendor_id: code(get("vendor_id"), line, "vendor_id"), issue_date: date(get("issue_date"), line, "issue_date"), due_date: date(get("due_date"), line, "due_date"), department: code(get("department"), line, "department"), category: code(get("category"), line, "category"), amount: amount(get("amount"), line), currency: currency(get("currency"), line) } satisfies Invoice;
+    if (kind === "requisitions") return { req_id: code(get("req_id"), line, "req_id"), date: date(get("date"), line, "date"), vendor_id: code(get("vendor_id"), line, "vendor_id", true), department: code(get("department"), line, "department"), category: code(get("category"), line, "category"), project_code: code(get("project_code"), line, "project_code", true), cost_code: code(get("cost_code"), line, "cost_code", true), amount: amount(get("amount"), line), currency: currency(get("currency"), line), status: code(get("status"), line, "status") } satisfies Requisition;
+    if (kind === "orders") return { po_id: code(get("po_id"), line, "po_id"), req_id: code(get("req_id"), line, "req_id", true), date: date(get("date"), line, "date"), vendor_id: code(get("vendor_id"), line, "vendor_id"), department: code(get("department"), line, "department"), category: code(get("category"), line, "category"), project_code: code(get("project_code"), line, "project_code", true), cost_code: code(get("cost_code"), line, "cost_code", true), amount: amount(get("amount"), line), currency: currency(get("currency"), line), status: code(get("status"), line, "status") } satisfies Order;
+    if (kind === "invoices") return { invoice_id: code(get("invoice_id"), line, "invoice_id"), invoice_number: code(get("invoice_number"), line, "invoice_number"), po_id: code(get("po_id"), line, "po_id", true), vendor_id: code(get("vendor_id"), line, "vendor_id"), issue_date: date(get("issue_date"), line, "issue_date"), due_date: date(get("due_date"), line, "due_date"), department: code(get("department"), line, "department"), category: code(get("category"), line, "category"), project_code: code(get("project_code"), line, "project_code", true), cost_code: code(get("cost_code"), line, "cost_code", true), amount: amount(get("amount"), line), currency: currency(get("currency"), line) } satisfies Invoice;
     return { payment_id: code(get("payment_id"), line, "payment_id"), invoice_id: code(get("invoice_id"), line, "invoice_id"), date: date(get("date"), line, "date"), amount: amount(get("amount"), line), currency: currency(get("currency"), line) } satisfies Payment;
   });
   return records as ProcurementData[K];
@@ -101,26 +102,26 @@ export function validProcurement(value: unknown): value is ProcurementData {
 export function demoProcurement(): ProcurementData {
   return { version: 1, source: "demo", imports: {}, edits: [],
     vendors: [
-      { vendor_id: "V-101", name: "Northstar Office", country: "CA", active: true, diversity_status: "yes", diversity_ref: "DEMO-DIV-101", diversity_from: "2026-01-01", diversity_until: "2026-12-31", indigenous_status: "no", indigenous_ref: "", indigenous_from: "", indigenous_until: "" },
-      { vendor_id: "V-102", name: "Cedar Works", country: "CA", active: true, diversity_status: "yes", diversity_ref: "DEMO-DIV-102", diversity_from: "2026-01-01", diversity_until: "2026-12-31", indigenous_status: "yes", indigenous_ref: "DEMO-IND-102", indigenous_from: "2026-01-01", indigenous_until: "2026-12-31" },
-      { vendor_id: "V-103", name: "Metro Supply", country: "CA", active: true, diversity_status: "unknown", diversity_ref: "", diversity_from: "", diversity_until: "", indigenous_status: "unknown", indigenous_ref: "", indigenous_from: "", indigenous_until: "" },
-      { vendor_id: "V-104", name: "Apex Services", country: "US", active: false, diversity_status: "no", diversity_ref: "", diversity_from: "", diversity_until: "", indigenous_status: "no", indigenous_ref: "", indigenous_from: "", indigenous_until: "" },
+      { vendor_id: "V-101", name: "Northstar Site Supply", country: "CA", active: true, diversity_status: "yes", diversity_ref: "DEMO-DIV-101", diversity_from: "2026-01-01", diversity_until: "2026-12-31", indigenous_status: "no", indigenous_ref: "", indigenous_from: "", indigenous_until: "" },
+      { vendor_id: "V-102", name: "Cedar Civil Works", country: "CA", active: true, diversity_status: "yes", diversity_ref: "DEMO-DIV-102", diversity_from: "2026-01-01", diversity_until: "2026-12-31", indigenous_status: "yes", indigenous_ref: "DEMO-IND-102", indigenous_from: "2026-01-01", indigenous_until: "2026-12-31" },
+      { vendor_id: "V-103", name: "Metro Concrete Supply", country: "CA", active: true, diversity_status: "unknown", diversity_ref: "", diversity_from: "", diversity_until: "", indigenous_status: "unknown", indigenous_ref: "", indigenous_from: "", indigenous_until: "" },
+      { vendor_id: "V-104", name: "Apex Site Services", country: "US", active: false, diversity_status: "no", diversity_ref: "", diversity_from: "", diversity_until: "", indigenous_status: "no", indigenous_ref: "", indigenous_from: "", indigenous_until: "" },
     ],
     requisitions: [
-      { req_id: "PR-401", date: "2026-09-02", vendor_id: "V-101", department: "Operations", category: "Office", amount: 12000, currency: "CAD", status: "approved" },
-      { req_id: "PR-402", date: "2026-09-04", vendor_id: "V-102", department: "Projects", category: "Services", amount: 25000, currency: "CAD", status: "approved" },
-      { req_id: "PR-403", date: "2026-10-01", vendor_id: "V-103", department: "Operations", category: "Materials", amount: 15000, currency: "CAD", status: "approved" },
+      { req_id: "PR-401", date: "2026-09-02", vendor_id: "V-101", department: "Infrastructure", category: "Site supplies", project_code: "P-1001", cost_code: "01-SITE", amount: 12000, currency: "CAD", status: "approved" },
+      { req_id: "PR-402", date: "2026-09-04", vendor_id: "V-102", department: "Civil works", category: "Subcontractors", project_code: "P-1002", cost_code: "03-CIVIL", amount: 25000, currency: "CAD", status: "approved" },
+      { req_id: "PR-403", date: "2026-10-01", vendor_id: "V-103", department: "Infrastructure", category: "Concrete", project_code: "P-1001", cost_code: "02-CONC", amount: 15000, currency: "CAD", status: "approved" },
     ],
     orders: [
-      { po_id: "PO-501", req_id: "PR-401", date: "2026-09-05", vendor_id: "V-101", department: "Operations", category: "Office", amount: 12000, currency: "CAD", status: "open" },
-      { po_id: "PO-502", req_id: "PR-402", date: "2026-09-06", vendor_id: "V-102", department: "Projects", category: "Services", amount: 25000, currency: "CAD", status: "open" },
-      { po_id: "PO-503", req_id: "PR-403", date: "2026-10-02", vendor_id: "V-103", department: "Operations", category: "Materials", amount: 15000, currency: "CAD", status: "open" },
+      { po_id: "PO-501", req_id: "PR-401", date: "2026-09-05", vendor_id: "V-101", department: "Infrastructure", category: "Site supplies", project_code: "P-1001", cost_code: "01-SITE", amount: 12000, currency: "CAD", status: "open" },
+      { po_id: "PO-502", req_id: "PR-402", date: "2026-09-06", vendor_id: "V-102", department: "Civil works", category: "Subcontractors", project_code: "P-1002", cost_code: "03-CIVIL", amount: 25000, currency: "CAD", status: "open" },
+      { po_id: "PO-503", req_id: "PR-403", date: "2026-10-02", vendor_id: "V-103", department: "Infrastructure", category: "Concrete", project_code: "P-1001", cost_code: "02-CONC", amount: 15000, currency: "CAD", status: "open" },
     ],
     invoices: [
-      { invoice_id: "INV-601", invoice_number: "NS-110", po_id: "PO-501", vendor_id: "V-101", issue_date: "2026-09-10", due_date: "2026-10-10", department: "Operations", category: "Office", amount: 10000, currency: "CAD" },
-      { invoice_id: "INV-602", invoice_number: "CW-220", po_id: "PO-502", vendor_id: "V-102", issue_date: "2026-09-12", due_date: "2026-10-12", department: "Projects", category: "Services", amount: 27000, currency: "CAD" },
-      { invoice_id: "INV-603", invoice_number: "MS-330", po_id: "PO-503", vendor_id: "V-103", issue_date: "2026-10-05", due_date: "2026-11-05", department: "Operations", category: "Materials", amount: 6000, currency: "CAD" },
-      { invoice_id: "INV-604", invoice_number: "AX-440", po_id: "", vendor_id: "V-104", issue_date: "2026-10-07", due_date: "2026-11-07", department: "Projects", category: "Services", amount: 3500, currency: "CAD" },
+      { invoice_id: "INV-601", invoice_number: "NS-110", po_id: "PO-501", vendor_id: "V-101", issue_date: "2026-09-10", due_date: "2026-10-10", department: "Infrastructure", category: "Site supplies", project_code: "P-1001", cost_code: "01-SITE", amount: 10000, currency: "CAD" },
+      { invoice_id: "INV-602", invoice_number: "CW-220", po_id: "PO-502", vendor_id: "V-102", issue_date: "2026-09-12", due_date: "2026-10-12", department: "Civil works", category: "Subcontractors", project_code: "P-1002", cost_code: "03-CIVIL", amount: 27000, currency: "CAD" },
+      { invoice_id: "INV-603", invoice_number: "MS-330", po_id: "PO-503", vendor_id: "V-103", issue_date: "2026-10-05", due_date: "2026-11-05", department: "Infrastructure", category: "Concrete", project_code: "P-1001", cost_code: "02-CONC", amount: 6000, currency: "CAD" },
+      { invoice_id: "INV-604", invoice_number: "AX-440", po_id: "", vendor_id: "V-104", issue_date: "2026-10-07", due_date: "2026-11-07", department: "Civil works", category: "Site services", project_code: "P-1002", cost_code: "04-SERV", amount: 3500, currency: "CAD" },
     ],
     payments: [
       { payment_id: "PAY-701", invoice_id: "INV-601", date: "2026-09-30", amount: 10000, currency: "CAD" },
@@ -167,6 +168,8 @@ export function analyzeProcurement(data: ProcurementData, today: string) {
       else {
         if (req.vendor_id && req.vendor_id !== po.vendor_id) add("high", "Vendor mismatch", po.po_id, `PO vendor differs from requisition ${req.req_id}.`);
         if (req.currency !== po.currency) add("high", "Currency mismatch", po.po_id, `PO currency differs from requisition ${req.req_id}.`);
+        if (req.project_code && po.project_code && req.project_code !== po.project_code) add("high", "Project mismatch", po.po_id, `PO project ${po.project_code} differs from requisition ${req.project_code}.`);
+        if (req.cost_code && po.cost_code && req.cost_code !== po.cost_code) add("review", "Cost code mismatch", po.po_id, `PO cost code ${po.cost_code} differs from requisition ${req.cost_code}.`);
         if (po.amount > req.amount + .01 && req.currency === po.currency) add("review", "PO over requisition", po.po_id, `PO exceeds requisition ${req.req_id} by ${(po.amount - req.amount).toFixed(2)}.`, po.amount - req.amount, po.currency);
       }
     } else add("review", "PO without requisition", po.po_id, "No requisition ID was supplied.");
@@ -186,6 +189,8 @@ export function analyzeProcurement(data: ProcurementData, today: string) {
       else {
         if (po.vendor_id !== invoice.vendor_id) add("high", "Vendor mismatch", invoice.invoice_id, `Invoice vendor differs from PO ${po.po_id}.`, invoice.amount, invoice.currency);
         if (po.currency !== invoice.currency) add("high", "Currency mismatch", invoice.invoice_id, `Invoice currency differs from PO ${po.po_id}.`, invoice.amount, invoice.currency);
+        if (po.project_code && invoice.project_code && po.project_code !== invoice.project_code) add("high", "Project mismatch", invoice.invoice_id, `Invoice project ${invoice.project_code} differs from PO ${po.project_code}.`, invoice.amount, invoice.currency);
+        if (po.cost_code && invoice.cost_code && po.cost_code !== invoice.cost_code) add("review", "Cost code mismatch", invoice.invoice_id, `Invoice cost code ${invoice.cost_code} differs from PO ${po.cost_code}.`, invoice.amount, invoice.currency);
       }
     }
     for (const kind of ["diversity", "indigenous"] as const) if (vendor?.[`${kind}_status`] === "yes" && evidence(vendor, kind, invoice.issue_date) !== "verified") add("review", "Unverified classification", invoice.invoice_id, `${kind} evidence for ${vendor.vendor_id} does not cover this invoice date.`, invoice.amount, invoice.currency);
