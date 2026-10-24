@@ -1,72 +1,72 @@
 /* Content stays opaque; translucent material is reserved for navigation. */
 :root {
   color-scheme: light;
-  --bg: #f4eee6;
-  --panel: #fffbf5;
-  --panel2: #eee2d5;
-  --border: #d9c7b5;
-  --text: #2f211b;
-  --muted: #6f5b50;
-  --accent: #85451f;
-  --cta: #e8bd72;
-  --cta-hover: #f0ca87;
-  --positive: #176b48;
+  --bg: #f2f1ea;
+  --panel: #fffefa;
+  --panel2: #ecefe7;
+  --border: #d8dfd4;
+  --text: #1b241d;
+  --muted: #5e6a60;
+  --accent: #526b00;
+  --cta: #d4fb54;
+  --cta-hover: #c7ee3c;
+  --positive: #11784b;
   --red: #c33648;
-  --purple: #775d8b;
-  --glass: rgba(255, 251, 245, 0.92);
-  --selected: #f6e3c4;
-  --shadow: 0 14px 34px #3d22120e, 0 2px 6px #3d22110b;
-  --warning: #915016;
-  --warning-bg: #fff0d9;
-  --ambient-halo: #d88a4566;
-  --hero-bg: #251813;
+  --purple: #5d6ab0;
+  --glass: rgba(255, 254, 250, 0.9);
+  --selected: #edf6d7;
+  --shadow: 0 14px 34px #17210e0a, 0 2px 6px #17210e09;
+  --warning: #786017;
+  --warning-bg: #fff8e7;
+  --ambient-halo: #d4fb5466;
+  --hero-bg: #191d18;
   --sidebar: 248px;
   --font: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 :root[data-appearance="dark"] {
   color-scheme: dark;
-  --bg: #1a1411;
-  --panel: #2b211b;
-  --panel2: #392b23;
-  --border: #614b3d;
-  --text: #f8eee2;
-  --muted: #c4ad9a;
-  --accent: #f1cb8c;
-  --cta: #e8bd72;
-  --cta-hover: #f0ca87;
-  --positive: #77d1a0;
+  --bg: #0c1410;
+  --panel: #17211a;
+  --panel2: #233027;
+  --border: #36473a;
+  --text: #f5f6ee;
+  --muted: #afbbad;
+  --accent: #d4fb54;
+  --cta: #d4fb54;
+  --cta-hover: #e0ff80;
+  --positive: #6fdda3;
   --red: #ff8796;
   --purple: #b8c0ff;
-  --glass: rgba(43, 33, 27, 0.93);
-  --selected: #4b3527;
+  --glass: rgba(23, 33, 26, 0.92);
+  --selected: #2e3c21;
   --shadow: 0 8px 32px #0003, 0 1px 3px #0003;
-  --warning: #f0c777;
-  --warning-bg: #40301f;
-  --ambient-halo: #c66c353d;
-  --hero-bg: #211611;
+  --warning: #e6ce89;
+  --warning-bg: #343020;
+  --ambient-halo: #bbf6373d;
+  --hero-bg: #171e13;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-appearance="light"]):not([data-appearance="dark"]) {
     color-scheme: dark;
-    --bg: #1a1411;
-    --panel: #2b211b;
-    --panel2: #392b23;
-    --border: #614b3d;
-    --text: #f8eee2;
-    --muted: #c4ad9a;
-    --accent: #f1cb8c;
-    --cta: #e8bd72;
-    --cta-hover: #f0ca87;
-    --positive: #77d1a0;
+    --bg: #0c1410;
+    --panel: #17211a;
+    --panel2: #233027;
+    --border: #36473a;
+    --text: #f5f6ee;
+    --muted: #afbbad;
+    --accent: #d4fb54;
+    --cta: #d4fb54;
+    --cta-hover: #e0ff80;
+    --positive: #6fdda3;
     --red: #ff8796;
     --purple: #b8c0ff;
-    --glass: rgba(43, 33, 27, 0.93);
-    --selected: #4b3527;
+    --glass: rgba(23, 33, 26, 0.92);
+    --selected: #2e3c21;
     --shadow: 0 8px 32px #0003, 0 1px 3px #0003;
-    --warning: #f0c777;
-    --warning-bg: #40301f;
-    --ambient-halo: #c66c353d;
-    --hero-bg: #211611;
+    --warning: #e6ce89;
+    --warning-bg: #343020;
+    --ambient-halo: #bbf6373d;
+    --hero-bg: #171e13;
   }
 }
 * {
@@ -166,17 +166,17 @@ h3 {
   top: 16px;
 }
 .sidebar {
-  --panel: #2b1d17;
-  --panel2: #3b2920;
-  --border: #574134;
-  --text: #f8eee2;
-  --muted: #c7ad98;
-  --accent: #f1cb8c;
-  --selected: #513728;
-  --glass: #2b1d17;
-  --positive: #82d7a6;
+  --panel: #17231b;
+  --panel2: #233429;
+  --border: #34493a;
+  --text: #f5f8ee;
+  --muted: #aebcac;
+  --accent: #d4fb54;
+  --selected: #344927;
+  --glass: #17231b;
+  --positive: #7fe5ac;
   --red: #ff9dab;
-  --warning: #f1cb8c;
+  --warning: #efd48b;
   color: var(--text);
   position: fixed;
   inset: 12px auto 12px 12px;
@@ -191,7 +191,7 @@ h3 {
   -webkit-backdrop-filter: blur(24px) saturate(140%);
   border: 1px solid var(--border);
   border-radius: 24px;
-  box-shadow: 0 18px 48px #29161040;
+  box-shadow: 0 18px 48px #0b1a1140;
 }
 .brand {
   display: flex;
@@ -206,7 +206,7 @@ h3 {
   width: 42px;
   height: 42px;
   flex: 0 0 42px;
-  filter: drop-shadow(0 4px 7px #2b170e38);
+  filter: drop-shadow(0 4px 7px #18211024);
   animation: brand-arrive 0.65s cubic-bezier(0.2, 0.75, 0.2, 1) both;
 }
 .brand-symbol path,
@@ -510,8 +510,8 @@ main {
   padding: 30px 32px;
   border: 1px solid var(--border);
   border-radius: 28px;
-  background: linear-gradient(112deg, var(--hero-bg) 28%, #563421 70%, #a45b2c 125%);
-  color: #fff4e8;
+  background: linear-gradient(112deg, var(--hero-bg) 30%, #233b28 70%, #4f692f 125%);
+  color: #f7faf2;
   box-shadow: var(--shadow);
 }
 .page-header-compact { min-height: 146px; padding: 23px 30px; margin-bottom: 18px; }
@@ -554,7 +554,7 @@ main {
 .hero-orbit {
   position: absolute;
   inset: 5px;
-  border: 1px solid #e8bd7233;
+  border: 1px solid #d4fb5433;
   border-radius: 50%;
 }
 .hero-orbit-outer {
@@ -563,7 +563,7 @@ main {
 }
 .hero-orbit-inner {
   inset: 17px;
-  border-color: #e8bd721f;
+  border-color: #d4fb541f;
 }
 .hero-orbit-point {
   position: absolute;
@@ -586,14 +586,14 @@ main {
   color: var(--cta);
 }
 .page-header .subtitle {
-  color: #e5cfb8;
+  color: #d4ddcb;
 }
 .page-header .button:not(.primary) {
   background: #ffffff;
-  color: #2f211b;
+  color: #1b1d1a;
 }
 .page-header .button:not(.primary):hover {
-  background: #f8e6c8;
+  background: #edf6d7;
 }
 .page-header::before {
   content: "";
@@ -656,7 +656,7 @@ h1 {
 .button.primary {
   background: var(--cta);
   border-color: var(--cta);
-  color: #2f211b;
+  color: #1b1d1a;
   font-weight: 650;
 }
 .button.primary:hover {
@@ -855,20 +855,20 @@ h1 {
   min-width: 0;
 }
 .price-panel {
-  --panel: #2a1d17;
-  --panel2: #3d2a20;
-  --border: #664a39;
-  --text: #fff2e4;
-  --muted: #c7ab96;
-  --accent: #f1cb8c;
-  --positive: #83dbac;
+  --panel: #17241c;
+  --panel2: #24362a;
+  --border: #39503e;
+  --text: #f8faef;
+  --muted: #afc3ad;
+  --accent: #d4fb54;
+  --positive: #83e9ae;
   --red: #ff9aa8;
-  --selected: #583b29;
+  --selected: #354b2d;
   position: relative;
   display: flex;
   flex-direction: column;
   color: var(--text);
-  background: radial-gradient(circle at 90% 0, #654029 0, transparent 38%), var(--panel);
+  background: radial-gradient(circle at 90% 0, #354f2f 0, transparent 38%), var(--panel);
   border-color: var(--border);
   overflow: hidden;
 }
@@ -2135,36 +2135,36 @@ footer button {
 }
 @media (prefers-contrast: more) {
   :root {
-    --border: #775f4c;
-    --muted: #4f3e33;
-    --accent: #71350f;
+    --border: #596052;
+    --muted: #353d31;
+    --accent: #3f5600;
     --positive: #006b3c;
     --red: #aa2034;
-    --selected: #f0d49f;
+    --selected: #dfefae;
   }
   :root[data-appearance="dark"] {
-    --border: #c8ac90;
-    --muted: #e5d2bf;
-    --accent: #ffe0a6;
+    --border: #aab6a3;
+    --muted: #e0e9d9;
+    --accent: #e0ff7a;
     --positive: #8af0b8;
     --red: #ffabb5;
-    --selected: #65442b;
+    --selected: #435d27;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-appearance="light"]):not([data-appearance="dark"]) {
-      --border: #c8ac90;
-      --muted: #e5d2bf;
-      --accent: #ffe0a6;
+      --border: #aab6a3;
+      --muted: #e0e9d9;
+      --accent: #e0ff7a;
       --positive: #8af0b8;
       --red: #ffabb5;
-      --selected: #65442b;
+      --selected: #435d27;
     }
   }
   .sidebar,
   .price-panel {
-    --border: #c8ac90;
-    --muted: #e5d2bf;
-    --accent: #ffe0a6;
+    --border: #9cae9e;
+    --muted: #d6e2d5;
+    --accent: #e0ff7a;
   }
   .sidebar,
   .topbar,
@@ -3022,7 +3022,7 @@ body:has(.signal-map) .signal-map-controls { margin-top: 8px; }
 .fpa-file-actions .button { white-space: nowrap; }
 .fpa-tabs { display: flex; flex-direction: row; gap: 6px; padding: 5px; border: 1px solid var(--border); border-radius: 16px; background: var(--panel); overflow-x: auto; }
 .fpa-tabs button { white-space: nowrap; padding: 9px 13px; border-radius: 11px; color: var(--muted); font-weight: 650; }
-.fpa-tabs button.active { color: #2f211b; background: var(--cta); box-shadow: 0 1px 4px #0002; }
+.fpa-tabs button.active { color: var(--text); background: var(--cta); box-shadow: 0 1px 4px #0002; }
 .fpa-tabs button.active::before { display: none; }
 .fpa-context { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; color: var(--muted); font-size: .82rem; }
 .fpa-context label, .fpa-section-head label, .fpa-allocation-select { display: flex; align-items: center; gap: 8px; font-weight: 650; }
