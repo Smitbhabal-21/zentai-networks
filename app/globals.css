@@ -3023,6 +3023,29 @@ body:has(.signal-map) .signal-map-controls { margin-top: 8px; }
 .fpa-tabs { display: flex; flex-direction: row; gap: 6px; padding: 5px; border: 1px solid var(--border); border-radius: 16px; background: var(--panel); overflow-x: auto; }
 .fpa-tabs button { white-space: nowrap; padding: 9px 13px; border-radius: 11px; color: var(--muted); font-weight: 650; }
 .fpa-tabs button.active { color: var(--text); background: var(--cta); box-shadow: 0 1px 4px #0002; }
+.quant-brief { display: grid; gap: 18px; }
+.quant-brief-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.quant-brief-fields label { display: grid; gap: 7px; color: var(--muted); font-size: .8rem; font-weight: 600; }
+.quant-brief-fields label:nth-child(2) { grid-row: span 2; }
+.quant-brief-fields input, .quant-brief-fields textarea { width: 100%; color: var(--text); background: var(--panel2); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; font: inherit; }
+.quant-brief-fields textarea { min-height: 116px; resize: vertical; }
+.quant-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.quant-resources { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.quant-resources a { display: grid; gap: 6px; padding: 14px; border: 1px solid var(--border); border-radius: 13px; background: var(--panel2); }
+.quant-resources a:hover { border-color: var(--accent); }
+.quant-resources strong { font-size: .82rem; }
+.quant-resources span { color: var(--muted); font-size: .75rem; }
+.quant-run-question { margin: 18px 0; color: var(--muted); line-height: 1.7; }
+.quant-run-question strong { color: var(--text); margin-left: 8px; }
+.quant-run-question strong:first-child { margin-left: 0; }
+.quant-holdout { margin: 18px 0; padding: 20px; border: 1px solid var(--border); border-radius: 16px; background: var(--panel2); }
+.quant-split-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 16px 0; }
+.quant-split-grid > div { display: grid; gap: 8px; padding: 16px; border: 1px solid var(--border); border-radius: 14px; background: var(--panel); }
+.quant-split-grid small { color: var(--muted); }
+.quant-split-grid > div > div { display: flex; justify-content: space-between; gap: 12px; font-size: .8rem; }
+.quant-split-grid > div > div span { color: var(--muted); }
+@media (max-width: 900px) { .quant-resources { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 620px) { .quant-brief-fields, .quant-split-grid { grid-template-columns: 1fr; } .quant-brief-fields label:nth-child(2) { grid-row: auto; } .quant-resources { grid-template-columns: 1fr; } }
 .fpa-tabs button.active::before { display: none; }
 .fpa-context { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; color: var(--muted); font-size: .82rem; }
 .fpa-context label, .fpa-section-head label, .fpa-allocation-select { display: flex; align-items: center; gap: 8px; font-weight: 650; }

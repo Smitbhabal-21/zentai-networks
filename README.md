@@ -43,6 +43,8 @@ No exchange-wide, tick-level real-time guarantee is made. A public provider can 
 
 Market overview, explainable signal map, persistent local watchlist, searchable company table, chart ranges, newsroom, quarterly research, printable equity-and-credit analyst report, company comparisons, DCF scenarios, Isolation Forest anomalies, options activity and strategy lab, insider activity, inverse-volatility portfolios, three backtest strategies, historical pattern matching, static operating-footprint references, and observation-based briefings.
 
+The **Quant research lab** follows a question → hypothesis → data → fixed-rule baseline → trading costs → chronological check workflow. It provides curated primary research and method links, local hypothesis notes, the existing SMA/RSI/MACD simulation, development-versus-later-history metrics, and an exportable JSON record with inputs, source, fetch time, and results. The 70/30 split is a diagnostic on fixed rules after indicator warm-up; no model is trained on the first segment, and repeated tuning after seeing the later segment invalidates an untouched holdout claim. This is separate from construction procurement and does not execute trades or run arbitrary paper code.
+
 ## Correctness decisions
 
 - Chart-range baselines are never treated as prior-day closes. Daily moves use a separate one-day quote response.

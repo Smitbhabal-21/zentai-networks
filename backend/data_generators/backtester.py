@@ -28,6 +28,26 @@ import pandas as pd
 import numpy as np
 
 
+def _period_metrics(frame: pd.DataFrame) -> dict:
+    """Evaluate one chronological segment from its own $1 baseline."""
+    strategy_curve = (1 + frame["Strategy Return"]).cumprod()
+    buyhold_curve = (1 + frame["Daily Return"]).cumprod()
+    peak = strategy_curve.cummax().clip(lower=1.0)
+    daily_std = frame["Strategy Return"].std()
+    strategy_return = (strategy_curve.iloc[-1] - 1) * 100
+    buyhold_return = (buyhold_curve.iloc[-1] - 1) * 100
+    return {
+        "start": frame.index[0].strftime("%Y-%m-%d"),
+        "end": frame.index[-1].strftime("%Y-%m-%d"),
+        "observations": len(frame),
+        "strategy_return_pct": round(float(strategy_return), 2),
+        "buyhold_return_pct": round(float(buyhold_return), 2),
+        "alpha_pct": round(float(strategy_return - buyhold_return), 2),
+        "max_drawdown_pct": round(float(((strategy_curve - peak) / peak).min() * 100), 2),
+        "sharpe_ratio": round(float(frame["Strategy Return"].mean() * 252 / (daily_std * np.sqrt(252))), 2) if pd.notna(daily_std) and daily_std > 0 else None,
+    }
+
+
 def run_backtest(ticker: str, strategy: str = "SMA Crossover", period: str = "5y", cost_bps: float = 10) -> dict:
     """
     Runs a full quantitative backtest for the given ticker and strategy.
@@ -152,6 +172,13 @@ def run_backtest(ticker: str, strategy: str = "SMA Crossover", period: str = "5y
 
         # Format dates as strings for JSON serialisation in the UI
         dates = df.index.strftime("%Y-%m-%d").tolist()
+        split = int(len(df) * .7)
+        holdout = {
+            "design": "Chronological first 70% / last 30% after indicator warm-up; fixed strategy rules, not fitted on the first segment.",
+            "caveat": "Re-running or changing a rule after inspecting the holdout makes it exploratory, not untouched out-of-sample validation.",
+            "development": _period_metrics(df.iloc[:split]),
+            "holdout": _period_metrics(df.iloc[split:]),
+        } if split >= 20 and len(df) - split >= 20 else None
 
         return {
             "ticker": ticker,
@@ -165,6 +192,7 @@ def run_backtest(ticker: str, strategy: str = "SMA Crossover", period: str = "5y
             "cost_bps": cost_bps,
             "as_of": dates[-1],
             "methodology": "Adjusted close-to-close returns with one-session-lagged positions and per-side trading costs. Not an opening-price execution simulation.",
+            "chronological_check": holdout,
             "dates": dates,
             "strategy_curve": df["Strategy Curve"].round(4).tolist(),
             "buyhold_curve": df["BuyHold Curve"].round(4).tolist(),

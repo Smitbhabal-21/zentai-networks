@@ -106,6 +106,19 @@ class AccuracyTests(unittest.TestCase):
         self.assertGreater(free['strategy_return_pct'],cost['strategy_return_pct'])
         self.assertEqual(len(cost['dates']),len(cost['strategy_curve']))
         self.assertGreater(cost['trades_executed'],0)
+        check=cost['chronological_check']
+        self.assertIsNotNone(check)
+        self.assertEqual(check['development']['observations']+check['holdout']['observations'],len(cost['dates']))
+        self.assertLess(check['development']['end'],check['holdout']['start'])
+        self.assertGreater(free['chronological_check']['holdout']['strategy_return_pct'],check['holdout']['strategy_return_pct'])
+    def test_short_history_withholds_chronological_check(self):
+        index=pd.bdate_range('2026-01-01',periods=50)
+        close=100+np.arange(50)*.1
+        with patch('backend.data_generators.backtester.yf.Ticker') as ticker:
+            ticker.return_value.history.return_value=pd.DataFrame({'Close':close},index=index)
+            result=run_backtest('AAPL','MACD Momentum',cost_bps=10)
+        self.assertNotIn('error',result)
+        self.assertIsNone(result['chronological_check'])
     def test_missing_data_abstains(self):
         self.assertIsNone(_compute_health_score({},None,None)['composite'])
         with patch('backend.data_generators.ai_ensemble.get_risk_analytics',return_value={'error':'offline'}), patch('backend.data_generators.ai_ensemble.get_financials',return_value={}):

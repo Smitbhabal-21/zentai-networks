@@ -65,7 +65,7 @@ const navigation = [
   { id: "options-lab", label: "Options lab", icon: TrendingUp, group: "Plan", description: "Connect a signal to a contract, risk plan, and outcome." },
   { id: "portfolio", label: "Portfolio lab", icon: Wallet, group: "Plan", description: "Explore allocation and portfolio scenarios." },
   { id: "fpa", label: "FP&A workspace", icon: Calculator, group: "Plan", description: "Expense actuals, staffing forecasts, allocations, and month-end controls." },
-  { id: "backtest", label: "Strategy backtester", icon: Activity, group: "Experimental", description: "Review historical strategy behavior and assumptions." },
+  { id: "backtest", label: "Quant research lab", icon: Activity, group: "Research", description: "State a hypothesis, inspect data, and compare a costed baseline with a chronological holdout." },
   { id: "operations", label: "Scenario references", icon: Globe2, group: "Experimental", description: "Explore illustrative operating locations and zones." },
 ] as const;
 const navigationGroups = ["Monitor", "Research", "Plan"] as const;
@@ -1509,10 +1509,44 @@ function Backtest({ company }: { company: Company }) {
     [period, setPeriod] = useState("5y"),
     [cost, setCost] = useState(10),
     [request, setRequest] = useState<string | null>(null);
+  const [question, setQuestion] = useState("");
+  const [hypothesis, setHypothesis] = useState("");
+  const [reference, setReference] = useState("");
+  const [briefNotice, setBriefNotice] = useState("");
+  const [runBrief, setRunBrief] = useState<{ question: string; hypothesis: string; reference: string; recordedAt: string; strategy: string; period: string; cost_bps: number } | null>(null);
   useEffect(() => setRequest(null), [company.key]);
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(`zentai-quant-brief-${company.key}`);
+      const brief = saved ? JSON.parse(saved) : null;
+      setQuestion(typeof brief?.question === "string" ? brief.question : "");
+      setHypothesis(typeof brief?.hypothesis === "string" ? brief.hypothesis : "");
+      setReference(typeof brief?.reference === "string" ? brief.reference : "");
+    } catch { setQuestion(""); setHypothesis(""); setReference(""); }
+    setRunBrief(null);
+    setBriefNotice("");
+  }, [company.key]);
   const feed = useFeed<any>(request, 0, false);
+  const saveBrief = () => {
+    try {
+      localStorage.setItem(`zentai-quant-brief-${company.key}`, JSON.stringify({ question: question.trim(), hypothesis: hypothesis.trim(), reference: reference.trim() }));
+      setBriefNotice("Research brief saved in this browser.");
+    } catch { setBriefNotice("Browser storage is unavailable. Export the run JSON to keep a copy."); }
+  };
+  const exportRun = () => {
+    if (!feed.data || !runBrief) return;
+    const record = { version: 1, ticker: company.ticker, research: { question: runBrief.question, hypothesis: runBrief.hypothesis, reference: runBrief.reference, recordedAt: runBrief.recordedAt }, inputs: { strategy: runBrief.strategy, period: runBrief.period, cost_bps: runBrief.cost_bps }, data_source: "Yahoo Finance historical adjusted prices via yfinance", fetched_at: feed.receivedAt, result: feed.data };
+    const url = URL.createObjectURL(new Blob([JSON.stringify(record, null, 2)], { type: "application/json" }));
+    const anchor = document.createElement("a"); anchor.href = url; anchor.download = `zentai-quant-${company.ticker.toLowerCase()}-${new Date().toISOString().slice(0, 10)}.json`; anchor.click(); URL.revokeObjectURL(url);
+  };
   return (
-    <section className="panel">
+    <div className="stack"><section className="panel quant-brief">
+      <PanelTitle eyebrow="QUESTION → DATA → BASELINE → COSTS → HOLDOUT" title="Quant research lab" />
+      <p className="note">Use this for systematic market research. It is separate from construction procurement and does not replace supplier-spend or SAP reporting work. The linked resources below are starting points, not integrations or endorsements.</p>
+      <div className="quant-brief-fields"><label>Research question<input value={question} maxLength={240} onChange={e => setQuestion(e.target.value)} placeholder={`Does a fixed trend rule improve on buy-and-hold for ${company.ticker}?`} /></label><label>Testable hypothesis<textarea value={hypothesis} maxLength={1000} onChange={e => setHypothesis(e.target.value)} placeholder="State the expected direction and why, before inspecting the result." /></label><label>Paper or idea URL (optional)<input type="url" value={reference} maxLength={500} onChange={e => setReference(e.target.value)} placeholder="https://arxiv.org/abs/…" /></label></div>
+      <div className="quant-actions"><button className="button" onClick={saveBrief}>Save brief locally</button><span className="source">Your notes stay in this browser. Save the hypothesis before running to make later review clearer.</span></div>{briefNotice && <p className="source" role="status">{briefNotice}</p>}
+      <div className="quant-resources"><a href="https://arxiv.org/archive/q-fin" target="_blank" rel="noopener noreferrer"><strong>Ideas &amp; theory</strong><span>Browse quantitative-finance papers on arXiv ↗</span></a><a href="https://www.sec.gov/search-filings" target="_blank" rel="noopener noreferrer"><strong>Primary evidence</strong><span>Check issuer filings through SEC EDGAR ↗</span></a><a href="https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.TimeSeriesSplit.html" target="_blank" rel="noopener noreferrer"><strong>Research method</strong><span>Learn time-ordered validation ↗</span></a><a href="https://pandas.pydata.org/docs/" target="_blank" rel="noopener noreferrer"><strong>Python workflow</strong><span>Explore pandas data analysis docs ↗</span></a></div>
+    </section><section className="panel">
       <PanelTitle
         eyebrow="REPRODUCIBLE HISTORICAL SIMULATION"
         title={`${company.name} strategy backtester`}
@@ -1521,6 +1555,7 @@ function Backtest({ company }: { company: Company }) {
         Signals are lagged by one session. Results use adjusted close-to-close
         returns with per-side trading costs, not simulated opening-price fills.
       </p>
+      <p className="source">Market data: public Yahoo Finance history via yfinance. The company selector above chooses the asset. This lab uses fixed SMA, RSI, or MACD rules; it does not run arbitrary paper code or execute trades.</p>
       <div className="form-row">
         <label>
           Strategy
@@ -1571,6 +1606,9 @@ function Backtest({ company }: { company: Company }) {
             feed.loading || !Number.isFinite(cost) || cost < 0 || cost > 100
           }
           onClick={() => {
+            const brief = { question: question.trim() || "Exploratory run: no research question recorded", hypothesis: hypothesis.trim() || "No hypothesis recorded before this run", reference: reference.trim(), recordedAt: new Date().toISOString(), strategy, period, cost_bps: cost };
+            setRunBrief(brief);
+            saveBrief();
             const url = `/api/analytics?section=backtest&company=${company.key}&strategy=${encodeURIComponent(strategy)}&period=${period}&cost=${cost}`;
             if (request === url) feed.refresh();
             else setRequest(url);
@@ -1595,14 +1633,14 @@ function Backtest({ company }: { company: Company }) {
         }
         noun="simulation"
       />
-      {feed.data && (
+      {feed.data && !feed.loading && (
         <div className="result-reveal" key={feed.receivedAt}>
           <div className="result-stage-heading">
             <div>
               <p className="eyebrow">HISTORICAL MODEL OUTPUT</p>
               <h3>Strategy snapshot</h3>
             </div>
-            <span className="result-ready">Latest completed snapshot</span>
+            <button className="button" onClick={exportRun} disabled={!runBrief}>Export research JSON</button>
           </div>
           <div className="result-stage">
             <div className="metric-grid">
@@ -1635,13 +1673,15 @@ function Backtest({ company }: { company: Company }) {
               />
             </div>
           </div>
+          {runBrief && <p className="quant-run-question"><strong>Question:</strong> {runBrief.question} <strong>Hypothesis:</strong> {runBrief.hypothesis}</p>}
+          {feed.data.chronological_check ? <div className="quant-holdout"><div className="fpa-section-head"><div><p className="eyebrow">CHRONOLOGICAL CHECK</p><h3>Development vs later history</h3></div><span>70% earlier · 30% later</span></div><div className="quant-split-grid">{([ ["Earlier segment", feed.data.chronological_check.development], ["Later holdout", feed.data.chronological_check.holdout] ] as const).map(([label, part]) => <div key={label}><strong>{label}</strong><small>{part.start} → {part.end} · {part.observations} sessions</small><div><span>Strategy</span><b>{pct(part.strategy_return_pct)}</b></div><div><span>Buy &amp; hold</span><b>{pct(part.buyhold_return_pct)}</b></div><div><span>Difference</span><b>{pct(part.alpha_pct)}</b></div><div><span>Max drawdown</span><b>{pct(part.max_drawdown_pct)}</b></div></div>)}</div><p className="source">{feed.data.chronological_check.design} {feed.data.chronological_check.caveat}</p></div> : <p className="note">Not enough post-warm-up observations for a 70/30 check with at least 20 sessions in each segment. Select more history.</p>}
           <p className="source">
             Growth of $1. Effective period: {feed.data.dates[0]} –{" "}
             {feed.data.as_of}. Indicator warm-up is excluded.
           </p>
         </div>
       )}
-    </section>
+    </section></div>
   );
 }
 function Operations({ company, auto }: { company: Company; auto: boolean }) {
