@@ -606,7 +606,7 @@ export default function Dashboard() {
           </div>
         </header>
         <main id="main-content" tabIndex={-1}>
-          {page !== "signals" && <div className={`page-header ${page === "overview" ? "" : "page-header-compact"}`}>
+          {page !== "signals" && <div className={`page-header ${page === "overview" ? "" : "page-header-compact"} ${page === "home" ? "page-header-home" : ""}`}>
             <div className="hero-copy">
               <p className="eyebrow">{page === "home" ? "TWO CLEAR WORKFLOWS" : page === "overview" ? "THE BIG PICTURE, IN FOCUS" : active?.group?.toUpperCase() || "WORKSPACE"}</p>
               <h1 id="page-title" tabIndex={-1}>
