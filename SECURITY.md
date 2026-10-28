@@ -1,6 +1,6 @@
 # Zentai security controls
 
-Run `npm run security-check`, `npm run typecheck`, `npm test`, and `npm run build` before release. The build runs the tracked-file and configuration gate automatically. Re-run `npm audit --omit=dev` when npm registry access is available; review findings before release.
+Run `npm run security-check`, `npm run typecheck`, `npm test`, and `npm run build` before release. The build runs the tracked-file and configuration gate automatically. GitHub Actions repeats these checks and `npm audit --omit=dev --audit-level=high` on pushes to `main` and pull requests. Review findings before release; Vercel deployment is a separate pipeline.
 
 | Area | Current control | Further operational check |
 | --- | --- | --- |
