@@ -525,7 +525,7 @@ main {
 .page-header-compact .hero-emblem { width: 90px; height: 90px; right: 300px; }
 .page-header-compact .hero-brand-symbol { width: 49px; height: 49px; }
 .page-header-compact .hero-orbit-inner { inset: 12px; }
-.page-header-home .hero-emblem { display: none; }
+.page-header-compact .hero-emblem { display: none; }
 .page-header-home .hero-copy { max-width: 620px; }
 .workspace-choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin-bottom: 26px; }
 .workspace-choice { display: flex; flex-direction: column; align-items: flex-start; text-align: left; gap: 12px; min-height: 310px; padding: 26px; border: 1px solid var(--border); border-radius: 24px; background: var(--panel); box-shadow: var(--shadow); }
@@ -555,8 +555,8 @@ main {
 .chart-reading p { margin: 9px 0 0; color: var(--muted); }
 .chart-reading a { color: var(--positive); text-decoration: underline; }
 .chart-reading button { display: inline-flex; align-items: center; gap: 5px; margin-top: 10px; color: var(--positive); font-size: .75rem; font-weight: 750; }
-@media (max-width: 1050px) { .decision-cards { grid-template-columns: 1fr; } .decision-card { min-height: 0; } }
-@media (max-width: 760px) { .workspace-choices { grid-template-columns: 1fr; } .workspace-choice { min-height: 240px; } .decision-summary-head { align-items: start; flex-direction: column; } .decision-summary-head > small { text-align: left; } }
+@media (max-width: 1050px) { .decision-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } .decision-card { min-height: 0; } }
+@media (max-width: 760px) { .workspace-choices, .decision-cards { grid-template-columns: 1fr; } .workspace-choice { min-height: 240px; } .decision-summary-head { align-items: start; flex-direction: column; } .decision-summary-head > small { text-align: left; } }
 .hero-copy,
 .header-actions {
   position: relative;
