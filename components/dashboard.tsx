@@ -55,20 +55,20 @@ import { FpaWorkspace } from "./fpa-workspace";
 import type { UniverseSnapshot } from "@/lib/ivv-universe";
 import { headlinePriority } from "@/lib/news-priority";
 const navigation = [
-  { id: "overview", label: "Market overview", icon: LayoutDashboard, group: "Monitor", description: "Prices, market context, and your watchlist in one glance." },
-  { id: "signals", label: "Signal map", icon: Network, group: "Monitor", description: "Browse sideways sector lanes and inspect the dated rules behind each scanned signal." },
-  { id: "universe", label: "S&P 500 universe", icon: Search, group: "Monitor", description: "Search the broad market and fetch details only for companies you open." },
-  { id: "news", label: "Newsroom", icon: Newspaper, group: "Monitor", description: "Recent company headlines with source links and timing." },
-  { id: "financials", label: "Company research", icon: BarChart3, group: "Research", description: "Reported fundamentals and company-level context." },
-  { id: "analyst", label: "Analyst report", icon: FileText, group: "Research", description: "Valuation, credit screening, evidence, and assumptions." },
-  { id: "risk", label: "Risk intelligence", icon: ShieldCheck, group: "Research", description: "Examine market risk measures and their limits." },
-  { id: "options-lab", label: "Options lab", icon: TrendingUp, group: "Plan", description: "Connect a signal to a contract, risk plan, and outcome." },
-  { id: "portfolio", label: "Portfolio lab", icon: Wallet, group: "Plan", description: "Explore allocation and portfolio scenarios." },
-  { id: "fpa", label: "FP&A workspace", icon: Calculator, group: "Plan", description: "Expense actuals, staffing forecasts, allocations, and month-end controls." },
-  { id: "backtest", label: "Quant research lab", icon: Activity, group: "Research", description: "State a hypothesis, inspect data, and compare a costed baseline with a chronological holdout." },
+  { id: "overview", label: "Market overview", icon: LayoutDashboard, group: "Market research", description: "Prices, market context, and your watchlist in one glance." },
+  { id: "signals", label: "Signal map", icon: Network, group: "Market research", description: "Browse sideways sector lanes and inspect the dated rules behind each scanned signal." },
+  { id: "universe", label: "S&P 500 universe", icon: Search, group: "Market research", description: "Search the broad market and fetch details only for companies you open." },
+  { id: "news", label: "Newsroom", icon: Newspaper, group: "Market research", description: "Recent company headlines with source links and timing." },
+  { id: "financials", label: "Company research", icon: BarChart3, group: "Market research", description: "Reported fundamentals and company-level context." },
+  { id: "analyst", label: "Analyst report", icon: FileText, group: "Market research", description: "Valuation, credit screening, evidence, and assumptions." },
+  { id: "risk", label: "Risk intelligence", icon: ShieldCheck, group: "Market research", description: "Examine market risk measures and their limits." },
+  { id: "options-lab", label: "Options lab", icon: TrendingUp, group: "Market research", description: "Connect a signal to a contract, risk plan, and outcome." },
+  { id: "portfolio", label: "Portfolio lab", icon: Wallet, group: "Market research", description: "Explore allocation and portfolio scenarios." },
+  { id: "fpa", label: "Construction finance", icon: Calculator, group: "Construction finance", description: "Procurement, supplier spend, expense planning, and close controls from your CSV exports." },
+  { id: "backtest", label: "Quant research lab", icon: Activity, group: "Market research", description: "State a hypothesis, inspect data, and compare a costed baseline with a chronological holdout." },
   { id: "operations", label: "Scenario references", icon: Globe2, group: "Experimental", description: "Explore illustrative operating locations and zones." },
 ] as const;
-const navigationGroups = ["Monitor", "Research", "Plan"] as const;
+const navigationGroups = ["Market research", "Construction finance"] as const;
 const money = (v: unknown, currency = "USD") =>
   typeof v === "number" && Number.isFinite(v)
     ? new Intl.NumberFormat("en-US", {
@@ -297,7 +297,7 @@ function Analytics({
   );
 }
 export default function Dashboard() {
-  const [page, setPage] = useState("overview"),
+  const [page, setPage] = useState("home"),
     [company, setCompany] = useState<Company>(companies[2]);
   const [range, setRange] = useState<Range>("3mo"),
     [auto, setAuto] = useState(true),
@@ -442,6 +442,7 @@ export default function Dashboard() {
       : selected.data?.quotes[0];
   const quoteBySymbol = (s: string) => s === company.ticker && !featured ? (broadQuote.data?.quote.symbol === s ? broadQuote.data.quote : undefined) : quotes.find((q) => q.symbol === s);
   const active = navigation.find((n) => n.id === page);
+  const currentWorkspace = page === "home" ? null : page === "fpa" ? "Construction finance" : "Market research";
   const navigate = (id: string) => {
     setPage(id);
     setMobile(false);
@@ -490,7 +491,9 @@ export default function Dashboard() {
           </span>
         </a>
         <nav aria-label="Main navigation">
-          {navigationGroups.map((group) => (
+          <button className={page === "home" ? "active" : ""} aria-current={page === "home" ? "page" : undefined} onClick={() => navigate("home")}><LayoutDashboard size={17} /> Workspace home</button>
+          <div className="workspace-switcher" role="group" aria-label="Choose workspace"><button className={currentWorkspace === "Market research" ? "active" : ""} aria-pressed={currentWorkspace === "Market research"} onClick={() => navigate("overview")}><BarChart3 size={15} /> Market</button><button className={currentWorkspace === "Construction finance" ? "active" : ""} aria-pressed={currentWorkspace === "Construction finance"} onClick={() => navigate("fpa")}><Calculator size={15} /> Construction</button></div>
+          {navigationGroups.filter(group => group === currentWorkspace).map((group) => (
             <div className="nav-group" key={group}>
               <p className="nav-label">{group}</p>
               {navigation.filter((item) => item.group === group).map(({ id, label, icon: Icon }) => (
@@ -507,16 +510,16 @@ export default function Dashboard() {
               ))}
             </div>
           ))}
-          <details className="nav-experimental">
+          {currentWorkspace === "Market research" && <details className="nav-experimental">
             <summary>Experimental tools</summary>
             {navigation.filter(item => item.group === "Experimental").map(({ id, label, icon: Icon }) => (
               <button key={id} className={page === id ? "active" : ""} aria-current={page === id ? "page" : undefined} onClick={() => navigate(id)}>
                 <Icon size={17} />{label}
               </button>
             ))}
-          </details>
+          </details>}
         </nav>
-        <div className="watchlist-title">
+        {currentWorkspace === "Market research" && <><div className="watchlist-title">
           <span>YOUR WATCHLIST</span>
           <Star size={12} />
         </div>
@@ -539,7 +542,7 @@ export default function Dashboard() {
           {!favorites.length && (
             <small>Star companies in the market table.</small>
           )}
-        </div>
+        </div></>}
         <div className="sidebar-bottom">
           <button
             className="method-link"
@@ -574,12 +577,12 @@ export default function Dashboard() {
             <BrandMark className="mobile-brand-symbol" />
             <span>Workspace</span>
             <span>/</span>
-            <strong>{active?.label || "Data & methodology"}</strong>
+            <strong>{page === "home" ? "Choose a workspace" : active?.label || "Data & methodology"}</strong>
           </div>
           <div className="topbar-right">
-            <span className={`public-badge ${market.loading ? "is-fetching" : ""}`}>
+            <span className={`public-badge ${market.loading && currentWorkspace !== "Construction finance" ? "is-fetching" : ""}`}>
               <span className="status-dot" />
-              {market.loading ? "UPDATING FEEDS" : "PUBLIC FEEDS"}
+              {currentWorkspace === "Construction finance" ? "BROWSER-LOCAL CSV" : market.loading ? "UPDATING FEEDS" : "PUBLIC FEEDS"}
             </span>
             <label className="appearance-control">
               <span className="sr-only">Appearance</span>
@@ -605,12 +608,13 @@ export default function Dashboard() {
         <main id="main-content" tabIndex={-1}>
           {page !== "signals" && <div className={`page-header ${page === "overview" ? "" : "page-header-compact"}`}>
             <div className="hero-copy">
-              <p className="eyebrow">{page === "overview" ? "THE BIG PICTURE, IN FOCUS" : active?.group?.toUpperCase() || "WORKSPACE"}</p>
+              <p className="eyebrow">{page === "home" ? "TWO CLEAR WORKFLOWS" : page === "overview" ? "THE BIG PICTURE, IN FOCUS" : active?.group?.toUpperCase() || "WORKSPACE"}</p>
               <h1 id="page-title" tabIndex={-1}>
-                {active?.label || "Data & methodology"}
+                {page === "home" ? "Choose your workspace" : active?.label || "Data & methodology"}
               </h1>
               <p className="subtitle">
-                {page === "overview"
+                {page === "home" ? "Start with the work you need to do today. Each path keeps its evidence and next steps together."
+                  : page === "overview"
                   ? "A clearer view of the market, with every signal tied to its source."
                   : active?.description || "Understand the data, sources, and methods behind Zentai."}
               </p>
@@ -621,7 +625,7 @@ export default function Dashboard() {
               <BrandMark className="hero-brand-symbol" />
               <span className="hero-orbit-point" />
             </div>
-            {page !== "universe" && page !== "fpa" && <div className="header-actions">
+            {page !== "home" && page !== "universe" && page !== "fpa" && <div className="header-actions">
               <button
                 className="button"
                 onClick={refresh}
@@ -636,7 +640,7 @@ export default function Dashboard() {
               </button>
             </div>}
           </div>}
-          {page !== "universe" && page !== "fpa" && page !== "signals" && <div className="control-strip">
+          {page !== "home" && page !== "universe" && page !== "fpa" && page !== "signals" && <div className="control-strip">
             <CompanyPicker companies={allCompanies} value={company} onChange={setCompany} label="Search and select company" />
             <div className={`refresh-control ${auto && market.loading ? "is-fetching" : ""}`}>
               <span className={`status-dot ${auto ? "" : "paused"}`} />
@@ -664,6 +668,10 @@ export default function Dashboard() {
               </button>
             </div>
           </div>}
+          {page === "home" && <div className="workspace-choices">
+            <button className="workspace-choice" onClick={() => navigate("overview")}><span className="choice-icon"><BarChart3 size={24} /></span><span className="eyebrow">PUBLIC MARKET DATA</span><strong>Market research</strong><span>Monitor companies, investigate signals and news, compare risks, and test a research hypothesis.</span><small>{market.data ? `Market snapshot fetched ${date(market.data.fetchedAt)} · public feeds may be delayed` : "Market feed loading or unavailable"}</small><em>Open market overview <ArrowRight size={16} /></em></button>
+            <button className="workspace-choice" onClick={() => navigate("fpa")}><span className="choice-icon"><Calculator size={24} /></span><span className="eyebrow">BROWSER-LOCAL CSV WORKSPACE</span><strong>Construction finance</strong><span>Review vendor master, requisitions, POs, invoices, payments, spend, and exceptions.</span><small>Data dates appear on imported files · no live SAP connection</small><em>Open construction finance <ArrowRight size={16} /></em></button>
+          </div>}
           {page === "overview" && (
             <>
               <FeedStatus
@@ -671,6 +679,14 @@ export default function Dashboard() {
                 hasData={!!market.data}
                 retry={market.refresh}
               />
+              <section className="decision-summary" aria-label="Market priorities">
+                <div className="decision-summary-head"><div><p className="eyebrow">WHAT MATTERS NOW</p><h2>Three things to check</h2></div><small>{market.data ? `Fetched ${date(market.data.fetchedAt)}` : "Waiting for market data"} · quotes may be delayed</small></div>
+                <div className="decision-cards">
+                  <article className={`decision-card ${quote?.changePercent != null && quote.changePercent < 0 ? "negative" : ""}`}><span>SELECTED COMPANY</span><strong>{company.ticker} {quote ? pct(quote.changePercent) : "quote unavailable"}</strong><p>{quote ? `Last reported quote ${date(quote.asOf)}. A day move describes price, not its cause.` : "Select a company or retry the quote feed."}</p><button onClick={() => navigate("financials")}>Inspect company <ArrowRight size={14} /></button></article>
+                  <article className="decision-card caution"><span>MARKET RISK</span><strong>VIX {number(quoteBySymbol("^VIX")?.price)}</strong><p>{quoteBySymbol("^VIX") ? `Observed ${date(quoteBySymbol("^VIX")?.asOf)}. Volatility is context, not a company-specific forecast.` : "Volatility quote unavailable."}</p><button onClick={() => navigate("risk")}>Review risk <ArrowRight size={14} /></button></article>
+                  <article className={`decision-card ${news.data?.articles.some(article => headlinePriority(article.title)) ? "urgent" : ""}`}><span>NEWS CONTEXT</span><strong>{news.data?.articles.filter(article => headlinePriority(article.title)).length ?? "—"} flagged headlines</strong><p>{news.data?.articles.length ? `Among ${news.data.articles.length} recent headlines; keyword flags need source review. Latest published ${date(news.data.articles[0].publishedAt)}.` : "Recent headlines are loading or unavailable."}</p><button onClick={() => navigate("news")}>Review sources <ArrowRight size={14} /></button></article>
+                </div>
+              </section>
               <div className="section-intro">
                 <div>
                   <p className="eyebrow">MARKET SIGNALS</p>
@@ -803,6 +819,7 @@ export default function Dashboard() {
                       }
                     />
                   )}
+                  {quote && quote.history.length > 1 && <details className="chart-reading"><summary>Explain this price chart</summary><p>From {date(quote.history[0].date)} to {date(quote.history.at(-1)?.date)}, the observed close changed from {money(quote.history[0].close, quote.currency)} to {money(quote.history.at(-1)?.close, quote.currency)} ({pct((quote.history.at(-1)!.close / quote.history[0].close - 1) * 100)}). This describes the selected date range; it does not explain the cause.</p>{news.data?.articles[0] && <p>Recent source context: <a href={news.data.articles[0].url} target="_blank" rel="noopener noreferrer">{news.data.articles[0].title}</a> · {news.data.articles[0].publisher} · published {date(news.data.articles[0].publishedAt)}. Compare the publication date with the chart; proximity alone does not establish causation.</p>}<button onClick={() => navigate("analyst")}>Open filing and valuation evidence <ArrowRight size={14} /></button></details>}
                   <Stamp quote={quote} />
                   <div className="chart-facts">
                     <div>
