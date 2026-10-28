@@ -1,9 +1,10 @@
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 
 const files = execFileSync("git", ["ls-files", "-z"], { encoding: "utf8" }).split("\0").filter(Boolean);
 const badNames = files.filter(path => /(^|\/)(\.env(\.|$)|secrets?\.(json|ya?ml|toml)$|[^/]+\.(pem|p12|pfx|key)$)/i.test(path) && path !== ".env.example");
-const source = files.filter(path => /\.(tsx?|mjs|cjs|jsx?)$/.test(path) && !path.startsWith("scripts/security-check"));
+// Vercel removes test and document files via .vercelignore after cloning.
+const source = files.filter(path => existsSync(path) && /\.(tsx?|mjs|cjs|jsx?)$/.test(path) && !path.startsWith("scripts/security-check"));
 const publicSecrets = source.flatMap(path => {
   const content = readFileSync(path, "utf8");
   return [...content.matchAll(/NEXT_PUBLIC_[A-Z0-9_]*(?:SECRET|PRIVATE|SERVICE_ROLE|API_KEY|PASSWORD|TOKEN)[A-Z0-9_]*/g)].map(match => `${path}: ${match[0]}`);
