@@ -65,6 +65,7 @@ export function AnalystReport({ company, quote, news, auto }: {
           <p className="eyebrow">EQUITY + CREDIT · PUBLIC DATA</p>
           <h2>{company.name} <span>{company.ticker}</span></h2>
           <p>One source-labeled view of the market quote, reported fundamentals, an illustrative equity valuation, and an internal credit screen.</p>
+          {report && <p className="source">Research snapshot fetched {stamp(report.fetched_at)} · fiscal period {report.as_of || "unavailable"} · review the evidence status below before use.</p>}
         </div>
         <div className="report-actions">
           <button className="button" onClick={feed.refresh} disabled={feed.loading}>
@@ -76,7 +77,7 @@ export function AnalystReport({ company, quote, news, auto }: {
         </div>
       </section>
 
-      {feed.error && <div className="notice error" role="alert">{feed.data ? "Update failed. Showing the last successful report. " : ""}{feed.error} <button onClick={feed.refresh}>Retry</button></div>}
+      {feed.error && <div className="notice error" role="alert">{feed.data ? `Update failed. Showing the report fetched ${stamp(feed.data.fetched_at)}; its evidence may be stale. ` : "No report is available. "}{feed.error} Check the cited source dates or <button onClick={feed.refresh}>retry</button>.</div>}
       {!report && !feed.error && <div className="loading" role="status"><RefreshCw size={15} className="spin" /> Assembling the analyst report…</div>}
 
       {report && <div className="report-content result-reveal" key={company.key}>

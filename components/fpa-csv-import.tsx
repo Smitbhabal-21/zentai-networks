@@ -20,6 +20,7 @@ export function FpaCsvImport({ model, onImport }: { model: FpaModel; onImport: (
   const [fileName, setFileName] = useState("");
   const [mapping, setMapping] = useState<AccountMap>({});
   const [error, setError] = useState("");
+  const [complete, setComplete] = useState("");
   const preview = useMemo(() => {
     if (!entries.length) return null;
     try { return { next: applyFpaCsv(model, entries, mapping, fileName), error: "" }; }
@@ -30,18 +31,19 @@ export function FpaCsvImport({ model, onImport }: { model: FpaModel; onImport: (
     try {
       if (file.size > 2_000_000) throw new Error("CSV must be under 2 MB.");
       const parsed = parseFpaCsv(await file.text());
-      setEntries(parsed); setMapping(suggestedAccountMap(parsed)); setFileName(file.name); setError("");
-    } catch (cause) { setEntries([]); setError(cause instanceof Error ? cause.message : "Could not read CSV."); }
+      setEntries(parsed); setMapping(suggestedAccountMap(parsed)); setFileName(file.name); setError(""); setComplete("");
+    } catch (cause) { setEntries([]); setFileName(""); setComplete(""); setError(cause instanceof Error ? cause.message : "Could not read CSV."); }
   };
   const apply = () => {
     if (!preview?.next) return;
     onImport(preview.next);
     setEntries([]); setFileName(""); setMapping({});
-    setError("Imported ledger reconciled. Prior review records were cleared; check FX rates and forecast drivers.");
+    setError(""); setComplete("Imported ledger reconciled. Prior review records were cleared; check FX rates and forecast drivers.");
   };
   return <details className="panel fpa-csv-import"><summary><FileUp size={16} /> Import a real expense ledger <span>CSV · local preview before replacement</span></summary><div className="fpa-csv-body"><p className="note">Map account codes to People, Technology, Vendors, or Shared services. The CSV must cover all 120 monthly 2026 budget groups; actuals may be partial. Source amounts stay in their unit currency. No file is uploaded to Zentai during this preview.</p>
     <div className="fpa-csv-actions"><button className="button" onClick={() => download("zentai-fpa-template.csv", fpaCsvTemplate(model))}><Download size={15} /> Download CSV template</button><label className="button">Choose CSV <input aria-label="Choose FP&A expense CSV" type="file" accept=".csv,text/csv" onChange={event => void read(event.target.files?.[0])} /></label></div>
-    {error && <p className="notice" role="status">{error}</p>}
+    {error && <div className="notice error" role="alert"><strong>Import stopped; current ledger was not changed.</strong> {error} Correct the CSV and choose it again. <button onClick={() => setError("")}>Dismiss</button></div>}
+    {complete && <p className="notice" role="status">{complete}</p>}
     {entries.length > 0 && <><div className="fpa-csv-preview"><strong>{fileName}</strong><span>{entries.length} source rows</span><span>Budget by currency: {totalsByCurrency(entries, "budget")}</span><span>Actual by currency: {totalsByCurrency(entries, "actual")}</span></div>
       <div className="fpa-csv-mapping"><h4>Account mapping</h4>{Object.keys(mapping).sort().map(account => <label key={account}>{account}<select aria-label={`Map account ${account}`} value={mapping[account]} onChange={event => setMapping(current => ({ ...current, [account]: event.target.value as Expense | "Shared services" | "" }))}><option value="">Map account…</option>{[...CATEGORIES, "Shared services"].map(category => <option key={category}>{category}</option>)}</select></label>)}</div>
       {preview?.error ? <p className="notice error" role="alert">{preview.error}</p> : <p className="fpa-csv-ready">Ready to import · source totals reconcile to the model · all budget groups covered</p>}

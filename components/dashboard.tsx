@@ -125,18 +125,20 @@ function FeedStatus({
   loading,
   error,
   hasData = false,
+  receivedAt,
   retry,
 }: {
   loading: boolean;
   error: string | null;
   hasData?: boolean;
+  receivedAt?: number | null;
   retry: () => void;
 }) {
   return error ? (
     <div className="notice error" role="alert">
       <span>
-        {hasData ? "Update failed. Showing the last successful snapshot. " : ""}
-        {error}
+        {hasData ? `Update failed. Last successful snapshot received ${receivedAt ? new Date(receivedAt).toLocaleString() : "earlier"}. The data below may be stale. ` : "No current data is available. "}
+        {error} Check the source timestamp before using this view.
       </span>
       <button onClick={retry}>Retry</button>
     </div>
